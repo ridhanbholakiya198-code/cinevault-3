@@ -20,9 +20,10 @@ async function api(p,q={}){if(!PX&&!KEY())throw Error("key");const ck="c:"+p+JSO
  mem.set(ck,j);
  try{localStorage.setItem(ck,JSON.stringify({t:Date.now(),j}))}catch{Object.keys(localStorage).filter(x=>x.startsWith("c:")).forEach(x=>localStorage.removeItem(x))}return j}
 const title=i=>i.title||i.name,kind=i=>i.media_type||(i.title?"movie":"tv");
+const STAR='<svg viewBox="0 0 24 24"><path d="m12 3 2.7 5.8 6.3.8-4.6 4.4 1.2 6.3-5.6-3.1-5.6 3.1 1.2-6.3L3 9.6l6.3-.8z"/></svg>';
 function card(i,t){t=t||kind(i);const e=document.createElement("div");e.className="card";
- e.innerHTML=`<img decoding="async" loading="lazy" alt="" width="342" height="513" src="${i.poster_path?IMG+P+i.poster_path:""}"><b>${(i.vote_average||0).toFixed(1)}</b><span>${esc(title(i))}</span>`;
- e.onclick=()=>openDetail(t,i.id);return e}
+ const bd=i.soon?`<b class="soon">${new Date(i.release_date).toLocaleDateString("en-GB",{day:"numeric",month:"short"})}</b>`:i.vote_average?`<b>${STAR}${i.vote_average.toFixed(1)}</b>`:"";
+ e.innerHTML=`<img decoding="async" loading="lazy" alt="" src="${i.poster_path?IMG+P+i.poster_path:""}">${bd}<span>${esc(title(i))}</span>`;e.onclick=()=>openDetail(t,i.id);return e}
 function dominant(path){return new Promise(res=>{const im=new Image();im.crossOrigin="anonymous";
  im.onload=()=>{const c=document.createElement("canvas");c.width=c.height=24;const x=c.getContext("2d");x.drawImage(im,0,0,24,24);
   const d=x.getImageData(0,0,24,24).data;let best=[224,160,48],bs=-1;
@@ -43,9 +44,9 @@ async function heroItems(){const tl=topOf(taste().l),mine=tl&&tl[0]!=="en"&&tl[1
  const ok=i=>i.backdrop_path&&i.poster_path,sh=r=>r.filter(ok).slice(0,10).sort(()=>Math.random()-.5);
  let h=[...sh(b.results).slice(0,2),...sh(a.results)].filter((x,i,r)=>r.findIndex(y=>y.id===x.id)===i).slice(0,6);
  if(h.length>=3)h.forEach(i=>{i.media_type="movie";i.cin=1});else h=(await api("/trending/all/week")).results.filter(ok).slice(0,6);return h}
-async function setHero(n){hi=n;const i=hero[n];$("#bd").style.backgroundImage=`url(${IMG}${M?"w300":"w1280"}${i.backdrop_path})`;if(M)$("#hp").src=IMG+"w500"+i.poster_path;
- ["#bd","#pw",".hc"].forEach(s=>{const e=$(s);e.style.animation="none";void e.offsetWidth;e.style.animation=""});
- $("#hmeta").textContent=`${i.cin?"● In cinemas":kind(i)==="tv"?"Series":"Film"} · ${(i.vote_average||0).toFixed(1)} · ${(i.release_date||i.first_air_date||"").slice(0,4)}`;
+async function setHero(n){hi=n;const i=hero[n];$("#bd").style.backgroundImage=`url(${IMG}${M?"w780":"w1280"}${M?i.poster_path:i.backdrop_path})`;
+ ["#bd",".hc"].forEach(s=>{const e=$(s);e.style.animation="none";void e.offsetWidth;e.style.animation=""});
+ $("#hmeta").innerHTML=`${i.cin?'<i class="live"></i>In cinemas':kind(i)==="tv"?"Series":"Film"} · ${(i.vote_average||0).toFixed(1)} · ${(i.release_date||i.first_air_date||"").slice(0,4)}`;
  $("#htitle").textContent=title(i);$("#hov").textContent=i.overview;$("#hopen").onclick=()=>openDetail(kind(i),i.id);
  document.querySelectorAll(".dots i").forEach((d,k)=>d.classList.toggle("on",k===n));
  dominant(i.poster_path).then(c=>root.style.setProperty("--accent",c))}
@@ -59,23 +60,28 @@ let tick;addEventListener("scroll",()=>{if(tick)return;tick=requestAnimationFram
 // ---- Rows: lazy-loaded in parallel as you scroll ----
 let RW=[];
 const L=(l,x={})=>({with_original_language:l,sort_by:"popularity.desc","vote_count.gte":30,...x}),G=g=>({with_genres:g,sort_by:"popularity.desc","vote_count.gte":150});
-const BASE=[["Trending worldwide today","/trending/all/day"],["Popular films","/movie/popular","movie"],["Hollywood blockbusters","/discover/movie","movie",L("en",{"vote_count.gte":1500}),"en"],["Top rated films","/movie/top_rated","movie"],["Trending series","/trending/tv/week","tv"],["Coming soon","/movie/upcoming","movie"],
-["Bollywood & Indian cinema","/discover/movie","movie",L("hi"),"hi"],["Telugu cinema","/discover/movie","movie",L("te"),"te"],["Malayalam cinema","/discover/movie","movie",L("ml"),"ml"],["Anime series","/discover/tv","tv",L("ja",{with_genres:16,"vote_count.gte":0}),"ja"],["Anime films","/discover/movie","movie",L("ja",{with_genres:16}),"ja"],
-["Top rated series","/tv/top_rated","tv"],["Airing today","/tv/airing_today","tv"],["Action","/discover/movie","movie",G(28)],["Horror","/discover/movie","movie",G(27)],["Sci-Fi","/discover/movie","movie",G(878)],["Crime","/discover/movie","movie",G(80)],["Documentaries","/discover/movie","movie",G(99)]];
+const BASE=[["Trending","/trending/all/day","",null,null,1],["Popular","/movie/popular","movie"],["Top rated","/movie/top_rated","movie"],["TV trending","/trending/tv/week","tv"],
+["Bollywood","/discover/movie","movie",L("hi"),"hi"],["Telugu","/discover/movie","movie",L("te"),"te"],["Malayalam","/discover/movie","movie",L("ml"),"ml"],["Anime","/discover/tv","tv",L("ja",{with_genres:16,"vote_count.gte":0}),"ja"],["Anime films","/discover/movie","movie",L("ja",{with_genres:16}),"ja"],
+["Top series","/tv/top_rated","tv"],["Airing today","/tv/airing_today","tv"],["Action","/discover/movie","movie",G(28)],["Horror","/discover/movie","movie",G(27)],["Sci-Fi","/discover/movie","movie",G(878)],["Crime","/discover/movie","movie",G(80)],["Docs","/discover/movie","movie",G(99)]];
 function buildRows(){const x=taste(),aff=r=>(r[4]?x.l[r[4]]||0:0)+(typeof(r[3]||{}).with_genres==="number"?x.g[r[3].with_genres]||0:0);
  const[first,...rest]=BASE;rest.sort((p,q)=>aff(q)-aff(p));const my=[],v=x.v[0],tl=topOf(x.l),tg=topOf(x.g),tt=topOf(x.t);
- if(v)my.push([`Because you viewed ${v.title}`,`/${v.type}/${v.id}/recommendations`,v.type]);
+ if(v)my.push([`Like ${v.title.length>16?v.title.slice(0,15)+"…":v.title}`,`/${v.type}/${v.id}/recommendations`,v.type]);
  if(tl&&tl[1]>=3){const ty=tt?tt[0]:"movie";my.push(["Picked for you","/discover/"+ty,ty,L(tl[0],tg&&tg[1]>=3?{with_genres:tg[0]}:{})])}
  return[first,...my,...rest]}
-const io=new IntersectionObserver(es=>es.forEach(async e=>{if(!e.isIntersecting)return;io.unobserve(e.target);const[,p,ty,q]=RW[e.target.dataset.i];
- try{const d=await api(p,q||{});const st=e.target.querySelector(".strip");st.innerHTML="";d.results.filter(i=>i.poster_path).forEach(i=>st.append(card(i,ty)))}catch{}}),{rootMargin:"800px 0px"});
+function inf(st,load,ty){let p=1,busy=0,end=0;const more=async()=>{if(busy||end)return;busy=1;
+ try{const d=await load(++p);if(!d.results.length||p>=Math.min(d.total_pages||1,25))end=1;d.results.filter(i=>i.poster_path&&i.media_type!=="person").forEach(i=>st.append(card(i,ty)))}catch{end=1}busy=0};
+ st.addEventListener("scroll",()=>{if(st.scrollLeft+st.clientWidth>st.scrollWidth-700)more()},{passive:true})}
+const io=new IntersectionObserver(es=>es.forEach(async e=>{if(!e.isIntersecting)return;io.unobserve(e.target);const[,p,ty,q,,mix]=RW[e.target.dataset.i],st=e.target.querySelector(".strip");
+ try{const[d,u]=await Promise.all([api(p,q||{}),mix?api("/movie/upcoming"):0]);let it=d.results.filter(i=>i.poster_path);
+  if(u){const s=u.results.filter(i=>i.poster_path&&i.release_date>day(0)).slice(0,5).map(i=>({...i,soon:1,media_type:"movie"}));it=it.flatMap((x,k)=>k%4===3&&s.length?[x,s.shift()]:[x])}
+  st.innerHTML="";it.forEach(i=>st.append(card(i,ty)));inf(st,n=>api(p,{...(q||{}),page:n}),ty)}catch{}}),{rootMargin:"800px 0px"});
 function setup(e){$("#hero").hidden=true;$("#rows").innerHTML=e.message==="key"||e.message==="401"?`<section class="setup"><h2>Connect TMDB</h2><p>themoviedb.org → Settings → API → "API Key (v3 auth)" paste karo.</p><input id="kin" placeholder="TMDB v3 API key"><button class="btn" id="ksv">Save &amp; load</button></section>`:`<section class="setup"><h2>Can't reach TMDB</h2><p>${esc(e.message)} — network ya ISP block ho sakta hai. Private DNS (dns.google) ya VPN try karo.</p><button class="btn" id="rt">Retry</button></section>`;
  if($("#rt"))$("#rt").onclick=()=>location.reload();
  if($("#ksv"))$("#ksv").onclick=()=>{localStorage.setItem("cv_key",$("#kin").value.trim());location.reload()}}
 async function home(){try{hero=await heroItems();startHero()}catch(e){return setup(e)}
  RW=buildRows();RW.forEach((r,i)=>{const s=document.createElement("section");s.className="row";s.dataset.i=i;
-  s.innerHTML=`<div class="rh"><h2>${r[0]}</h2><button class="all">See all</button></div><div class="strip">${'<div class="card sk"></div>'.repeat(6)}</div>`;
-  s.querySelector(".all").onclick=()=>{reset(r[0],r[1],r[2]||"",r[3]||{},false);view("browse")};$("#rows").append(s);io.observe(s)});
+  s.innerHTML=`<div class="rh"><h2>${esc(r[0])}</h2><svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></div><div class="strip">${'<div class="card sk"></div>'.repeat(6)}</div>`;
+  s.querySelector(".rh").onclick=()=>{reset(r[0],r[1],r[2]||"",r[3]||{},false);view("browse")};$("#rows").append(s);io.observe(s)});
  const e=document.createElement("div");e.className="end";e.innerHTML='<button class="btn">Browse all films &amp; series</button>';e.firstChild.onclick=()=>go("browse");$("#rows").append(e)}
 // ---- Browse: infinite scroll grid (filters, See all, search all use this) ----
 let B={path:"",f:0,page:0,busy:0,end:0,q:{},type:""};
@@ -103,26 +109,39 @@ document.querySelectorAll("[data-v]").forEach(a=>a.onclick=e=>{e.preventDefault(
 let st;$("#q").oninput=e=>{clearTimeout(st);const q=e.target.value.trim();if(!q)return view("home");
  st=setTimeout(()=>{saveQ(q);reset(`Results for “${q}”`,"/search/multi","",{query:q},0);view("browse")},350)};
 addEventListener("popstate",()=>{if(!$("#modal").hidden)hideModal();else view("home",1)});
-// ---- Detail with trailer, cast, money, recommendations ----
-const money=n=>n?"$"+n.toLocaleString("en-US"):"Not disclosed";let tok=0;
+// ---- Detail: tabs, data appears on tap ----
+const money=n=>n?"$"+n.toLocaleString("en-US"):"Not disclosed",fd=s=>s?new Date(s).toLocaleDateString("en-GB",{day:"numeric",month:"short",year:"numeric"}):"TBA";
+const when=s=>{const n=Math.ceil((new Date(s)-new Date(day(0)))/864e5);return n<=0?"today":n===1?"tomorrow":`in ${n} days`};
+const stat=(l,x)=>`<div class="stat"><small>${l}</small><strong>${x}</strong></div>`;let tok=0;
+function cat(d,t){const g=(d.genres||[]).map(x=>x.id),an=d.original_language==="ja"&&g.includes(16);return t==="tv"?(an?"Anime":g.includes(16)?"Animation":"Series"):g.includes(99)?"Documentary":an?"Anime film":g.includes(16)?"Animation":"Film"}
+async function episodes(d,sn){const el=$("#pn"),ss=(d.seasons||[]).filter(s=>s.season_number>0),nx=d.next_episode_to_air;
+ if(!ss.length){el.innerHTML='<p class="empty">No episode data yet.</p>';return}
+ sn=sn||(ss.find(s=>nx&&s.season_number===nx.season_number)||ss[ss.length-1]).season_number;
+ el.innerHTML=`<div class="eh"><select id="ssn">${ss.map(s=>`<option value="${s.season_number}"${s.season_number===sn?" selected":""}>Season ${s.season_number}</option>`).join("")}</select><span>${d.number_of_episodes||""} episodes</span></div>${nx?`<p class="nx">Episode ${nx.episode_number} releases ${when(nx.air_date)} · ${fd(nx.air_date)}</p>`:""}<div id="eps"><p class="empty">Loading…</p></div>`;
+ $("#ssn").onchange=e=>episodes(d,+e.target.value);
+ try{const s=await api(`/tv/${d.id}/season/${sn}`),n=day(0);
+  $("#eps").innerHTML=s.episodes.map(e=>{const up=!e.air_date||e.air_date>n;return`<div class="ep"><div class="eh2"><b>${e.episode_number}</b><span>${esc(e.name)}</span>${up?'<em class="up">UPCOMING</em>':e.vote_average?`<em>${STAR}${e.vote_average.toFixed(1)}</em>`:""}</div><div class="ed">${fd(e.air_date)}${e.runtime?" · "+e.runtime+" min":""}${up?"":`<p>${esc(e.overview)}</p>`}</div></div>`}).join("")||'<p class="empty">No episodes listed.</p>';
+  $("#eps").onclick=e=>{const r=e.target.closest(".ep");if(r)r.classList.toggle("open")}}catch{$("#eps").innerHTML='<p class="empty">Could not load episodes.</p>'}}
+function show(p,d,t,m){const el=$("#pn");
+ if(p==="ov"){const run=d.runtime?d.runtime+" min":"";el.innerHTML=`<div class="stats">${stat("Rating",(d.vote_average||0).toFixed(1)+"/10")}${stat("Votes",(d.vote_count||0).toLocaleString())}${t==="movie"?stat("Budget",money(d.budget))+stat("Box office",money(d.revenue)):stat("Seasons",d.number_of_seasons||"—")+stat("Episodes",d.number_of_episodes||"—")}${run?stat("Runtime",run):""}</div><p class="ovt">${esc(d.overview||"No overview yet.")}</p><button class="all" id="rm">Read more</button><div class="acts" id="acts"></div>`;
+  $("#rm").onclick=e=>{const o=$(".ovt").classList.toggle("open");e.target.textContent=o?"Less":"Read more"};acts(m)}
+ else if(p==="ca")el.innerHTML='<div class="strip cast">'+(d.credits.cast.slice(0,20).map(c=>`<div>${c.profile_path?`<img loading="lazy" decoding="async" src="${IMG}w185${c.profile_path}" alt="">`:"<i></i>"}<b>${esc(c.name)}</b><small>${esc(c.character||"")}</small></div>`).join("")||'<p class="empty">No cast listed.</p>')+"</div>";
+ else if(p==="ep")episodes(d);
+ else{el.innerHTML='<div class="strip" id="rec"></div>';const st=$("#rec");[...d.recommendations.results,...d.similar.results].filter((x,i,r)=>x.poster_path&&r.findIndex(y=>y.id===x.id)===i).slice(0,20).forEach(x=>st.append(card(x,t)));
+  if(!st.children.length)el.innerHTML='<p class="empty">Nothing similar yet.</p>';else inf(st,n=>api(`/${t}/${d.id}/recommendations`,{page:n}),t)}}
 async function openDetail(t,id){if($("#modal").hidden){history.pushState({m:1},"");$("#modal").hidden=false;document.body.style.overflow="hidden"}
  const my=++tok;$("#modal").scrollTop=0;$("#mc").innerHTML='<div class="tr"></div><p class="empty">Loading…</p>';
  try{const d=await api(`/${t}/${id}`,{append_to_response:"videos,credits,recommendations,similar"});if(my!==tok)return;
- const vs=d.videos.results.filter(x=>x.site==="YouTube"),v=vs.find(x=>x.type==="Trailer")||vs.find(x=>x.type==="Teaser")||vs[0];
- const run=d.runtime?d.runtime+" min":d.number_of_seasons?d.number_of_seasons+" seasons":"";
- const stat=(l,x)=>`<div class="stat"><small>${l}</small><strong>${x}</strong></div>`;
- const cast=d.credits.cast.slice(0,15).map(c=>`<div>${c.profile_path?`<img loading="lazy" decoding="async" src="${IMG}w185${c.profile_path}" alt="">`:"<i></i>"}<b>${esc(c.character||"—")}</b><small>${esc(c.name)}</small></div>`).join("");
+ const vs=d.videos.results.filter(x=>x.site==="YouTube"),v=vs.find(x=>x.type==="Trailer")||vs.find(x=>x.type==="Teaser")||vs[0],nx=d.next_episode_to_air;
+ const stt=t==="tv"?(nx?`Ongoing · next ep ${when(nx.air_date)}`:/Ended|Canceled/.test(d.status)?"Ended":"Returning"):(!d.release_date?"Upcoming":d.release_date>day(0)?`Releases ${fd(d.release_date)}`:"Released");
+ const m={id,type:t,title:title(d),poster:d.poster_path,lang:d.original_language,genres:(d.genres||[]).map(g=>g.id)};learn(m,1);
  $("#mc").innerHTML=`<div class="tr" style="background-image:url(${d.backdrop_path?IMG+"w780"+d.backdrop_path:""})">${v?'<button class="btn play" id="pl">Play trailer</button>':'<p class="notr">No trailer available</p>'}</div>
- ${v?`<a class="yt" target="_blank" rel="noopener" href="https://www.youtube.com/watch?v=${v.key}">Open on YouTube</a>`:""}
- <div class="mi"><h2>${esc(title(d))}</h2><p class="tag">${esc(d.tagline||(d.genres||[]).map(g=>g.name).join(", "))}</p>
- <div class="stats">${stat("TMDB rating",(d.vote_average||0).toFixed(1)+" / 10")}${stat("Votes",(d.vote_count||0).toLocaleString())}${t==="movie"?stat("Budget",money(d.budget))+stat("Box office",money(d.revenue)):""}${run?stat("Runtime",run):""}${stat("Released",d.release_date||d.first_air_date||"—")}</div>
- <p style="max-width:70ch;color:#d8d3c8">${esc(d.overview)}</p><h3>Your list</h3><div class="acts" id="acts"></div>
- <h3>Cast — character &amp; actor</h3><div class="cast">${cast}</div></div>`;
+ <div class="mi"><div class="chips"><i class="c1">${cat(d,t)}</i><i>${(d.release_date||d.first_air_date||"").slice(0,4)||"TBA"}</i><i>${STAR}${(d.vote_average||0).toFixed(1)}</i><i>${stt}</i></div>
+ <h2>${esc(title(d))}</h2><p class="tag">${esc(d.tagline||(d.genres||[]).map(g=>g.name).join(" · "))}</p>
+ <div class="tabs mt" id="mt"><button class="on" data-p="ov">Overview</button><button data-p="ca">Cast</button>${t==="tv"?'<button data-p="ep">Episodes</button>':""}<button data-p="mo">More like this</button></div><div id="pn"></div></div>`;
  if(v)$("#pl").onclick=()=>{$(".tr").innerHTML=`<iframe src="https://www.youtube.com/embed/${v.key}?autoplay=1&rel=0&playsinline=1" referrerpolicy="strict-origin-when-cross-origin" allow="autoplay;fullscreen;picture-in-picture" allowfullscreen></iframe>`};
- const m={id,type:t,title:title(d),poster:d.poster_path,lang:d.original_language,genres:(d.genres||[]).map(g=>g.id)};learn(m,1);acts(m);
- const rec=[...d.recommendations.results,...d.similar.results].filter((x,i,a)=>x.poster_path&&a.findIndex(y=>y.id===x.id)===i).slice(0,20);
- if(rec.length){$("#mc .mi").insertAdjacentHTML("beforeend",'<h3>More like this</h3><div class="strip" id="rec"></div>');rec.forEach(x=>$("#rec").append(card(x,t)))}
- if(d.poster_path)dominant(d.poster_path).then(c=>root.style.setProperty("--accent",c));
+ $("#mt").onclick=e=>{const b=e.target.closest("button");if(!b)return;document.querySelectorAll("#mt button").forEach(x=>x.classList.toggle("on",x===b));show(b.dataset.p,d,t,m)};
+ show("ov",d,t,m);if(d.poster_path)dominant(d.poster_path).then(c=>root.style.setProperty("--accent",c));
  }catch(e){if(my===tok)$("#mc").innerHTML='<p class="empty">Could not load details.</p>'}}
 function acts(m){const k=m.type+m.id,e=store.get()[k]||{};const b=(txt,on,fn)=>{const x=document.createElement("button");x.textContent=txt;x.className=on?"on":"";x.onclick=()=>{const l=store.get(),c=l[k]||{...m};fn(c);l[k]=c;store.set(l);if(c.status||c.fav||c.sub)learn(m,3);acts(m)};$("#acts").append(x)};
  $("#acts").innerHTML="";STATUS.forEach(s=>b(s,e.status===s,c=>c.status=c.status===s?"":s));b("Favourite",e.fav,c=>c.fav=!c.fav);b("Subscribed",e.sub,c=>c.sub=!c.sub)}

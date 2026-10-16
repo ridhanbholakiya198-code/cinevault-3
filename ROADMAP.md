@@ -44,3 +44,8 @@
 - Poster stretch bug fixed (img height attr), solid header on scroll, removed rows (Tamil, Korean, Hidden gems, Romance, Comedy)
 - Hero = random hit films currently in cinemas (+ taste-based regional picks); phone: floating poster + blurred backdrop + accent glow, swipe to change
 - On-device personalisation: views, list adds, searches -> "Because you viewed", "Picked for you", Indian/Hollywood/Anime rows re-ordered. Reset button in My list
+
+## PART 1.7 — DONE
+- Full-poster phone hero restored; See all = that exact section (infinite); every strip loads more on swipe
+- Detail: category chip, status, tabs (Overview/Cast/Episodes/More like this), per-episode ratings, UPCOMING + next-episode countdown
+- Upcoming films merged into Trending (date badge); shorter row names; new icon nav (folder = My list)
