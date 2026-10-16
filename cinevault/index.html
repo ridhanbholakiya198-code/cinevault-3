@@ -1,0 +1,29 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#07080a">
+<title>CINEVAULT — Explore films in their own colour</title>
+<link rel="preconnect" href="https://api.themoviedb.org"><link rel="preconnect" href="https://image.tmdb.org"><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Cormorant+Garamond:ital,wght@0,500;1,500&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css"></head><body>
+<div class="grain"></div>
+<header id="top"><a class="logo" href="#" data-v="home">CINEVAULT</a>
+<nav><a href="#" data-v="home">Explore</a><a href="#" data-v="browse">Browse</a><a href="#" data-v="list">My list</a></nav>
+<input id="q" type="search" placeholder="Search any film or series" autocomplete="off"></header>
+<main>
+<section id="hero"><div class="bd" id="bd"></div><div class="shade"></div>
+<div class="hc"><p class="meta" id="hmeta"></p><h1 id="htitle"></h1><p class="ov" id="hov"></p>
+<button class="btn" id="hopen">Trailer &amp; details</button></div><div class="dots" id="dots"></div></section>
+<div id="rows"></div>
+<section id="browse" hidden><h2 class="rt" id="btitle">Browse</h2>
+<div class="bar" id="bar"><div class="tabs seg" id="seg" style="padding:0"><button data-t="movie" class="on">Films</button><button data-t="tv">Series</button></div>
+<select id="gsel" aria-label="Genre"></select>
+<select id="ssel" aria-label="Sort"><option value="pop">Popular</option><option value="top">Top rated</option><option value="new">Newest</option><option value="rev">Box office</option></select></div>
+<div class="grid" id="bgrid"></div><div id="sent"></div></section>
+<section id="list" hidden><h2 class="rt">My list</h2><div class="tabs" id="tabs"></div><div class="grid" id="lgrid"></div></section>
+</main>
+<nav class="bn" aria-label="Main">
+<button data-v="home" class="on"><svg viewBox="0 0 24 24"><path d="M3 11l9-8 9 8v10H3z"/></svg>Home</button>
+<button data-v="browse"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>Browse</button>
+<button data-v="search"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg>Search</button>
+<button data-v="list"><svg viewBox="0 0 24 24"><path d="M6 3h12v18l-6-4-6 4z"/></svg>My list</button></nav>
+<div id="modal" hidden><div class="mbox"><button class="x" id="mx">Close</button><div id="mc"></div></div></div>
+<script src="config.js"></script><script src="app.js"></script></body></html>
