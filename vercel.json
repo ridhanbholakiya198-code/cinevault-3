@@ -1,0 +1,2 @@
+{"rewrites":[{"source":"/timg/:path*","destination":"https://image.tmdb.org/t/p/:path*"}],
+"headers":[{"source":"/timg/(.*)","headers":[{"key":"Cache-Control","value":"public, max-age=31536000, immutable"}]}]}

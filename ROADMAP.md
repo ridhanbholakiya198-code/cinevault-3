@@ -39,3 +39,8 @@
 - Detail: "More like this" recommendations (TMDB recommendations + similar), tap to chain through titles
 - Trailer click-to-play (no heavy iframe on open) + "Open on YouTube" fallback
 - Android: bottom nav, safe-area, hardware Back closes modal/view, full-screen bottom-sheet detail, poster-based hero
+
+## PART 1.6 — DONE
+- Poster stretch bug fixed (img height attr), solid header on scroll, removed rows (Tamil, Korean, Hidden gems, Romance, Comedy)
+- Hero = random hit films currently in cinemas (+ taste-based regional picks); phone: floating poster + blurred backdrop + accent glow, swipe to change
+- On-device personalisation: views, list adds, searches -> "Because you viewed", "Picked for you", Indian/Hollywood/Anime rows re-ordered. Reset button in My list
