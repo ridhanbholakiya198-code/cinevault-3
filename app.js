@@ -106,7 +106,7 @@ async function home(){heroItems().then(h=>{hero=h;startHero();h.forEach(heroLogo
  RW=buildRows();RW.forEach((r,i)=>{const s=document.createElement("section");s.className="row";s.dataset.i=i;
   s.innerHTML=`<div class="rh"><h2>${esc(r[0])}</h2><svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></div><div class="strip">${'<div class="card sk"></div>'.repeat(6)}</div><button class="ar l" aria-label="Back"><svg viewBox="0 0 24 24"><path d="m15 5-7 7 7 7"/></svg></button><button class="ar r" aria-label="Next"><svg viewBox="0 0 24 24"><path d="m9 5 7 7-7 7"/></svg></button>`;
   s.querySelector(".rh").onclick=async()=>{if(r[6]){B={path:"",type:"",q:{},f:0,page:1,busy:0,end:1};$("#btitle").textContent=r[0];$("#bar").hidden=true;$("#bgrid").innerHTML="";(await named(r[6])).forEach(i=>$("#bgrid").append(card(i,"")));view("browse");return}reset(r[0],r[1],r[2]||"",r[3]||{},false);view("browse")};s.querySelectorAll(".ar").forEach(b=>b.onclick=()=>{const st=s.querySelector(".strip");st.scrollBy({left:(b.classList.contains("r")?1:-1)*st.clientWidth*.8,behavior:"smooth"})});$("#rows").append(s);io.observe(s)});
- const e=document.createElement("div");e.className="end";e.innerHTML='<button class="btn">Browse all films &amp; series</button>';e.firstChild.onclick=()=>go("browse");$("#rows").append(e);
+
  if(!(navigator.connection&&navigator.connection.saveData))document.querySelectorAll("#rows .row").forEach((r,k)=>setTimeout(()=>loadRow(r),1200+k*300))}
 // ---- Browse: infinite scroll grid (filters, See all, search all use this) ----
 let B={path:"",f:0,page:0,busy:0,end:0,q:{},type:""};
@@ -208,4 +208,5 @@ window.cvStoreChanged=()=>{if(!$("#list").hidden)renderList();if(!$("#modal").hi
 $("#rst").onclick=()=>{localStorage.removeItem(TK);alert("Personalisation reset")};
 $("#modal").addEventListener("scroll",()=>{const r=$(".tr");$(".tb").classList.toggle("s",$("#modal").scrollTop>(r?r.offsetHeight*.55:150))},{passive:true});
 const it=$("#intro");if(it){if(sessionStorage.getItem("cv_i"))it.remove();else{sessionStorage.setItem("cv_i","1");setTimeout(()=>it.remove(),2700)}}
+$("#yr").textContent=new Date().getFullYear();$("#up").onclick=()=>scrollTo({top:0,behavior:"smooth"});document.querySelectorAll("[data-acc]").forEach(a=>a.onclick=e=>{e.preventDefault();$("#acc").click()});
 home();
