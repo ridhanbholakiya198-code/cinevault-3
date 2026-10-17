@@ -43,9 +43,14 @@ function ensureFb() {
   fbp = (async () => {
     const B = `https://www.gstatic.com/firebasejs/${FBV}/`;
     const [app, au, fs] = await Promise.all([import(B + "firebase-app.js"), import(B + "firebase-auth.js"), import(B + "firebase-firestore.js")]);
-    const a = app.initializeApp(CFG);
+    const a = app.getApps && app.getApps().length ? app.getApp() : app.initializeApp(CFG);
     auth = au.getAuth(a);
-    db = CFG.firestoreDatabaseId ? fs.getFirestore(a, CFG.firestoreDatabaseId) : fs.getFirestore(a);
+    try {
+      db = (CFG.firestoreDatabaseId && CFG.firestoreDatabaseId !== "(default)") ? fs.getFirestore(a, CFG.firestoreDatabaseId) : fs.getFirestore(a);
+    } catch (err) {
+      console.warn("[CineVault] Firestore init fallback to default:", err);
+      db = fs.getFirestore(a);
+    }
     fb = { au, fs };
     au.onAuthStateChanged(auth, onUser);
     return fb;
@@ -339,9 +344,16 @@ async function logout(el) {
     const { au } = await ensureFb(), safe = !syncBad;
     await au.signOut(auth);
     if (safe) { try { localStorage.removeItem(LS) } catch { } changed() }
+    try { localStorage.removeItem(HINT); } catch { }
+    paintBtn();
     closeOv(el);
     say(safe ? "Signed out · list removed from this device" : "Signed out · couldn’t sync, list kept on this device");
-  } catch (e) { busy(el, false); msg(el, errText(e)) }
+  } catch (e) {
+    try { localStorage.removeItem(HINT); } catch { }
+    paintBtn();
+    closeOv(el);
+    say("Signed out");
+  }
 }
 async function delAccount(el) {
   const pw = (el.querySelector("[name=dpw]") || {}).value || "";

@@ -1,26 +1,16 @@
-export default async function handler(req, res) {
-  const { path, ...rest } = req.query || {};
-  if (!path || typeof path !== "string" || !path.startsWith("/") || path.includes("..")) {
-    return res.status(400).json({ error: "bad path" });
-  }
-
-  const apiKey = process.env.TMDB_API_KEY;
-  if (!apiKey) {
-    return res.status(500).json({ error: "missing TMDB_API_KEY environment variable" });
-  }
-
-  const url = new URL(`https://api.themoviedb.org/3${path}`);
-  url.searchParams.set("api_key", apiKey);
-  for (const [k, v] of Object.entries(rest)) {
-    if (v != null) url.searchParams.set(k, String(v));
-  }
-
+// Vercel serverless proxy: key stays in env var TMDB_API_KEY, never reaches the browser.
+module.exports = async (req, res) => {
+  const key = process.env.TMDB_API_KEY;
+  if (!key) return res.status(500).json({ error: "TMDB_API_KEY missing" });
+  const u = new URL(req.url, "http://x");
+  const path = u.searchParams.get("path") || "";
+  if (!/^\/[a-zA-Z0-9_\/-]+$/.test(path)) return res.status(400).json({ error: "bad path" });
+  u.searchParams.delete("path");
+  u.searchParams.set("api_key", key);
   try {
-    const r = await fetch(url.toString());
-    const data = await r.json();
-    res.setHeader("Cache-Control", "public, max-age=1800, s-maxage=1800");
-    return res.status(r.status).json(data);
-  } catch (err) {
-    return res.status(500).json({ error: err.message || "Upstream fetch error" });
-  }
-}
+    const r = await fetch("https://api.themoviedb.org/3" + path + "?" + u.searchParams);
+    res.setHeader("Content-Type", "application/json");
+    res.setHeader("Cache-Control", "s-maxage=600, stale-while-revalidate=3600");
+    res.status(r.status).send(await r.text());
+  } catch (e) { res.status(502).json({ error: "upstream" }); }
+};
