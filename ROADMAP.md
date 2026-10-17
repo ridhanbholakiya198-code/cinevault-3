@@ -49,3 +49,16 @@
 - Full-poster phone hero restored; See all = that exact section (infinite); every strip loads more on swipe
 - Detail: category chip, status, tabs (Overview/Cast/Episodes/More like this), per-episode ratings, UPCOMING + next-episode countdown
 - Upcoming films merged into Trending (date badge); shorter row names; new icon nav (folder = My list)
+
+## PART 1.8 — DONE
+- Detail redesigned like StreamPlay: top bar (back, bell=subscribe, heart=favourite, share, similar panel), bookmark -> "Set watch status" sheet, cast always visible, single scroll page
+- Adaptive: phone = bottom sheets + bottom nav; desktop = poster+info layout, centered status dialog, right-side Similar drawer, row arrows, hover glow
+- My list: underline tabs with counts + empty state
+
+## PART 2-lite — DONE
+- Desktop hero like Blade Runner reference: accent colour-grade, huge title, 01/06 counter, dots, up/down arrows, "Next up" card
+- Phone hero: story-style progress dots; intro title card (once per session); nav Home/Movies/Series/Browse/My list
+
+## PART 1.9 — DONE
+- Wide backdrop + title logo (TMDB images) on detail and home hero; sticky top bar turns into backdrop+logo after scroll
+- "Where to watch": official platforms per region (JustWatch via TMDB): Subscription / Rent / Buy / Free, region selector

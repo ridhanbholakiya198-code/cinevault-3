@@ -47,14 +47,18 @@ async function heroItems(){const tl=topOf(taste().l),mine=tl&&tl[0]!=="en"&&tl[1
 async function setHero(n){hi=n;const i=hero[n];$("#bd").style.backgroundImage=`url(${IMG}${M?"w780":"w1280"}${M?i.poster_path:i.backdrop_path})`;
  ["#bd",".hc"].forEach(s=>{const e=$(s);e.style.animation="none";void e.offsetWidth;e.style.animation=""});
  $("#hmeta").innerHTML=`${i.cin?'<i class="live"></i>In cinemas':kind(i)==="tv"?"Series":"Film"} · ${(i.vote_average||0).toFixed(1)} · ${(i.release_date||i.first_air_date||"").slice(0,4)}`;
- $("#htitle").textContent=title(i);$("#hov").textContent=i.overview;$("#hopen").onclick=()=>openDetail(kind(i),i.id);
+ {const l=lgc[kind(i)+i.id];$("#htitle").innerHTML=l?`<img class="hl" alt="${esc(title(i))}" src="${l}">`:esc(title(i))}$("#hov").textContent=i.overview;$("#hopen").onclick=()=>openDetail(kind(i),i.id);
  document.querySelectorAll(".dots i").forEach((d,k)=>d.classList.toggle("on",k===n));
+ $("#cn").textContent=String(n+1).padStart(2,"0");$("#ct").textContent="/"+String(hero.length).padStart(2,"0");
+ const nx=hero[(n+1)%hero.length];$("#ni").src=IMG+"w300"+nx.backdrop_path;$("#nt").textContent=title(nx);
  dominant(i.poster_path).then(c=>root.style.setProperty("--accent",c))}
 function startHero(){$("#dots").innerHTML=hero.map((_,k)=>`<i data-k="${k}"></i>`).join("");
- document.querySelectorAll(".dots i").forEach(d=>d.onclick=()=>{clearInterval(ht);setHero(+d.dataset.k)});
+ document.querySelectorAll(".dots i").forEach(d=>d.onclick=()=>step(+d.dataset.k-hi));
  setHero(0);ht=setInterval(()=>{if(!document.hidden&&!$("#hero").hidden&&$("#modal").hidden)setHero((hi+1)%hero.length)},9000);
  let x0=0;const H=$("#hero");H.addEventListener("touchstart",e=>x0=e.touches[0].clientX,{passive:true});
- H.addEventListener("touchend",e=>{const d=e.changedTouches[0].clientX-x0;if(Math.abs(d)>50){clearInterval(ht);setHero((hi+(d<0?1:hero.length-1))%hero.length)}},{passive:true})}
+ H.addEventListener("touchend",e=>{const d=e.changedTouches[0].clientX-x0;if(Math.abs(d)>50)step(d<0?1:-1)},{passive:true})}
+const step=d=>{clearInterval(ht);setHero((hi+d+hero.length)%hero.length);ht=setInterval(()=>{if(!document.hidden&&!$("#hero").hidden&&$("#modal").hidden)setHero((hi+1)%hero.length)},9000)};
+$("#hu").onclick=()=>step(-1);$("#hd").onclick=()=>step(1);$("#nxt").onclick=()=>step(1);
 if(!M)$("#hero").addEventListener("mousemove",e=>{tx=(e.clientX/innerWidth-.5)*-30;ty=(e.clientY/innerHeight-.5)*-20;upd()});
 let tick;addEventListener("scroll",()=>{if(tick)return;tick=requestAnimationFrame(()=>{tick=0;$("#top").classList.toggle("s",scrollY>30);if(scrollY<innerHeight){py=scrollY*.25;upd()}})},{passive:true});
 // ---- Rows: lazy-loaded in parallel as you scroll ----
@@ -62,15 +66,15 @@ let RW=[];
 const L=(l,x={})=>({with_original_language:l,sort_by:"popularity.desc","vote_count.gte":30,...x}),G=g=>({with_genres:g,sort_by:"popularity.desc","vote_count.gte":150});
 const BASE=[["Trending","/trending/all/day","",null,null,1],["Popular","/movie/popular","movie"],["Top rated","/movie/top_rated","movie"],["TV trending","/trending/tv/week","tv"],
 ["Bollywood","/discover/movie","movie",L("hi"),"hi"],["Telugu","/discover/movie","movie",L("te"),"te"],["Malayalam","/discover/movie","movie",L("ml"),"ml"],["Anime","/discover/tv","tv",L("ja",{with_genres:16,"vote_count.gte":0}),"ja"],["Anime films","/discover/movie","movie",L("ja",{with_genres:16}),"ja"],
-["Top series","/tv/top_rated","tv"],["Airing today","/tv/airing_today","tv"],["Action","/discover/movie","movie",G(28)],["Horror","/discover/movie","movie",G(27)],["Sci-Fi","/discover/movie","movie",G(878)],["Crime","/discover/movie","movie",G(80)],["Docs","/discover/movie","movie",G(99)]];
+["Top series","/tv/top_rated","tv"],["Action","/discover/movie","movie",G(28)],["Horror","/discover/movie","movie",G(27)],["Sci-Fi","/discover/movie","movie",G(878)],["Crime","/discover/movie","movie",G(80)],["Docs","/discover/movie","movie",G(99)]];
 function buildRows(){const x=taste(),aff=r=>(r[4]?x.l[r[4]]||0:0)+(typeof(r[3]||{}).with_genres==="number"?x.g[r[3].with_genres]||0:0);
  const[first,...rest]=BASE;rest.sort((p,q)=>aff(q)-aff(p));const my=[],v=x.v[0],tl=topOf(x.l),tg=topOf(x.g),tt=topOf(x.t);
  if(v)my.push([`Like ${v.title.length>16?v.title.slice(0,15)+"…":v.title}`,`/${v.type}/${v.id}/recommendations`,v.type]);
  if(tl&&tl[1]>=3){const ty=tt?tt[0]:"movie";my.push(["Picked for you","/discover/"+ty,ty,L(tl[0],tg&&tg[1]>=3?{with_genres:tg[0]}:{})])}
  return[first,...my,...rest]}
-function inf(st,load,ty){let p=1,busy=0,end=0;const more=async()=>{if(busy||end)return;busy=1;
+function inf(st,load,ty,box,vert,p0){let p=p0==null?1:p0,busy=0,end=0;const sc=box||st,more=async()=>{if(busy||end)return;busy=1;
  try{const d=await load(++p);if(!d.results.length||p>=Math.min(d.total_pages||1,25))end=1;d.results.filter(i=>i.poster_path&&i.media_type!=="person").forEach(i=>st.append(card(i,ty)))}catch{end=1}busy=0};
- st.addEventListener("scroll",()=>{if(st.scrollLeft+st.clientWidth>st.scrollWidth-700)more()},{passive:true})}
+ sc.addEventListener("scroll",()=>{if(vert?sc.scrollTop+sc.clientHeight>sc.scrollHeight-700:sc.scrollLeft+sc.clientWidth>sc.scrollWidth-700)more()},{passive:true});return more}
 const io=new IntersectionObserver(es=>es.forEach(async e=>{if(!e.isIntersecting)return;io.unobserve(e.target);const[,p,ty,q,,mix]=RW[e.target.dataset.i],st=e.target.querySelector(".strip");
  try{const[d,u]=await Promise.all([api(p,q||{}),mix?api("/movie/upcoming"):0]);let it=d.results.filter(i=>i.poster_path);
   if(u){const s=u.results.filter(i=>i.poster_path&&i.release_date>day(0)).slice(0,5).map(i=>({...i,soon:1,media_type:"movie"}));it=it.flatMap((x,k)=>k%4===3&&s.length?[x,s.shift()]:[x])}
@@ -78,10 +82,10 @@ const io=new IntersectionObserver(es=>es.forEach(async e=>{if(!e.isIntersecting)
 function setup(e){$("#hero").hidden=true;$("#rows").innerHTML=e.message==="key"||e.message==="401"?`<section class="setup"><h2>Connect TMDB</h2><p>themoviedb.org → Settings → API → "API Key (v3 auth)" paste karo.</p><input id="kin" placeholder="TMDB v3 API key"><button class="btn" id="ksv">Save &amp; load</button></section>`:`<section class="setup"><h2>Can't reach TMDB</h2><p>${esc(e.message)} — network ya ISP block ho sakta hai. Private DNS (dns.google) ya VPN try karo.</p><button class="btn" id="rt">Retry</button></section>`;
  if($("#rt"))$("#rt").onclick=()=>location.reload();
  if($("#ksv"))$("#ksv").onclick=()=>{localStorage.setItem("cv_key",$("#kin").value.trim());location.reload()}}
-async function home(){try{hero=await heroItems();startHero()}catch(e){return setup(e)}
+async function home(){try{hero=await heroItems();await Promise.race([Promise.all(hero.map(logoOf)),new Promise(r=>setTimeout(r,1500))]);startHero()}catch(e){return setup(e)}
  RW=buildRows();RW.forEach((r,i)=>{const s=document.createElement("section");s.className="row";s.dataset.i=i;
-  s.innerHTML=`<div class="rh"><h2>${esc(r[0])}</h2><svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></div><div class="strip">${'<div class="card sk"></div>'.repeat(6)}</div>`;
-  s.querySelector(".rh").onclick=()=>{reset(r[0],r[1],r[2]||"",r[3]||{},false);view("browse")};$("#rows").append(s);io.observe(s)});
+  s.innerHTML=`<div class="rh"><h2>${esc(r[0])}</h2><svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></div><div class="strip">${'<div class="card sk"></div>'.repeat(6)}</div><button class="ar l" aria-label="Back"><svg viewBox="0 0 24 24"><path d="m15 5-7 7 7 7"/></svg></button><button class="ar r" aria-label="Next"><svg viewBox="0 0 24 24"><path d="m9 5 7 7-7 7"/></svg></button>`;
+  s.querySelector(".rh").onclick=()=>{reset(r[0],r[1],r[2]||"",r[3]||{},false);view("browse")};s.querySelectorAll(".ar").forEach(b=>b.onclick=()=>{const st=s.querySelector(".strip");st.scrollBy({left:(b.classList.contains("r")?1:-1)*st.clientWidth*.8,behavior:"smooth"})});$("#rows").append(s);io.observe(s)});
  const e=document.createElement("div");e.className="end";e.innerHTML='<button class="btn">Browse all films &amp; series</button>';e.firstChild.onclick=()=>go("browse");$("#rows").append(e)}
 // ---- Browse: infinite scroll grid (filters, See all, search all use this) ----
 let B={path:"",f:0,page:0,busy:0,end:0,q:{},type:""};
@@ -104,6 +108,7 @@ function view(v,np){["hero","rows"].forEach(i=>$("#"+i).hidden=v!=="home");$("#b
  document.querySelectorAll("[data-v]").forEach(b=>b.classList.toggle("on",b.dataset.v===v));scrollTo(0,0);if(v==="list")renderList();
  if(!np&&v!=="home"&&cur!==v)history.pushState({v},"");cur=v}
 async function go(v){$("#q").value="";if(v==="search"){view("home");$("#q").focus();return}
+ if(v==="movies"||v==="series"){const t=v==="movies"?"movie":"tv";document.querySelectorAll("#seg button").forEach(x=>x.classList.toggle("on",x.dataset.t===t));await fillGenres(t);filt();view("browse");return}
  if(v==="browse"&&!B.f){await fillGenres("movie");filt()}view(v)}
 document.querySelectorAll("[data-v]").forEach(a=>a.onclick=e=>{e.preventDefault();go(a.dataset.v)});
 let st;$("#q").oninput=e=>{clearTimeout(st);const q=e.target.value.trim();if(!q)return view("home");
@@ -114,7 +119,7 @@ const money=n=>n?"$"+n.toLocaleString("en-US"):"Not disclosed",fd=s=>s?new Date(
 const when=s=>{const n=Math.ceil((new Date(s)-new Date(day(0)))/864e5);return n<=0?"today":n===1?"tomorrow":`in ${n} days`};
 const stat=(l,x)=>`<div class="stat"><small>${l}</small><strong>${x}</strong></div>`;let tok=0;
 function cat(d,t){const g=(d.genres||[]).map(x=>x.id),an=d.original_language==="ja"&&g.includes(16);return t==="tv"?(an?"Anime":g.includes(16)?"Animation":"Series"):g.includes(99)?"Documentary":an?"Anime film":g.includes(16)?"Animation":"Film"}
-async function episodes(d,sn){const el=$("#pn"),ss=(d.seasons||[]).filter(s=>s.season_number>0),nx=d.next_episode_to_air;
+async function episodes(d,sn){const el=$("#epw"),ss=(d.seasons||[]).filter(s=>s.season_number>0),nx=d.next_episode_to_air;
  if(!ss.length){el.innerHTML='<p class="empty">No episode data yet.</p>';return}
  sn=sn||(ss.find(s=>nx&&s.season_number===nx.season_number)||ss[ss.length-1]).season_number;
  el.innerHTML=`<div class="eh"><select id="ssn">${ss.map(s=>`<option value="${s.season_number}"${s.season_number===sn?" selected":""}>Season ${s.season_number}</option>`).join("")}</select><span>${d.number_of_episodes||""} episodes</span></div>${nx?`<p class="nx">Episode ${nx.episode_number} releases ${when(nx.air_date)} · ${fd(nx.air_date)}</p>`:""}<div id="eps"><p class="empty">Loading…</p></div>`;
@@ -122,38 +127,61 @@ async function episodes(d,sn){const el=$("#pn"),ss=(d.seasons||[]).filter(s=>s.s
  try{const s=await api(`/tv/${d.id}/season/${sn}`),n=day(0);
   $("#eps").innerHTML=s.episodes.map(e=>{const up=!e.air_date||e.air_date>n;return`<div class="ep"><div class="eh2"><b>${e.episode_number}</b><span>${esc(e.name)}</span>${up?'<em class="up">UPCOMING</em>':e.vote_average?`<em>${STAR}${e.vote_average.toFixed(1)}</em>`:""}</div><div class="ed">${fd(e.air_date)}${e.runtime?" · "+e.runtime+" min":""}${up?"":`<p>${esc(e.overview)}</p>`}</div></div>`}).join("")||'<p class="empty">No episodes listed.</p>';
   $("#eps").onclick=e=>{const r=e.target.closest(".ep");if(r)r.classList.toggle("open")}}catch{$("#eps").innerHTML='<p class="empty">Could not load episodes.</p>'}}
-function show(p,d,t,m){const el=$("#pn");
- if(p==="ov"){const run=d.runtime?d.runtime+" min":"";el.innerHTML=`<div class="stats">${stat("Rating",(d.vote_average||0).toFixed(1)+"/10")}${stat("Votes",(d.vote_count||0).toLocaleString())}${t==="movie"?stat("Budget",money(d.budget))+stat("Box office",money(d.revenue)):stat("Seasons",d.number_of_seasons||"—")+stat("Episodes",d.number_of_episodes||"—")}${run?stat("Runtime",run):""}</div><p class="ovt">${esc(d.overview||"No overview yet.")}</p><button class="all" id="rm">Read more</button><div class="acts" id="acts"></div>`;
-  $("#rm").onclick=e=>{const o=$(".ovt").classList.toggle("open");e.target.textContent=o?"Less":"Read more"};acts(m)}
- else if(p==="ca")el.innerHTML='<div class="strip cast">'+(d.credits.cast.slice(0,20).map(c=>`<div>${c.profile_path?`<img loading="lazy" decoding="async" src="${IMG}w185${c.profile_path}" alt="">`:"<i></i>"}<b>${esc(c.name)}</b><small>${esc(c.character||"")}</small></div>`).join("")||'<p class="empty">No cast listed.</p>')+"</div>";
- else if(p==="ep")episodes(d);
- else{el.innerHTML='<div class="strip" id="rec"></div>';const st=$("#rec");[...d.recommendations.results,...d.similar.results].filter((x,i,r)=>x.poster_path&&r.findIndex(y=>y.id===x.id)===i).slice(0,20).forEach(x=>st.append(card(x,t)));
-  if(!st.children.length)el.innerHTML='<p class="empty">Nothing similar yet.</p>';else inf(st,n=>api(`/${t}/${d.id}/recommendations`,{page:n}),t)}}
-async function openDetail(t,id){if($("#modal").hidden){history.pushState({m:1},"");$("#modal").hidden=false;document.body.style.overflow="hidden"}
+const pick=l=>{l=(l||[]).filter(x=>x.file_path);const x=l.filter(y=>y.iso_639_1==="en").sort((p,q)=>q.vote_average-p.vote_average)[0]||l.sort((p,q)=>q.vote_average-p.vote_average)[0];return x?IMG+(x.file_path.endsWith(".svg")?"original":"w500")+x.file_path:""};
+const lgc={};async function logoOf(i){const t=kind(i),k=t+i.id;if(k in lgc)return lgc[k];try{lgc[k]=pick((await api(`/${t}/${i.id}/images`,{include_image_language:"en,null"})).logos)}catch{lgc[k]=""}return lgc[k]}
+const RG=["IN","US","GB","CA","AU","DE","FR","JP","KR","BR"];let REG=localStorage.getItem("cv_reg")||((navigator.language||"").split("-")[1]||"IN").toUpperCase();if(!RG.includes(REG))RG.unshift(REG);
+function prov(d){const el=$("#wp");if(!el)return;const r=((d["watch/providers"]||{}).results||{})[REG],M={};
+ [["flatrate","Subscription"],["rent","Rent"],["buy","Buy"],["ads","Free with ads"],["free","Free"]].forEach(([k,l])=>((r||{})[k]||[]).forEach(p=>{(M[p.provider_id]=M[p.provider_id]||{p,t:[]}).t.push(l)}));const list=Object.values(M);
+ el.innerHTML=`<div class="eh"><h3>Where to watch</h3><select id="rg">${RG.map(c=>`<option${c===REG?" selected":""}>${c}</option>`).join("")}</select></div>`+(list.length?`<div class="wps">${list.map(x=>`<a class="wp" target="_blank" rel="noopener" href="${esc(r.link)}"><img alt="" loading="lazy" src="${IMG}w92${x.p.logo_path}"><div><b>${esc(x.p.provider_name)}</b><small>${x.t.join(" · ")}</small></div></a>`).join("")}</div><small class="jw">Streaming data by JustWatch</small>`:`<p class="empty" style="padding:6px 0">Not listed on major platforms in ${REG} yet.</p>`);
+ $("#rg").onchange=e=>{REG=e.target.value;localStorage.setItem("cv_reg",REG);prov(d)}}
+let CUR={};
+async function openDetail(t,id){$("#simp").hidden=$("#sheet").hidden=true;if($("#modal").hidden){history.pushState({m:1},"");$("#modal").hidden=false;document.body.style.overflow="hidden"}
  const my=++tok;$("#modal").scrollTop=0;$("#mc").innerHTML='<div class="tr"></div><p class="empty">Loading…</p>';
- try{const d=await api(`/${t}/${id}`,{append_to_response:"videos,credits,recommendations,similar"});if(my!==tok)return;
+ try{const d=await api(`/${t}/${id}`,{append_to_response:"videos,credits,recommendations,similar,images,watch/providers",include_image_language:"en,null"});if(my!==tok)return;
  const vs=d.videos.results.filter(x=>x.site==="YouTube"),v=vs.find(x=>x.type==="Trailer")||vs.find(x=>x.type==="Teaser")||vs[0],nx=d.next_episode_to_air;
  const stt=t==="tv"?(nx?`Ongoing · next ep ${when(nx.air_date)}`:/Ended|Canceled/.test(d.status)?"Ended":"Returning"):(!d.release_date?"Upcoming":d.release_date>day(0)?`Releases ${fd(d.release_date)}`:"Released");
- const m={id,type:t,title:title(d),poster:d.poster_path,lang:d.original_language,genres:(d.genres||[]).map(g=>g.id)};learn(m,1);
- $("#mc").innerHTML=`<div class="tr" style="background-image:url(${d.backdrop_path?IMG+"w780"+d.backdrop_path:""})">${v?'<button class="btn play" id="pl">Play trailer</button>':'<p class="notr">No trailer available</p>'}</div>
- <div class="mi"><div class="chips"><i class="c1">${cat(d,t)}</i><i>${(d.release_date||d.first_air_date||"").slice(0,4)||"TBA"}</i><i>${STAR}${(d.vote_average||0).toFixed(1)}</i><i>${stt}</i></div>
- <h2>${esc(title(d))}</h2><p class="tag">${esc(d.tagline||(d.genres||[]).map(g=>g.name).join(" · "))}</p>
- <div class="tabs mt" id="mt"><button class="on" data-p="ov">Overview</button><button data-p="ca">Cast</button>${t==="tv"?'<button data-p="ep">Episodes</button>':""}<button data-p="mo">More like this</button></div><div id="pn"></div></div>`;
- if(v)$("#pl").onclick=()=>{$(".tr").innerHTML=`<iframe src="https://www.youtube.com/embed/${v.key}?autoplay=1&rel=0&playsinline=1" referrerpolicy="strict-origin-when-cross-origin" allow="autoplay;fullscreen;picture-in-picture" allowfullscreen></iframe>`};
- $("#mt").onclick=e=>{const b=e.target.closest("button");if(!b)return;document.querySelectorAll("#mt button").forEach(x=>x.classList.toggle("on",x===b));show(b.dataset.p,d,t,m)};
- show("ov",d,t,m);if(d.poster_path)dominant(d.poster_path).then(c=>root.style.setProperty("--accent",c));
+ const m={id,type:t,title:title(d),poster:d.poster_path,lang:d.original_language,genres:(d.genres||[]).map(g=>g.id)};learn(m,1);CUR={d,t,m};
+ const cast=d.credits.cast.slice(0,20).map(c=>`<div>${c.profile_path?`<img loading="lazy" decoding="async" src="${IMG}w185${c.profile_path}" alt="">`:"<i></i>"}<b>${esc(c.name)}</b><small>${esc(c.character||"")}</small></div>`).join("");
+ const run=d.runtime?d.runtime+" min":"",bk=d.backdrop_path?IMG+(innerWidth>900?"w1280":"w780")+d.backdrop_path:"",lg=pick(d.images&&d.images.logos);
+ $("#mc").innerHTML=`<div class="tr" style="background-image:url(${bk})"><div class="tc">${lg?`<img class="tlg" src="${lg}" alt="">`:""}${v?'<button class="btn play" id="pl">Play trailer</button>':'<p class="notr">No trailer available</p>'}</div></div>
+ <div class="mi"><div class="mw"><img class="dp" alt="" src="${d.poster_path?IMG+"w342"+d.poster_path:""}"><div class="mx">
+ <div class="chips"><i class="c1">${cat(d,t)}</i><i>${(d.release_date||d.first_air_date||"").slice(0,4)||"TBA"}</i><i>${STAR}${(d.vote_average||0).toFixed(1)}</i><i>${stt}</i></div>
+ <h2${lg?' class="sr"':""}>${esc(title(d))}</h2><p class="tag">${esc(d.tagline||"")}</p>
+ <div class="act"><button class="pill" id="bkm">${BM}<span>Add to list</span></button></div>
+ <p class="ovt">${esc(d.overview||"No overview yet.")}</p><button class="all" id="rm">Read more</button>
+ ${cast?`<h3>Cast</h3><div class="strip cast">${cast}</div>`:""}
+ <div class="chips g">${(d.genres||[]).map(g=>`<i>${esc(g.name)}</i>`).join("")}</div>
+ <div class="stats">${stat("Rating",(d.vote_average||0).toFixed(1)+"/10")}${stat("Votes",(d.vote_count||0).toLocaleString())}${t==="movie"?stat("Budget",money(d.budget))+stat("Box office",money(d.revenue)):stat("Seasons",d.number_of_seasons||"—")+stat("Episodes",d.number_of_episodes||"—")}${run?stat("Runtime",run):""}</div>
+ <div id="wp"></div>${t==="tv"?'<h3>Episodes</h3><div id="epw"></div>':""}<h3>More like this</h3><div class="strip" id="rec"></div></div></div></div>`;
+ if(v)$("#pl").onclick=()=>{$(".tr").classList.add("pl");$(".tr").innerHTML=`<iframe src="https://www.youtube.com/embed/${v.key}?autoplay=1&rel=0&playsinline=1" referrerpolicy="strict-origin-when-cross-origin" allow="autoplay;fullscreen;picture-in-picture" allowfullscreen></iframe>`};
+ $("#rm").onclick=e=>{const o=$(".ovt").classList.toggle("open");e.target.textContent=o?"Less":"Read more"};$("#bkm").onclick=openSheet;
+ const st=$("#rec");[...d.recommendations.results,...d.similar.results].filter((x,i,r)=>x.poster_path&&r.findIndex(y=>y.id===x.id)===i).slice(0,20).forEach(x=>st.append(card(x,t)));
+ if(st.children.length)inf(st,n=>api(`/${t}/${id}/recommendations`,{page:n}),t);else st.previousElementSibling.remove(),st.remove();
+ prov(d);const tb=$(".tb");tb.classList.remove("s");tb.style.setProperty("--bk",bk?`url(${bk})`:"none");if(lg)$("#tl").src=lg;else $("#tl").removeAttribute("src");$("#tt").textContent=lg?"":title(d);if(t==="tv")episodes(d);syncTb();if(d.poster_path)dominant(d.poster_path).then(c=>root.style.setProperty("--accent",c));
  }catch(e){if(my===tok)$("#mc").innerHTML='<p class="empty">Could not load details.</p>'}}
-function acts(m){const k=m.type+m.id,e=store.get()[k]||{};const b=(txt,on,fn)=>{const x=document.createElement("button");x.textContent=txt;x.className=on?"on":"";x.onclick=()=>{const l=store.get(),c=l[k]||{...m};fn(c);l[k]=c;store.set(l);if(c.status||c.fav||c.sub)learn(m,3);acts(m)};$("#acts").append(x)};
- $("#acts").innerHTML="";STATUS.forEach(s=>b(s,e.status===s,c=>c.status=c.status===s?"":s));b("Favourite",e.fav,c=>c.fav=!c.fav);b("Subscribed",e.sub,c=>c.sub=!c.sub)}
-function hideModal(){tok++;$("#modal").hidden=true;$("#mc").innerHTML="";document.body.style.overflow="";if(!$("#list").hidden)renderList()}
+const BM='<svg viewBox="0 0 24 24"><path d="M6 3h12v18l-6-4.5L6 21z"/></svg>',CHK='<svg viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg>',FOLDER='<svg viewBox="0 0 24 24"><path d="M3 18.5V6a2 2 0 0 1 2-2h4l2 2h7a2 2 0 0 1 2 2v2"/><path d="M5 20h13.6a2 2 0 0 0 1.9-1.4l1.5-5.6a1 1 0 0 0-1-1.2H8a2 2 0 0 0-1.9 1.4z"/></svg>';
+const getE=()=>store.get()[CUR.m.type+CUR.m.id]||{};
+function upd2(fn){const m=CUR.m,k=m.type+m.id,l=store.get(),c=l[k]||{...m};fn(c);l[k]=c;store.set(l);if(c.status||c.fav||c.sub)learn(m,3);syncTb()}
+function syncTb(){const e=getE();$("#hr").classList.toggle("on",!!e.fav);$("#bl").classList.toggle("on",!!e.sub);const b=$("#bkm");if(b){b.querySelector("span").textContent=e.status||"Add to list";b.classList.toggle("on",!!e.status)}}
+function openSheet(){const cur=getE().status||"";$("#sopts").innerHTML=[...STATUS,"None"].map(s=>{const on=s==="None"?!cur:s===cur;return`<button data-s="${s}" class="${on?"on":""}"><span>${s}</span>${on?CHK:""}</button>`}).join("");$("#sheet").hidden=false}
+$("#sopts").onclick=e=>{const b=e.target.closest("button");if(!b)return;upd2(c=>c.status=b.dataset.s==="None"?"":b.dataset.s);$("#sheet").hidden=true};
+$("#sheet").onclick=e=>{if(e.target.id==="sheet")$("#sheet").hidden=true};
+$("#hr").onclick=()=>upd2(c=>c.fav=!c.fav);$("#bl").onclick=()=>upd2(c=>c.sub=!c.sub);
+$("#sh").onclick=()=>{const x={title:CUR.m.title+" on CineVault",url:location.origin};navigator.share?navigator.share(x).catch(()=>{}):navigator.clipboard&&navigator.clipboard.writeText(x.url)};
+$("#sm").onclick=()=>{const m=CUR.m;$("#simp").innerHTML='<div class="pnl"><div class="ph"><h4>Similar</h4><button class="pill" id="spx">Close</button></div><div class="pb"><div class="grid" id="sgrid"></div></div></div>';
+ $("#spx").onclick=()=>$("#simp").hidden=true;$("#simp").hidden=false;
+ inf($("#sgrid"),async n=>{const r=await api(`/${m.type}/${m.id}/recommendations`,{page:n});return r.results.length||n>1?r:api(`/${m.type}/${m.id}/similar`,{page:n})},m.type,$("#simp .pb"),1,0)()};
+$("#simp").onclick=e=>{if(e.target.id==="simp")$("#simp").hidden=true};
+function hideModal(){tok++;$("#simp").hidden=$("#sheet").hidden=true;$("#modal").hidden=true;$("#mc").innerHTML="";document.body.style.overflow="";if(!$("#list").hidden)renderList()}
 const close=()=>history.state&&history.state.m?history.back():hideModal();
-$("#mx").onclick=close;$("#modal").onclick=e=>{if(e.target.id==="modal")close()};addEventListener("keydown",e=>e.key==="Escape"&&!$("#modal").hidden&&close());
+$("#mx").onclick=close;$("#modal").onclick=e=>{if(e.target.id==="modal")close()};addEventListener("keydown",e=>{if(e.key!=="Escape")return;if(!$("#sheet").hidden||!$("#simp").hidden){$("#sheet").hidden=$("#simp").hidden=true}else if(!$("#modal").hidden)close()});
 // ---- My list ----
 let tab="Watching";
-function renderList(){const T=[...STATUS,"Favourites","Subscribed"];$("#tabs").innerHTML="";
- T.forEach(n=>{const b=document.createElement("button");b.textContent=n;b.className=n===tab?"on":"";b.onclick=()=>{tab=n;renderList()};$("#tabs").append(b)});
- const items=Object.values(store.get()).filter(i=>tab==="Favourites"?i.fav:tab==="Subscribed"?i.sub:i.status===tab);
- $("#lgrid").innerHTML=items.length?"":'<p class="empty">Nothing here yet. Open any title and add it to this list.</p>';
+function renderList(){const all=Object.values(store.get()),T=[...STATUS,"Favourites","Subscribed"],f=(n,i)=>n==="Favourites"?i.fav:n==="Subscribed"?i.sub:i.status===n;
+ $("#tabs").innerHTML="";T.forEach(n=>{const c=all.filter(i=>f(n,i)).length,b=document.createElement("button");b.className=n===tab?"on":"";b.innerHTML=`${n}<small>${c||""}</small>`;b.onclick=()=>{tab=n;renderList()};$("#tabs").append(b)});
+ const items=all.filter(i=>f(tab,i));$("#lgrid").innerHTML=items.length?"":`<div class="void">${FOLDER}<p>${tab} is empty</p><span>Open any title and tap the bookmark to save it here.</span></div>`;
  items.forEach(i=>$("#lgrid").append(card({id:i.id,title:i.title,poster_path:i.poster,vote_average:0},i.type)))}
 $("#rst").onclick=()=>{localStorage.removeItem(TK);alert("Personalisation reset")};
+$("#modal").addEventListener("scroll",()=>{const r=$(".tr");$(".tb").classList.toggle("s",$("#modal").scrollTop>(r?r.offsetHeight*.55:150))},{passive:true});
+const it=$("#intro");if(it){if(sessionStorage.getItem("cv_i"))it.remove();else{sessionStorage.setItem("cv_i","1");setTimeout(()=>it.remove(),2700)}}
 home();
