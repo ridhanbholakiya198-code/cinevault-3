@@ -1,0 +1,99 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "User profile document storing terms acceptance state and metadata",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "The unique Firebase Auth UID of the user"
+        },
+        "termsV": {
+          "type": "string",
+          "description": "Version of terms of service accepted"
+        },
+        "privacyV": {
+          "type": "string",
+          "description": "Version of privacy policy accepted"
+        },
+        "acceptedAt": {
+          "type": "string",
+          "description": "Timestamp string of terms acceptance"
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Account creation timestamp"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "Last update timestamp"
+        }
+      },
+      "required": ["userId"]
+    },
+    "WatchlistItem": {
+      "title": "WatchlistItem",
+      "description": "User watchlist item for movies and television series",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique movie or show ID (numeric or string)"
+        },
+        "type": {
+          "type": "string",
+          "description": "Media type (movie or tv)",
+          "enum": ["movie", "tv"]
+        },
+        "title": {
+          "type": "string",
+          "description": "Title of the film or TV show",
+          "maxLength": 300
+        },
+        "poster": {
+          "type": "string",
+          "description": "Poster path or URL",
+          "maxLength": 300
+        },
+        "lang": {
+          "type": "string",
+          "description": "Original language code",
+          "maxLength": 10
+        },
+        "genres": {
+          "type": "array",
+          "description": "List of genre names"
+        },
+        "status": {
+          "type": "string",
+          "description": "Watch status",
+          "enum": ["", "Watching", "Completed", "On-Hold", "Dropped", "Plan to Watch"]
+        },
+        "fav": {
+          "type": "boolean",
+          "description": "Marked as favourite"
+        },
+        "sub": {
+          "type": "boolean",
+          "description": "Subscribed for release updates"
+        },
+        "u": {
+          "type": "number",
+          "description": "Client update epoch timestamp for cloud sync conflict resolution"
+        }
+      },
+      "required": ["id", "type", "title", "status"]
+    }
+  },
+  "firestore": {
+    "/users/{uid}": {
+      "schema": "UserProfile",
+      "description": "User profile document with terms acceptance and timestamps"
+    },
+    "/users/{uid}/list/{key}": {
+      "schema": "WatchlistItem",
+      "description": "User personal watchlist items"
+    }
+  }
+}

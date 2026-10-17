@@ -1,0 +1,6 @@
+{
+  "name": "CineVault",
+  "description": "Explore films and series in their own colour with TMDB exploration, personal watchlists, and Firebase cloud sync.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
