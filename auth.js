@@ -1,4 +1,3 @@
-// build: v4-debug
 // CineVault — optional login, cloud sync, account menu, legal sheets.
 // Loads as an ES module AFTER app.js. The app works 100% without it (guest mode).
 // Firebase SDK is loaded lazily (only for returning users, or when someone opens sign-in) to keep first load fast.
@@ -57,7 +56,7 @@ function ensureFb() {
     fb = { au, fs };
     au.onAuthStateChanged(auth, onUser);
     return fb;
-  })().catch(e => { fbp = null; fbErr = e; try { window.cvDbg && cvDbg.err("firebase-load", e) } catch { } throw e });
+  })().catch(e => { fbp = null; fbErr = e; throw e });
   return fbp;
 }
 
@@ -196,7 +195,6 @@ function listNote() {
 const FIRST = u => ((u && (u.displayName || u.email)) || "").split(/[ @]/)[0];
 function errText(e) {
   const c = (e && e.code) || "";
-  try { window.cvDbg && cvDbg.err("auth-error", e) } catch { }
   return ({
     "auth/invalid-credential": "Wrong email or password.", "auth/wrong-password": "Wrong email or password.", "auth/user-not-found": "Wrong email or password.",
     "auth/invalid-email": "That email address doesn’t look right.", "auth/email-already-in-use": "An account with this email already exists. Try signing in.",
