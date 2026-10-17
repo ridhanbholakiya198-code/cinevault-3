@@ -64,19 +64,33 @@ let tick;addEventListener("scroll",()=>{if(tick)return;tick=requestAnimationFram
 // ---- Rows: lazy-loaded in parallel as you scroll ----
 let RW=[];
 const L=(l,x={})=>({with_original_language:l,sort_by:"popularity.desc","vote_count.gte":30,...x}),G=g=>({with_genres:g,sort_by:"popularity.desc","vote_count.gte":150});
-const BASE=[["Trending","/trending/all/day","",null,null,1],["Popular","/movie/popular","movie"],["Top rated","/movie/top_rated","movie"],["TV trending","/trending/tv/week","tv"],
-["Bollywood","/discover/movie","movie",L("hi"),"hi"],["Telugu","/discover/movie","movie",L("te"),"te"],["Malayalam","/discover/movie","movie",L("ml"),"ml"],["Anime","/discover/tv","tv",L("ja",{with_genres:16,"vote_count.gte":0}),"ja"],["Anime films","/discover/movie","movie",L("ja",{with_genres:16}),"ja"],
-["Top series","/tv/top_rated","tv"],["Action","/discover/movie","movie",G(28)],["Horror","/discover/movie","movie",G(27)],["Sci-Fi","/discover/movie","movie",G(878)],["Crime","/discover/movie","movie",G(80)],["Docs","/discover/movie","movie",G(99)]];
-function buildRows(){const x=taste(),aff=r=>(r[4]?x.l[r[4]]||0:0)+(typeof(r[3]||{}).with_genres==="number"?x.g[r[3].with_genres]||0:0);
- const[first,...rest]=BASE;rest.sort((p,q)=>aff(q)-aff(p));const my=[],v=x.v[0],tl=topOf(x.l),tg=topOf(x.g),tt=topOf(x.t);
- if(v)my.push([`Like ${v.title.length>16?v.title.slice(0,15)+"…":v.title}`,`/${v.type}/${v.id}/recommendations`,v.type]);
+const NET=n=>({with_networks:n,sort_by:"popularity.desc","vote_count.gte":50}),ANI={with_original_language:"ja",with_genres:16};
+// Childhood nostalgia: exactly these shows (classic versions), resolved to TMDB by title+year. [search text, type, first-air year]
+const CHILD=[["Doraemon","tv",1979],["Crayon Shin-chan","tv",1992],["Ninja Hattori-kun","tv",1981],["Pokémon","tv",1997],["Oggy and the Cockroaches","tv",1998],["Ben 10","tv",2005],
+["Ultimate Spider-Man","tv",2012],["Avengers: Secret Wars","tv",2014],["Guardians of the Galaxy","tv",2015],["Hulk and the Agents of S.M.A.S.H.","tv",2013],["Courage the Cowardly Dog","tv",1999],
+["Kid vs. Kat","tv",2008],["Tom and Jerry","tv",1975],["Horrid Henry","tv",2006],["Takeshi's Castle","tv",1986],["Mr. Bean","tv",1990]];
+// Fixed order, as requested. [title, TMDB path, type, query, lang (for taste), mix upcoming, fixed title list]
+const BASE=[["Trending","/trending/all/day","",null,null,1],
+["Popular films","/movie/popular","movie"],["Popular TV shows","/tv/popular","tv"],
+["Netflix","/discover/tv","tv",NET(213)],["Amazon","/discover/tv","tv",NET(1024)],["HBO","/discover/tv","tv",NET(49)],["Disney+","/discover/tv","tv",NET(2739)],
+["Anime movies","/discover/movie","movie",L("ja",{with_genres:16})],["Childhood","","","",null,0,CHILD],
+["Airing today: anime","/discover/tv","tv",{...ANI,"air_date.gte":day(0),"air_date.lte":day(0),sort_by:"popularity.desc"}],["Airing today: TV shows","/tv/airing_today","tv"],
+["Top rated TV shows","/tv/top_rated","tv"],["Top rated movies","/movie/top_rated","movie"],
+["Sci-Fi","/discover/movie","movie",G(878)],["Horror","/discover/movie","movie",G(27)],["Action","/discover/movie","movie",G(28)],
+["Bollywood","/discover/movie","movie",L("hi"),"hi"],["Telugu","/discover/movie","movie",L("te"),"te"],["Malayalam","/discover/movie","movie",L("ml"),"ml"],["Documentary","/discover/movie","movie",G(99)]];
+// "Picked for you" sits right after Trending, "Like <last title>" stays as before
+function buildRows(){const x=taste(),[first,...rest]=BASE,my=[],v=x.v[0],tl=topOf(x.l),tg=topOf(x.g),tt=topOf(x.t);
  if(tl&&tl[1]>=3){const ty=tt?tt[0]:"movie";my.push(["Picked for you","/discover/"+ty,ty,L(tl[0],tg&&tg[1]>=3?{with_genres:tg[0]}:{})])}
+ if(v)my.push([`Like ${v.title.length>16?v.title.slice(0,15)+"…":v.title}`,`/${v.type}/${v.id}/recommendations`,v.type]);
  return[first,...my,...rest]}
+// Resolve a fixed title list to cards (cached by api()); skips anything TMDB can't find
+async function named(list){const r=await Promise.all(list.map(async([q,t,y])=>{try{let d=await api("/search/"+t,{query:q,...(y?{first_air_date_year:y}:{})});if(!d.results.length&&y)d=await api("/search/"+t,{query:q});const i=d.results.find(z=>z.poster_path);return i?{...i,media_type:t}:null}catch{return null}}));return r.filter(Boolean)}
 function inf(st,load,ty,box,vert,p0){let p=p0==null?1:p0,busy=0,end=0;const sc=box||st,more=async()=>{if(busy||end)return;busy=1;
  try{const d=await load(++p);if(!d.results.length||p>=Math.min(d.total_pages||1,25))end=1;d.results.filter(i=>i.poster_path&&i.media_type!=="person").forEach(i=>st.append(card(i,ty)))}catch{end=1}busy=0};
  sc.addEventListener("scroll",()=>{if(vert?sc.scrollTop+sc.clientHeight>sc.scrollHeight-700:sc.scrollLeft+sc.clientWidth>sc.scrollWidth-700)more()},{passive:true});return more}
-const io=new IntersectionObserver(es=>es.forEach(async e=>{if(!e.isIntersecting)return;io.unobserve(e.target);const[,p,ty,q,,mix]=RW[e.target.dataset.i],st=e.target.querySelector(".strip");
- try{const[d,u]=await Promise.all([api(p,q||{}),mix?api("/movie/upcoming"):0]);let it=d.results.filter(i=>i.poster_path);
+const io=new IntersectionObserver(es=>es.forEach(async e=>{if(!e.isIntersecting)return;io.unobserve(e.target);const[,p,ty,q,,mix,nm]=RW[e.target.dataset.i],st=e.target.querySelector(".strip");
+ try{if(nm){const it=await named(nm);st.innerHTML="";if(!it.length)return e.target.remove();it.forEach(i=>st.append(card(i,"")));return}
+  const[d,u]=await Promise.all([api(p,q||{}),mix?api("/movie/upcoming"):0]);let it=d.results.filter(i=>i.poster_path);if(!it.length&&!u)return e.target.remove();
   if(u){const s=u.results.filter(i=>i.poster_path&&i.release_date>day(0)).slice(0,5).map(i=>({...i,soon:1,media_type:"movie"}));it=it.flatMap((x,k)=>k%4===3&&s.length?[x,s.shift()]:[x])}
   st.innerHTML="";it.forEach(i=>st.append(card(i,ty)));inf(st,n=>api(p,{...(q||{}),page:n}),ty)}catch{}}),{rootMargin:"800px 0px"});
 function setup(e){$("#hx").hidden=true;$("#rows").innerHTML=e.message==="key"||e.message==="401"?`<section class="setup"><h2>Connect TMDB</h2><p>themoviedb.org → Settings → API → "API Key (v3 auth)" paste karo.</p><input id="kin" placeholder="TMDB v3 API key"><button class="btn" id="ksv">Save &amp; load</button></section>`:`<section class="setup"><h2>Can't reach TMDB</h2><p>${esc(e.message)} — network ya ISP block ho sakta hai. Private DNS (dns.google) ya VPN try karo.</p><button class="btn" id="rt">Retry</button></section>`;
@@ -85,7 +99,7 @@ function setup(e){$("#hx").hidden=true;$("#rows").innerHTML=e.message==="key"||e
 async function home(){window.cvDbg&&cvDbg.log("home","start");try{hero=await heroItems();await Promise.race([Promise.all(hero.map(logoOf)),new Promise(r=>setTimeout(r,1500))]);startHero();window.cvDbg&&cvDbg.log("hero","ok "+hero.length+" items")}catch(e){window.cvDbg&&cvDbg.err("home-fail",e);return setup(e)}
  RW=buildRows();RW.forEach((r,i)=>{const s=document.createElement("section");s.className="row";s.dataset.i=i;
   s.innerHTML=`<div class="rh"><h2>${esc(r[0])}</h2><svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></div><div class="strip">${'<div class="card sk"></div>'.repeat(6)}</div><button class="ar l" aria-label="Back"><svg viewBox="0 0 24 24"><path d="m15 5-7 7 7 7"/></svg></button><button class="ar r" aria-label="Next"><svg viewBox="0 0 24 24"><path d="m9 5 7 7-7 7"/></svg></button>`;
-  s.querySelector(".rh").onclick=()=>{reset(r[0],r[1],r[2]||"",r[3]||{},false);view("browse")};s.querySelectorAll(".ar").forEach(b=>b.onclick=()=>{const st=s.querySelector(".strip");st.scrollBy({left:(b.classList.contains("r")?1:-1)*st.clientWidth*.8,behavior:"smooth"})});$("#rows").append(s);io.observe(s)});
+  s.querySelector(".rh").onclick=async()=>{if(r[6]){B={path:"",type:"",q:{},f:0,page:1,busy:0,end:1};$("#btitle").textContent=r[0];$("#bar").hidden=true;$("#bgrid").innerHTML="";(await named(r[6])).forEach(i=>$("#bgrid").append(card(i,"")));view("browse");return}reset(r[0],r[1],r[2]||"",r[3]||{},false);view("browse")};s.querySelectorAll(".ar").forEach(b=>b.onclick=()=>{const st=s.querySelector(".strip");st.scrollBy({left:(b.classList.contains("r")?1:-1)*st.clientWidth*.8,behavior:"smooth"})});$("#rows").append(s);io.observe(s)});
  const e=document.createElement("div");e.className="end";e.innerHTML='<button class="btn">Browse all films &amp; series</button>';e.firstChild.onclick=()=>go("browse");$("#rows").append(e)}
 // ---- Browse: infinite scroll grid (filters, See all, search all use this) ----
 let B={path:"",f:0,page:0,busy:0,end:0,q:{},type:""};
