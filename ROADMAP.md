@@ -62,3 +62,8 @@
 ## PART 1.9 — DONE
 - Wide backdrop + title logo (TMDB images) on detail and home hero; sticky top bar turns into backdrop+logo after scroll
 - "Where to watch": official platforms per region (JustWatch via TMDB): Subscription / Rent / Buy / Free, region selector
+
+## PART 2.1 — DONE (fix pass)
+- Home hero rebuilt from scratch with new class names (no old override conflicts); same layout logic for phone + desktop
+- Detail: full-screen on phone, fixed side padding, blank "similar" button removed, new Add-to-list button + status sheet with icons and toast
+- Pinch-zoom disabled so layout can't shift sideways

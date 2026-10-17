@@ -37,30 +37,30 @@ function learn(m,w){const x=taste();if(m.lang)x.l[m.lang]=(x.l[m.lang]||0)+w;(m.
 function saveQ(q){const x=taste();x.s=[q,...x.s.filter(y=>y!==q)].slice(0,10);putT(x)}
 // ---- Hero: hit films currently in cinemas (random), nudged by taste. Phone = floating poster over blurred backdrop ----
 let hero=[],hi=0,ht,tx=0,ty=0,py=0;
-const upd=()=>$("#bd").style.transform=`translate3d(${tx}px,${py+ty}px,0)`,day=n=>new Date(Date.now()-n*864e5).toISOString().slice(0,10);
+const upd=()=>$("#hbg").style.transform=`translate3d(${tx}px,${py+ty}px,0)`,day=n=>new Date(Date.now()-n*864e5).toISOString().slice(0,10);
 async function heroItems(){const tl=topOf(taste().l),mine=tl&&tl[0]!=="en"&&tl[1]>=3?tl[0]:"";
  const win=n=>({sort_by:"popularity.desc","primary_release_date.gte":day(n),"primary_release_date.lte":day(0),"vote_count.gte":40,"vote_average.gte":6});
  const[a,b]=await Promise.all([api("/discover/movie",win(60)),mine?api("/discover/movie",{...win(150),with_original_language:mine}):{results:[]}]);
  const ok=i=>i.backdrop_path&&i.poster_path,sh=r=>r.filter(ok).slice(0,10).sort(()=>Math.random()-.5);
  let h=[...sh(b.results).slice(0,2),...sh(a.results)].filter((x,i,r)=>r.findIndex(y=>y.id===x.id)===i).slice(0,6);
  if(h.length>=3)h.forEach(i=>{i.media_type="movie";i.cin=1});else h=(await api("/trending/all/week")).results.filter(ok).slice(0,6);return h}
-async function setHero(n){hi=n;const i=hero[n];$("#bd").style.backgroundImage=`url(${IMG}${M?"w780":"w1280"}${M?i.poster_path:i.backdrop_path})`;
- ["#bd",".hc"].forEach(s=>{const e=$(s);e.style.animation="none";void e.offsetWidth;e.style.animation=""});
+async function setHero(n){hi=n;const i=hero[n];$("#hbg").style.backgroundImage=`url(${IMG}${M?"w780":"w1280"}${M?i.poster_path:i.backdrop_path})`;
+ ["#hbg",".hcont"].forEach(s=>{const e=$(s);e.style.animation="none";void e.offsetWidth;e.style.animation=""});
  $("#hmeta").innerHTML=`${i.cin?'<i class="live"></i>In cinemas':kind(i)==="tv"?"Series":"Film"} · ${(i.vote_average||0).toFixed(1)} · ${(i.release_date||i.first_air_date||"").slice(0,4)}`;
- {const l=lgc[kind(i)+i.id];$("#htitle").innerHTML=l?`<img class="hl" alt="${esc(title(i))}" src="${l}">`:esc(title(i))}$("#hov").textContent=i.overview;$("#hopen").onclick=()=>openDetail(kind(i),i.id);
- document.querySelectorAll(".dots i").forEach((d,k)=>d.classList.toggle("on",k===n));
+ {const l=lgc[kind(i)+i.id];$("#htitle").innerHTML=l?`<img class="htl" alt="${esc(title(i))}" src="${l}">`:esc(title(i))}$("#hov").textContent=i.overview;$("#hopen").onclick=()=>openDetail(kind(i),i.id);
+ document.querySelectorAll(".hdots i").forEach((d,k)=>d.classList.toggle("on",k===n));
  $("#cn").textContent=String(n+1).padStart(2,"0");$("#ct").textContent="/"+String(hero.length).padStart(2,"0");
  const nx=hero[(n+1)%hero.length];$("#ni").src=IMG+"w300"+nx.backdrop_path;$("#nt").textContent=title(nx);
  dominant(i.poster_path).then(c=>root.style.setProperty("--accent",c))}
 function startHero(){$("#dots").innerHTML=hero.map((_,k)=>`<i data-k="${k}"></i>`).join("");
- document.querySelectorAll(".dots i").forEach(d=>d.onclick=()=>step(+d.dataset.k-hi));
- setHero(0);ht=setInterval(()=>{if(!document.hidden&&!$("#hero").hidden&&$("#modal").hidden)setHero((hi+1)%hero.length)},9000);
- let x0=0;const H=$("#hero");H.addEventListener("touchstart",e=>x0=e.touches[0].clientX,{passive:true});
+ document.querySelectorAll(".hdots i").forEach(d=>d.onclick=()=>step(+d.dataset.k-hi));
+ setHero(0);ht=setInterval(()=>{if(!document.hidden&&!$("#hx").hidden&&$("#modal").hidden)setHero((hi+1)%hero.length)},9000);
+ let x0=0;const H=$("#hx");H.addEventListener("touchstart",e=>x0=e.touches[0].clientX,{passive:true});
  H.addEventListener("touchend",e=>{const d=e.changedTouches[0].clientX-x0;if(Math.abs(d)>50)step(d<0?1:-1)},{passive:true})}
-const step=d=>{clearInterval(ht);setHero((hi+d+hero.length)%hero.length);ht=setInterval(()=>{if(!document.hidden&&!$("#hero").hidden&&$("#modal").hidden)setHero((hi+1)%hero.length)},9000)};
+const step=d=>{clearInterval(ht);setHero((hi+d+hero.length)%hero.length);ht=setInterval(()=>{if(!document.hidden&&!$("#hx").hidden&&$("#modal").hidden)setHero((hi+1)%hero.length)},9000)};
 $("#hu").onclick=()=>step(-1);$("#hd").onclick=()=>step(1);$("#nxt").onclick=()=>step(1);
-if(!M)$("#hero").addEventListener("mousemove",e=>{tx=(e.clientX/innerWidth-.5)*-30;ty=(e.clientY/innerHeight-.5)*-20;upd()});
-let tick;addEventListener("scroll",()=>{if(tick)return;tick=requestAnimationFrame(()=>{tick=0;$("#top").classList.toggle("s",scrollY>30);if(scrollY<innerHeight){py=scrollY*.25;upd()}})},{passive:true});
+if(!M)$("#hx").addEventListener("mousemove",e=>{tx=(e.clientX/innerWidth-.5)*-30;ty=(e.clientY/innerHeight-.5)*-20;upd()});
+let tick;addEventListener("scroll",()=>{if(tick)return;tick=requestAnimationFrame(()=>{tick=0;$("#top").classList.toggle("s",scrollY>30);if(scrollY<innerHeight){py=Math.min(scrollY*.2,60);upd()}})},{passive:true});
 // ---- Rows: lazy-loaded in parallel as you scroll ----
 let RW=[];
 const L=(l,x={})=>({with_original_language:l,sort_by:"popularity.desc","vote_count.gte":30,...x}),G=g=>({with_genres:g,sort_by:"popularity.desc","vote_count.gte":150});
@@ -79,7 +79,7 @@ const io=new IntersectionObserver(es=>es.forEach(async e=>{if(!e.isIntersecting)
  try{const[d,u]=await Promise.all([api(p,q||{}),mix?api("/movie/upcoming"):0]);let it=d.results.filter(i=>i.poster_path);
   if(u){const s=u.results.filter(i=>i.poster_path&&i.release_date>day(0)).slice(0,5).map(i=>({...i,soon:1,media_type:"movie"}));it=it.flatMap((x,k)=>k%4===3&&s.length?[x,s.shift()]:[x])}
   st.innerHTML="";it.forEach(i=>st.append(card(i,ty)));inf(st,n=>api(p,{...(q||{}),page:n}),ty)}catch{}}),{rootMargin:"800px 0px"});
-function setup(e){$("#hero").hidden=true;$("#rows").innerHTML=e.message==="key"||e.message==="401"?`<section class="setup"><h2>Connect TMDB</h2><p>themoviedb.org → Settings → API → "API Key (v3 auth)" paste karo.</p><input id="kin" placeholder="TMDB v3 API key"><button class="btn" id="ksv">Save &amp; load</button></section>`:`<section class="setup"><h2>Can't reach TMDB</h2><p>${esc(e.message)} — network ya ISP block ho sakta hai. Private DNS (dns.google) ya VPN try karo.</p><button class="btn" id="rt">Retry</button></section>`;
+function setup(e){$("#hx").hidden=true;$("#rows").innerHTML=e.message==="key"||e.message==="401"?`<section class="setup"><h2>Connect TMDB</h2><p>themoviedb.org → Settings → API → "API Key (v3 auth)" paste karo.</p><input id="kin" placeholder="TMDB v3 API key"><button class="btn" id="ksv">Save &amp; load</button></section>`:`<section class="setup"><h2>Can't reach TMDB</h2><p>${esc(e.message)} — network ya ISP block ho sakta hai. Private DNS (dns.google) ya VPN try karo.</p><button class="btn" id="rt">Retry</button></section>`;
  if($("#rt"))$("#rt").onclick=()=>location.reload();
  if($("#ksv"))$("#ksv").onclick=()=>{localStorage.setItem("cv_key",$("#kin").value.trim());location.reload()}}
 async function home(){try{hero=await heroItems();await Promise.race([Promise.all(hero.map(logoOf)),new Promise(r=>setTimeout(r,1500))]);startHero()}catch(e){return setup(e)}
@@ -104,7 +104,7 @@ document.querySelectorAll("#seg button").forEach(b=>b.onclick=async()=>{document
 $("#gsel").onchange=$("#ssel").onchange=filt;
 // ---- Views / nav (Android back button aware) ----
 let cur="home";
-function view(v,np){["hero","rows"].forEach(i=>$("#"+i).hidden=v!=="home");$("#browse").hidden=v!=="browse";$("#list").hidden=v!=="list";
+function view(v,np){["hx","rows"].forEach(i=>$("#"+i).hidden=v!=="home");$("#browse").hidden=v!=="browse";$("#list").hidden=v!=="list";
  document.querySelectorAll("[data-v]").forEach(b=>b.classList.toggle("on",b.dataset.v===v));scrollTo(0,0);if(v==="list")renderList();
  if(!np&&v!=="home"&&cur!==v)history.pushState({v},"");cur=v}
 async function go(v){$("#q").value="";if(v==="search"){view("home");$("#q").focus();return}
@@ -162,15 +162,17 @@ async function openDetail(t,id){$("#simp").hidden=$("#sheet").hidden=true;if($("
 const BM='<svg viewBox="0 0 24 24"><path d="M6 3h12v18l-6-4.5L6 21z"/></svg>',CHK='<svg viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg>',FOLDER='<svg viewBox="0 0 24 24"><path d="M3 18.5V6a2 2 0 0 1 2-2h4l2 2h7a2 2 0 0 1 2 2v2"/><path d="M5 20h13.6a2 2 0 0 0 1.9-1.4l1.5-5.6a1 1 0 0 0-1-1.2H8a2 2 0 0 0-1.9 1.4z"/></svg>';
 const getE=()=>store.get()[CUR.m.type+CUR.m.id]||{};
 function upd2(fn){const m=CUR.m,k=m.type+m.id,l=store.get(),c=l[k]||{...m};fn(c);l[k]=c;store.set(l);if(c.status||c.fav||c.sub)learn(m,3);syncTb()}
-function syncTb(){const e=getE();$("#hr").classList.toggle("on",!!e.fav);$("#bl").classList.toggle("on",!!e.sub);const b=$("#bkm");if(b){b.querySelector("span").textContent=e.status||"Add to list";b.classList.toggle("on",!!e.status)}}
-function openSheet(){const cur=getE().status||"";$("#sopts").innerHTML=[...STATUS,"None"].map(s=>{const on=s==="None"?!cur:s===cur;return`<button data-s="${s}" class="${on?"on":""}"><span>${s}</span>${on?CHK:""}</button>`}).join("");$("#sheet").hidden=false}
-$("#sopts").onclick=e=>{const b=e.target.closest("button");if(!b)return;upd2(c=>c.status=b.dataset.s==="None"?"":b.dataset.s);$("#sheet").hidden=true};
+const SI={Watching:["#5ad1ff",'<circle cx="12" cy="12" r="3"/><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/>'],Completed:["#6ee7a0",'<circle cx="12" cy="12" r="9"/><path d="m8 12.5 3 3 5-6"/>'],"On-Hold":["#ffd166",'<circle cx="12" cy="12" r="9"/><path d="M10 9v6M14 9v6"/>'],Dropped:["#ff7a7a",'<circle cx="12" cy="12" r="9"/><path d="m9 9 6 6M15 9l-6 6"/>'],"Plan to Watch":["#b794f6",'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>']};
+const ic=p=>`<svg viewBox="0 0 24 24">${p}</svg>`;
+function toast(t){const e=$("#toast");e.textContent=t;e.classList.add("on");clearTimeout(e._t);e._t=setTimeout(()=>e.classList.remove("on"),1800)}
+function syncTb(){const e=getE(),s=e.status,b=$("#bkm");$("#hr").classList.toggle("on",!!e.fav);$("#bl").classList.toggle("on",!!e.sub);
+ if(b){b.classList.toggle("set",!!s);b.style.setProperty("--c",s?SI[s][0]:"");b.innerHTML=s?`${ic(SI[s][1])}<span>${s}</span><svg class="cv" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg>`:`${BM}<span>Add to list</span>`}}
+function openSheet(){const cur=getE().status||"";$("#shs").textContent=CUR.m.title;
+ $("#sopts").innerHTML=Object.keys(SI).map(s=>`<button data-s="${s}" style="--c:${SI[s][0]}" class="${s===cur?"on":""}"><i>${ic(SI[s][1])}</i><span>${s}</span>${s===cur?CHK:""}</button>`).join("")+(cur?`<button data-s="None" class="rm"><i>${ic('<path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/>')}</i><span>Remove from list</span></button>`:"");$("#sheet").hidden=false}
+$("#sopts").onclick=e=>{const b=e.target.closest("button");if(!b)return;const s=b.dataset.s;upd2(c=>c.status=s==="None"?"":s);$("#sheet").hidden=true;toast(s==="None"?"Removed from list":"Added to "+s)};
 $("#sheet").onclick=e=>{if(e.target.id==="sheet")$("#sheet").hidden=true};
 $("#hr").onclick=()=>upd2(c=>c.fav=!c.fav);$("#bl").onclick=()=>upd2(c=>c.sub=!c.sub);
 $("#sh").onclick=()=>{const x={title:CUR.m.title+" on CineVault",url:location.origin};navigator.share?navigator.share(x).catch(()=>{}):navigator.clipboard&&navigator.clipboard.writeText(x.url)};
-$("#sm").onclick=()=>{const m=CUR.m;$("#simp").innerHTML='<div class="pnl"><div class="ph"><h4>Similar</h4><button class="pill" id="spx">Close</button></div><div class="pb"><div class="grid" id="sgrid"></div></div></div>';
- $("#spx").onclick=()=>$("#simp").hidden=true;$("#simp").hidden=false;
- inf($("#sgrid"),async n=>{const r=await api(`/${m.type}/${m.id}/recommendations`,{page:n});return r.results.length||n>1?r:api(`/${m.type}/${m.id}/similar`,{page:n})},m.type,$("#simp .pb"),1,0)()};
 $("#simp").onclick=e=>{if(e.target.id==="simp")$("#simp").hidden=true};
 function hideModal(){tok++;$("#simp").hidden=$("#sheet").hidden=true;$("#modal").hidden=true;$("#mc").innerHTML="";document.body.style.overflow="";if(!$("#list").hidden)renderList()}
 const close=()=>history.state&&history.state.m?history.back():hideModal();

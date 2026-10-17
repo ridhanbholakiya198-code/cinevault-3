@@ -160,3 +160,42 @@ main{padding-bottom:76px}#hero{height:90svh;min-height:0}.hc{bottom:9vh}
 .wp{display:flex;gap:14px;align-items:center;padding:12px 14px;border-radius:12px;background:#ffffff10;border:1px solid #ffffff14;color:var(--fg);text-decoration:none;transition:transform .2s,background .2s}.wp:hover{background:#ffffff1c;transform:translateY(-2px)}
 .wp img{width:44px;height:44px;border-radius:10px;object-fit:cover}.wp b{display:block;font-weight:500}.wp small{color:var(--mute)}
 #rg{background:#ffffff14;color:var(--fg);border:1px solid #fff3;border-radius:99px;padding:6px 12px;font:inherit}.jw{display:block;margin-top:8px;color:var(--mute);font-size:11px}
+
+/* ===== HERO v2: clean rules (old hero classes are no longer used) ===== */
+#hx{position:relative;height:92svh;min-height:520px;overflow:hidden;background:#000;isolation:isolate}
+.hbg{position:absolute;inset:-6% -3%;background:center/cover no-repeat;animation:kb 16s ease-out forwards;will-change:transform}
+@keyframes kb{from{scale:1.1}to{scale:1.02}}@keyframes fade{from{opacity:0}}
+.hgr{position:absolute;inset:0;background:var(--accent);opacity:.16;transition:background 1s}
+.hs{position:absolute;inset:0;background:linear-gradient(0deg,var(--bg) 3%,rgba(7,8,10,.88) 28%,rgba(7,8,10,.25) 58%,rgba(7,8,10,0) 78%),linear-gradient(180deg,rgba(0,0,0,.55),rgba(0,0,0,0) 22%)}
+.hcont{position:absolute;left:0;right:0;bottom:calc(96px + env(safe-area-inset-bottom));padding:0 22px;display:flex;flex-direction:column;align-items:flex-start;gap:12px;z-index:3;animation:fade .7s both}
+.hmeta{margin:0;display:flex;align-items:center;color:var(--accent);font:italic 500 19px "Cormorant Garamond"}
+.htt{font:400 clamp(46px,14vw,84px)/.95 "Bebas Neue";letter-spacing:.02em;text-shadow:0 8px 40px #000a}
+.htl{display:block;max-width:min(78vw,420px);max-height:104px;object-fit:contain;object-position:left;filter:drop-shadow(0 6px 24px #000b)}
+.hov{margin:0;max-width:52ch;color:#d8d3c8;font-size:15px;line-height:1.5;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.hside{position:absolute;z-index:3;left:22px;bottom:calc(70px + env(safe-area-inset-bottom));display:flex;align-items:center}
+.hdots{display:flex;gap:6px}.hdots i{width:20px;height:3px;border-radius:2px;background:#fff5;cursor:pointer;transition:.3s}.hdots i.on{width:40px;background:var(--accent)}
+.hcount,.hud,.hnext{display:none}
+@media(min-width:900px){
+#hx{height:100svh;min-height:620px}.hcont{left:5vw;right:auto;bottom:28vh;max-width:780px;padding:0;gap:16px}
+.htt{font-size:clamp(70px,9vw,150px)}.htl{max-width:min(520px,40vw);max-height:180px}.hov{font-size:17px;-webkit-line-clamp:3}
+.hside{left:auto;right:5vw;top:26%;bottom:auto;flex-direction:column;align-items:flex-end;gap:18px}
+.hcount{display:flex;align-items:baseline;gap:10px;font:400 64px/1 "Bebas Neue";letter-spacing:.04em}.hcount span{font:italic 500 24px "Cormorant Garamond";opacity:.75}
+.hdots{flex-direction:column;align-items:center;gap:12px;margin-right:10px}.hdots i,.hdots i.on{width:9px;height:9px;border-radius:50%}.hdots i{background:#fff6}.hdots i.on{background:#fff}
+.hud{display:flex;gap:10px}.hud button{width:44px;height:44px;border-radius:50%;border:0;background:#fff;display:grid;place-items:center;cursor:pointer;transition:transform .2s}.hud button:hover{transform:scale(1.1)}
+.hud svg{width:20px;height:20px;stroke:#000;fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+.hnext{display:flex;position:absolute;left:5vw;bottom:7vh;z-index:3;cursor:pointer;background:#0007;backdrop-filter:blur(10px);border-left:2px solid #fff;transition:transform .3s}.hnext:hover{transform:translateX(6px)}
+.hnext>div{padding:16px 24px;min-width:230px}.hnext small{letter-spacing:.2em;font-size:11px;opacity:.8}.hnext b{display:block;font-weight:500;font-size:17px;margin-top:4px}.hnext img{width:190px;height:96px;object-fit:cover;display:block}}
+/* ===== DETAIL: full screen on phone, consistent side padding, new list button + sheet ===== */
+html{touch-action:pan-x pan-y}#modal{background:#07080a}
+@media(max-width:899px){#modal{padding:0}.mbox{border-radius:0;min-height:100vh}.mi{padding:18px 0 96px!important}.mx{padding:0 20px}.mx .strip{margin:0 -20px;padding:0 20px}.mx .stats{margin:14px -20px;padding:0 20px}}
+@media(min-width:900px){.mx{padding:0}}
+.act{display:flex;margin:16px 0}.act .pill{flex:1;justify-content:center;height:50px;border-radius:14px;gap:10px}
+#bkm{background:var(--accent);color:#000;border:0;font:600 16px "DM Sans"}#bkm svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:2.2;stroke-linejoin:round;stroke-linecap:round}
+#bkm.set{justify-content:flex-start;padding:0 16px;background:color-mix(in srgb,var(--c) 16%,#14161b);color:var(--c);border:1px solid color-mix(in srgb,var(--c) 45%,transparent)}#bkm .cv{margin-left:auto;width:18px;height:18px}
+@media(min-width:900px){.act .pill{flex:0 0 auto;min-width:240px}}
+.gr{display:block;width:40px;height:4px;border-radius:2px;background:#fff3;margin:2px auto 10px}
+.sh h4{padding:4px 22px 0;color:var(--fg);font:400 28px "Bebas Neue";letter-spacing:.08em}#shs{padding:0 22px 10px;margin:0;color:var(--mute);font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sh button{gap:14px;justify-content:flex-start;padding:11px 22px;color:var(--fg)}.sh button.on{color:var(--fg);background:color-mix(in srgb,var(--c) 10%,#0000)}
+.sh button i{width:40px;height:40px;border-radius:12px;display:grid;place-items:center;background:color-mix(in srgb,var(--c,#888) 18%,#0000);color:var(--c,#aaa)}.sh button i svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.sh button>svg{margin-left:auto;color:var(--c);width:22px;height:22px}.sh button.rm{--c:#ff7a7a;margin-top:6px;border-top:1px solid #fff1}
+#toast{position:fixed;left:50%;bottom:calc(92px + env(safe-area-inset-bottom));translate:-50% 20px;background:#1d2026;color:var(--fg);padding:12px 20px;border-radius:99px;font-size:15px;opacity:0;pointer-events:none;transition:.25s;z-index:90;box-shadow:0 10px 30px #000a}#toast.on{opacity:1;translate:-50% 0}

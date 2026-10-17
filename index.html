@@ -1,5 +1,5 @@
 <!doctype html><html lang="en"><head><meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#07080a">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,viewport-fit=cover"><meta name="theme-color" content="#07080a">
 <title>CINEVAULT — Explore films in their own colour</title>
 <link rel="preconnect" href="https://api.themoviedb.org"><link rel="preconnect" href="https://image.tmdb.org"><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Cormorant+Garamond:ital,wght@0,500;1,500&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
@@ -9,11 +9,11 @@
 <nav><a href="#" data-v="home">Home</a><a href="#" data-v="movies">Movies</a><a href="#" data-v="series">Series</a><a href="#" data-v="browse">Browse</a><a href="#" data-v="list">My list</a></nav>
 <input id="q" type="search" placeholder="Search any film or series" autocomplete="off"></header>
 <main>
-<section id="hero"><div class="bd" id="bd"></div><div class="shade"></div>
-<div class="hc"><p class="meta" id="hmeta"></p><h1 id="htitle"></h1><p class="ov" id="hov"></p><button class="btn" id="hopen"><svg class="pi" viewBox="0 0 24 24"><path d="M7 4.5v15l13-7.5z"/></svg>Trailer &amp; details</button></div>
-<div class="side"><div class="cnt"><b id="cn">01</b><span id="ct">/06</span></div><div class="dots" id="dots"></div>
-<div class="ud"><button id="hu" aria-label="Previous"><svg viewBox="0 0 24 24"><path d="M12 19V5M6 11l6-6 6 6"/></svg></button><button id="hd" aria-label="Next"><svg viewBox="0 0 24 24"><path d="M12 5v14M6 13l6 6 6-6"/></svg></button></div></div>
-<div class="nxt" id="nxt"><div><small>NEXT UP</small><b id="nt"></b></div><img id="ni" alt=""></div></section>
+<section id="hx"><div class="hbg" id="hbg"></div><div class="hgr"></div><div class="hs"></div>
+<div class="hcont"><p class="hmeta" id="hmeta"></p><div class="htt" id="htitle"></div><p class="hov" id="hov"></p><button class="btn" id="hopen"><svg class="pi" viewBox="0 0 24 24"><path d="M7 4.5v15l13-7.5z"/></svg>Trailer &amp; details</button></div>
+<div class="hside"><div class="hcount"><b id="cn">01</b><span id="ct">/06</span></div><div class="hdots" id="dots"></div>
+<div class="hud"><button id="hu" aria-label="Previous"><svg viewBox="0 0 24 24"><path d="M12 19V5M6 11l6-6 6 6"/></svg></button><button id="hd" aria-label="Next"><svg viewBox="0 0 24 24"><path d="M12 5v14M6 13l6 6 6-6"/></svg></button></div></div>
+<div class="hnext" id="nxt"><div><small>NEXT UP</small><b id="nt"></b></div><img id="ni" alt=""></div></section>
 <div id="rows"></div>
 <section id="browse" hidden><h2 class="rt" id="btitle">Browse</h2>
 <div class="bar" id="bar"><div class="tabs seg" id="seg" style="padding:0"><button data-t="movie" class="on">Films</button><button data-t="tv">Series</button></div>
@@ -32,6 +32,6 @@
 <button id="bl" aria-label="Notify"><svg viewBox="0 0 24 24"><path d="M6 16v-5a6 6 0 1 1 12 0v5l2 2H4zM10 21h4"/></svg></button>
 <button id="hr" aria-label="Favourite"><svg viewBox="0 0 24 24"><path d="M12 20.5s-8-4.8-8-10.4A4.6 4.6 0 0 1 12 7a4.6 4.6 0 0 1 8 3.1c0 5.6-8 10.4-8 10.4z"/></svg></button>
 <button id="sh" aria-label="Share"><svg viewBox="0 0 24 24"><circle cx="18" cy="5" r="2.5"/><circle cx="6" cy="12" r="2.5"/><circle cx="18" cy="19" r="2.5"/><path d="m8.2 10.8 7.6-4.4M8.2 13.2l7.6 4.4"/></svg></button>
-<button id="sm" aria-label="Similar"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M8 9h8M8 12h8M8 15h5"/></svg></button></div><div id="mc"></div></div></div>
-<div id="sheet" class="ov" hidden><div class="sh"><h4>Set watch status</h4><div id="sopts"></div></div></div><div id="simp" class="ov" hidden></div>
+</div><div id="mc"></div></div></div>
+<div id="sheet" class="ov" hidden><div class="sh"><i class="gr"></i><h4>Add to list</h4><p id="shs"></p><div id="sopts"></div></div></div><div id="simp" class="ov" hidden></div><div id="toast"></div>
 <script src="config.js"></script><script src="app.js"></script></body></html>
