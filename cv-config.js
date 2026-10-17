@@ -12,7 +12,7 @@ window.CV_FIREBASE = {
 
 // Shown inside Terms / Privacy. Put a real contact email below before sharing the site publicly.
 window.CV_SITE = {
-  owner: "Ridhan Bholakiya",
+  owner: "",              // leave empty -> legal pages say "the CineVault developer"
   email: "",              // e.g. "yourname@gmail.com"  (legal pages need a contact)
   effective: "17 October 2026",
   version: "1.0",
