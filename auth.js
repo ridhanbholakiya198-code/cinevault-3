@@ -1,4 +1,3 @@
-// build: v2
 // CineVault — optional login, cloud sync, account menu, legal sheets.
 // Loads as an ES module AFTER app.js. The app works 100% without it (guest mode).
 // Firebase SDK is loaded lazily (only for returning users, or when someone opens sign-in) to keep first load fast.
@@ -38,26 +37,19 @@ const count = () => Object.values(readList()).filter(i => !isEmpty(i)).length;
 const changed = () => { try { window.cvStoreChanged && window.cvStoreChanged() } catch { } paintBtn(); listNote(); };
 
 // ---------- Firebase (lazy) ----------
-let fbErr = null, fb = null, fbp = null, auth = null, db = null, user = null, unsub = null, known = {}, timer = null, pending = null, syncBad = false, warned = false;
+let fb = null, fbp = null, auth = null, db = null, user = null, unsub = null, known = {}, timer = null, pending = null, syncBad = false, warned = false;
 function ensureFb() {
   if (fbp) return fbp;
   fbp = (async () => {
-    if (!CFG.apiKey || !CFG.projectId) throw Object.assign(new Error("cv-config.js missing or empty"), { code: "config" });
     const B = `https://www.gstatic.com/firebasejs/${FBV}/`;
-    const load = () => Promise.all([import(B + "firebase-app.js"), import(B + "firebase-auth.js"), import(B + "firebase-firestore.js")]);
-    const [app, au, fs] = await load().catch(() => new Promise(r => setTimeout(r, 800)).then(load)); // one retry for flaky mobile networks
-    const a = app.getApps && app.getApps().length ? app.getApp() : app.initializeApp(CFG);
+    const [app, au, fs] = await Promise.all([import(B + "firebase-app.js"), import(B + "firebase-auth.js"), import(B + "firebase-firestore.js")]);
+    const a = app.initializeApp(CFG);
     auth = au.getAuth(a);
-    try {
-      db = (CFG.firestoreDatabaseId && CFG.firestoreDatabaseId !== "(default)") ? fs.getFirestore(a, CFG.firestoreDatabaseId) : fs.getFirestore(a);
-    } catch (err) {
-      console.warn("[CineVault] Firestore init fallback to default:", err);
-      db = fs.getFirestore(a);
-    }
+    db = CFG.firestoreDatabaseId ? fs.getFirestore(a, CFG.firestoreDatabaseId) : fs.getFirestore(a);
     fb = { au, fs };
     au.onAuthStateChanged(auth, onUser);
     return fb;
-  })().catch(e => { fbp = null; fbErr = e; console.warn("[CineVault] Firebase load failed:", e); throw e });
+  })().catch(e => { fbp = null; throw e });
   return fbp;
 }
 
@@ -204,9 +196,9 @@ function errText(e) {
     "auth/user-disabled": "This account has been disabled.", "auth/operation-not-allowed": "This sign-in method isn’t enabled yet (Firebase console).",
     "auth/unauthorized-domain": "This website isn’t authorised for sign-in yet (Firebase → Authentication → Settings → Authorized domains).",
     "auth/requires-recent-login": "Please sign in again, then retry."
-  })[c] || (fb ? "Something went wrong. Please try again." : "Sign-in service couldn’t load. Check your connection and try again.") + " [" + String(c || (e && e.message) || (fbErr && (fbErr.code || fbErr.message)) || "unknown").slice(0, 70) + "]";
+  })[c] || (fb ? "Something went wrong. Please try again." : "Sign-in service couldn’t load. Check your connection and try again.");
 }
-function msg(el, t, ok) { const m = el.querySelector(".cva-msg"); if (!m) return; m.className = "cva-msg " + (ok ? "good" : "bad"); m.textContent = t; m.hidden = !t }
+function msg(el, t, ok) { const m = el.querySelector(".cva-msg"); if (!m) return; m.className = "cva-msg " + (ok ? "ok" : "err"); m.textContent = t; m.hidden = !t }
 function busy(el, on) { el.querySelectorAll("button,input").forEach(x => { if (!x.closest(".cva-top")) x.disabled = on }); el.classList.toggle("wait", on) }
 const inApp = () => /FBAN|FBAV|Instagram|Snapchat|Line\/|; wv\)|Twitter|MicroMessenger/i.test(navigator.userAgent);
 
@@ -308,7 +300,7 @@ function accountHTML(confirmDel) {
 ${pwUser ? `<label class="cva-f"><span>Password</span><input name="dpw" type="password" autocomplete="current-password"></label>` : ""}
 <button class="cva-btn cva-danger" data-a="del-go">Delete my account</button><button class="cva-ghost" data-a="acct">Cancel</button>`;
   return `${TOP}<div class="cva-me"><div class="cva-av">${av}</div><h3 class="cva-h">${esc(name)}</h3>${mail ? `<p class="cva-mail">${esc(mail)}</p>` : ""}
-<p class="cva-sync ${syncBad ? "bad" : ""}"><i></i>${!user ? (fbErr ? "Couldn’t reach sign-in service" : "Connecting…") : syncBad ? "Saved on this device · sync paused" : `Synced · ${count()} saved title${count() === 1 ? "" : "s"}`}</p></div>
+<p class="cva-sync ${syncBad ? "bad" : ""}"><i></i>${!user ? "Connecting…" : syncBad ? "Saved on this device · sync paused" : `Synced · ${count()} saved title${count() === 1 ? "" : "s"}`}</p></div>
 <div class="cva-msg" hidden></div>
 ${row("list", "list", "My list", "#e0a030")}${row("export", "dl", "Export my data", "#5ad1ff")}${row("terms", "doc", "Terms of Use", "#b794f6")}${row("privacy", "shield", "Privacy Policy", "#6ee7a0")}
 ${row("out", "out", "Sign out", "#ffd166")}${row("del", "trash", "Delete account", "#ff7a7a")}`;
@@ -347,16 +339,9 @@ async function logout(el) {
     const { au } = await ensureFb(), safe = !syncBad;
     await au.signOut(auth);
     if (safe) { try { localStorage.removeItem(LS) } catch { } changed() }
-    try { localStorage.removeItem(HINT); } catch { }
-    paintBtn();
     closeOv(el);
     say(safe ? "Signed out · list removed from this device" : "Signed out · couldn’t sync, list kept on this device");
-  } catch (e) {
-    try { localStorage.removeItem(HINT); } catch { }
-    paintBtn();
-    closeOv(el);
-    say("Signed out");
-  }
+  } catch (e) { busy(el, false); msg(el, errText(e)) }
 }
 async function delAccount(el) {
   const pw = (el.querySelector("[name=dpw]") || {}).value || "";
