@@ -37,15 +37,16 @@ function learn(m,w){const x=taste();if(m.lang)x.l[m.lang]=(x.l[m.lang]||0)+w;(m.
 function saveQ(q){const x=taste();x.s=[q,...x.s.filter(y=>y!==q)].slice(0,10);putT(x)}
 // ---- Hero: curated cinematic picks (crossfade, ken-burns, tagline, per-film colour) ----
 let hero=[],hi=0,ht,tx=0,ty=0,py=0,hl=0,hq=0;
-const HERO=[["Blade Runner 2049",2017],["Dune",2021],["Stalker",1979],["Interstellar",2014],["Fallen Angels",1995]];
+const HERO=[["Blade Runner 2049",2017],["Dune",2021],["Stalker",1979],["2001: A Space Odyssey",1968],["Fallen Angels",1995]];
 const upd=()=>$("#hbgs").style.transform=`translate3d(${tx}px,${py+ty}px,0)`,day=n=>new Date(Date.now()-n*864e5).toISOString().slice(0,10);
-const hm=m=>m?`${Math.floor(m/60)}h ${m%60}m`:"",hbd=i=>i.bd||i.backdrop_path,hsrc=i=>IMG+(M?"w780":"w1280")+(M?i.poster_path:hbd(i));
+const hm=m=>m?`${Math.floor(m/60)}h ${m%60}m`:"",hbd=i=>i.bd||i.backdrop_path,hsrc=i=>M&&i.pt?IMG+"w780"+i.pt:IMG+"w1280"+hbd(i);
 async function heroPicks(){const r=await Promise.all(HERO.map(async([q,y])=>{try{
   let id=localStorage.getItem("hid:"+q+y);
   if(!id){const s=await api("/search/movie",{query:q,year:y}),m=s.results.find(x=>x.backdrop_path&&x.poster_path);if(!m)return null;id=m.id;try{localStorage.setItem("hid:"+q+y,id)}catch{}}
   const d=await api("/movie/"+id,{append_to_response:"images",include_image_language:"en,null"});if(!d.poster_path||!d.backdrop_path)return null;
   const bs=((d.images||{}).backdrops||[]).filter(b=>!b.iso_639_1&&b.width>=1920).sort((p,q)=>q.vote_average-p.vote_average);
-  lgc["movie"+d.id]=pick((d.images||{}).logos);return{...d,media_type:"movie",bd:bs[0]?bs[0].file_path:d.backdrop_path}}catch{return null}}));return r.filter(Boolean)}
+  const ps=((d.images||{}).posters||[]).filter(p=>!p.iso_639_1&&p.height>=1200).sort((p,q)=>q.vote_average-p.vote_average);
+  lgc["movie"+d.id]=pick((d.images||{}).logos);return{...d,media_type:"movie",bd:bs[0]?bs[0].file_path:d.backdrop_path,pt:ps[0]?ps[0].file_path:""}}catch{return null}}));return r.filter(Boolean)}
 async function heroFallback(){const tl=topOf(taste().l),mine=tl&&tl[0]!=="en"&&tl[1]>=3?tl[0]:"";
  const win=n=>({sort_by:"popularity.desc","primary_release_date.gte":day(n),"primary_release_date.lte":day(0),"vote_count.gte":40,"vote_average.gte":6});
  const[a,b]=await Promise.all([api("/discover/movie",win(60)),mine?api("/discover/movie",{...win(150),with_original_language:mine}):{results:[]}]);
