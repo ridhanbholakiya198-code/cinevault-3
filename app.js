@@ -10,7 +10,7 @@ const $=s=>document.querySelector(s),root=document.documentElement,M=innerWidth<
 const STATUS=["Watching","Completed","On-Hold","Dropped","Plan to Watch"];
 const esc=s=>String(s==null?"":s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 // ---- Storage: swap for Firebase later (ROADMAP Part 4) ----
-const store={get:()=>JSON.parse(localStorage.getItem("cv_list")||"{}"),set:v=>localStorage.setItem("cv_list",JSON.stringify(v))};
+const store={get:()=>JSON.parse(localStorage.getItem("cv_list")||"{}"),set:v=>{localStorage.setItem("cv_list",JSON.stringify(v));window.CVA&&CVA.push(v)}};
 // ---- API with memory + 30 min localStorage cache (fast repeat loads) ----
 const KEY=()=>localStorage.getItem("cv_key")||(TMDB_KEY.startsWith("PASTE")?"":TMDB_KEY),mem=new Map(),TTL=18e5;
 async function api(p,q={}){if(!PX&&!KEY())throw Error("key");const ck="c:"+p+JSON.stringify(q);
@@ -113,7 +113,7 @@ async function go(v){$("#q").value="";if(v==="search"){view("home");$("#q").focu
 document.querySelectorAll("[data-v]").forEach(a=>a.onclick=e=>{e.preventDefault();go(a.dataset.v)});
 let st;$("#q").oninput=e=>{clearTimeout(st);const q=e.target.value.trim();if(!q)return view("home");
  st=setTimeout(()=>{saveQ(q);reset(`Results for “${q}”`,"/search/multi","",{query:q},0);view("browse")},350)};
-addEventListener("popstate",()=>{if(!$("#modal").hidden)hideModal();else view("home",1)});
+addEventListener("popstate",()=>{if(window.CVA&&CVA.back())return;if(!$("#modal").hidden)hideModal();else view("home",1)});
 // ---- Detail: tabs, data appears on tap ----
 const money=n=>n?"$"+n.toLocaleString("en-US"):"Not disclosed",fd=s=>s?new Date(s).toLocaleDateString("en-GB",{day:"numeric",month:"short",year:"numeric"}):"TBA";
 const when=s=>{const n=Math.ceil((new Date(s)-new Date(day(0)))/864e5);return n<=0?"today":n===1?"tomorrow":`in ${n} days`};
@@ -153,7 +153,7 @@ async function openDetail(t,id){$("#simp").hidden=$("#sheet").hidden=true;if($("
  <div class="chips g">${(d.genres||[]).map(g=>`<i>${esc(g.name)}</i>`).join("")}</div>
  <div class="stats">${stat("Rating",(d.vote_average||0).toFixed(1)+"/10")}${stat("Votes",(d.vote_count||0).toLocaleString())}${t==="movie"?stat("Budget",money(d.budget))+stat("Box office",money(d.revenue)):stat("Seasons",d.number_of_seasons||"—")+stat("Episodes",d.number_of_episodes||"—")}${run?stat("Runtime",run):""}</div>
  <div id="wp"></div>${t==="tv"?'<h3>Episodes</h3><div id="epw"></div>':""}<h3>More like this</h3><div class="strip" id="rec"></div></div></div></div>`;
- if(v)$("#pl").onclick=()=>{$(".tr").classList.add("pl");$(".tr").innerHTML=`<iframe src="https://www.youtube.com/embed/${v.key}?autoplay=1&rel=0&playsinline=1" referrerpolicy="strict-origin-when-cross-origin" allow="autoplay;fullscreen;picture-in-picture" allowfullscreen></iframe>`};
+ if(v)$("#pl").onclick=()=>{$(".tr").classList.add("pl");$(".tr").innerHTML=`<iframe src="https://www.youtube-nocookie.com/embed/${v.key}?autoplay=1&rel=0&playsinline=1" referrerpolicy="strict-origin-when-cross-origin" allow="autoplay;fullscreen;picture-in-picture" allowfullscreen></iframe>`};
  $("#rm").onclick=e=>{const o=$(".ovt").classList.toggle("open");e.target.textContent=o?"Less":"Read more"};$("#bkm").onclick=openSheet;
  const st=$("#rec");[...d.recommendations.results,...d.similar.results].filter((x,i,r)=>x.poster_path&&r.findIndex(y=>y.id===x.id)===i).slice(0,20).forEach(x=>st.append(card(x,t)));
  if(st.children.length)inf(st,n=>api(`/${t}/${id}/recommendations`,{page:n}),t);else st.previousElementSibling.remove(),st.remove();
@@ -161,7 +161,7 @@ async function openDetail(t,id){$("#simp").hidden=$("#sheet").hidden=true;if($("
  }catch(e){if(my===tok)$("#mc").innerHTML='<p class="empty">Could not load details.</p>'}}
 const BM='<svg viewBox="0 0 24 24"><path d="M6 3h12v18l-6-4.5L6 21z"/></svg>',CHK='<svg viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg>',FOLDER='<svg viewBox="0 0 24 24"><path d="M3 18.5V6a2 2 0 0 1 2-2h4l2 2h7a2 2 0 0 1 2 2v2"/><path d="M5 20h13.6a2 2 0 0 0 1.9-1.4l1.5-5.6a1 1 0 0 0-1-1.2H8a2 2 0 0 0-1.9 1.4z"/></svg>';
 const getE=()=>store.get()[CUR.m.type+CUR.m.id]||{};
-function upd2(fn){const m=CUR.m,k=m.type+m.id,l=store.get(),c=l[k]||{...m};fn(c);l[k]=c;store.set(l);if(c.status||c.fav||c.sub)learn(m,3);syncTb()}
+function upd2(fn){const m=CUR.m,k=m.type+m.id,l=store.get(),c=l[k]||{...m};fn(c);c.u=Date.now();l[k]=c;store.set(l);if(c.status||c.fav||c.sub)learn(m,3);syncTb();if(c.status||c.fav||c.sub)window.CVA&&CVA.afterSave()}
 const SI={Watching:["#5ad1ff",'<circle cx="12" cy="12" r="3"/><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/>'],Completed:["#6ee7a0",'<circle cx="12" cy="12" r="9"/><path d="m8 12.5 3 3 5-6"/>'],"On-Hold":["#ffd166",'<circle cx="12" cy="12" r="9"/><path d="M10 9v6M14 9v6"/>'],Dropped:["#ff7a7a",'<circle cx="12" cy="12" r="9"/><path d="m9 9 6 6M15 9l-6 6"/>'],"Plan to Watch":["#b794f6",'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>']};
 const ic=p=>`<svg viewBox="0 0 24 24">${p}</svg>`;
 function toast(t){const e=$("#toast");e.textContent=t;e.classList.add("on");clearTimeout(e._t);e._t=setTimeout(()=>e.classList.remove("on"),1800)}
@@ -182,7 +182,8 @@ let tab="Watching";
 function renderList(){const all=Object.values(store.get()),T=[...STATUS,"Favourites","Subscribed"],f=(n,i)=>n==="Favourites"?i.fav:n==="Subscribed"?i.sub:i.status===n;
  $("#tabs").innerHTML="";T.forEach(n=>{const c=all.filter(i=>f(n,i)).length,b=document.createElement("button");b.className=n===tab?"on":"";b.innerHTML=`${n}<small>${c||""}</small>`;b.onclick=()=>{tab=n;renderList()};$("#tabs").append(b)});
  const items=all.filter(i=>f(tab,i));$("#lgrid").innerHTML=items.length?"":`<div class="void">${FOLDER}<p>${tab} is empty</p><span>Open any title and tap the bookmark to save it here.</span></div>`;
- items.forEach(i=>$("#lgrid").append(card({id:i.id,title:i.title,poster_path:i.poster,vote_average:0},i.type)))}
+ items.forEach(i=>$("#lgrid").append(card({id:i.id,title:i.title,poster_path:i.poster,vote_average:0},i.type)));window.CVA&&CVA.listNote()}
+window.cvStoreChanged=()=>{if(!$("#list").hidden)renderList();if(!$("#modal").hidden&&CUR.m)syncTb()};
 $("#rst").onclick=()=>{localStorage.removeItem(TK);alert("Personalisation reset")};
 $("#modal").addEventListener("scroll",()=>{const r=$(".tr");$(".tb").classList.toggle("s",$("#modal").scrollTop>(r?r.offsetHeight*.55:150))},{passive:true});
 const it=$("#intro");if(it){if(sessionStorage.getItem("cv_i"))it.remove();else{sessionStorage.setItem("cv_i","1");setTimeout(()=>it.remove(),2700)}}
