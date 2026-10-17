@@ -37,16 +37,25 @@ function learn(m,w){const x=taste();if(m.lang)x.l[m.lang]=(x.l[m.lang]||0)+w;(m.
 function saveQ(q){const x=taste();x.s=[q,...x.s.filter(y=>y!==q)].slice(0,10);putT(x)}
 // ---- Hero: curated cinematic picks (crossfade, ken-burns, tagline, per-film colour) ----
 let hero=[],hi=0,ht,tx=0,ty=0,py=0,hl=0,hq=0;
-const HERO=[["Blade Runner 2049",2017],["Dune",2021],["Stalker",1979],["2001: A Space Odyssey",1968],["Fallen Angels",1995]];
+// 16x9 colour fingerprint of the reference still (man + spinner in the orange wasteland); used to pick that exact backdrop from TMDB
+const BRFP=[230,191,144,234,202,163,236,206,170,239,209,176,241,210,176,244,215,183,245,216,184,246,216,182,246,214,176,245,213,173,243,209,162,242,208,162,240,207,162,239,205,161,236,200,150,234,191,137,227,176,121,230,185,133,232,193,144,233,194,147,232,188,134,238,205,161,239,206,161,239,203,151,235,191,128,236,193,131,233,186,121,237,197,139,236,196,139,233,187,128,227,170,105,228,171,109,148,84,37,182,111,52,216,141,67,215,136,54,220,143,61,226,159,82,228,163,87,229,162,83,224,149,61,225,153,69,221,143,52,226,154,69,227,154,70,215,129,36,210,118,23,214,131,47,155,78,12,159,75,7,193,98,9,195,97,5,194,101,9,198,100,7,202,102,7,201,104,10,198,97,5,189,96,8,181,90,8,182,90,7,171,80,6,170,79,5,157,72,6,152,67,5,143,64,8,139,63,8,111,49,10,94,45,13,90,40,10,111,49,9,143,64,7,132,62,17,139,61,12,118,52,13,128,54,9,134,59,12,134,57,9,133,54,5,123,50,7,128,53,7,108,43,7,103,43,8,99,42,9,111,47,8,110,47,7,123,54,11,144,69,16,119,65,24,133,67,17,119,63,23,158,99,61,148,93,59,134,85,55,160,98,58,123,58,18,117,52,12,110,48,11,115,50,10,123,54,9,126,57,12,133,62,13,135,63,14,131,60,14,122,57,14,123,56,11,87,44,18,73,44,26,31,19,13,34,21,14,27,16,12,73,35,13,122,57,17,126,58,12,130,60,13,127,58,14,116,52,12,113,47,8,110,45,7,106,43,7,107,45,9,103,43,8,70,31,10,32,19,12,30,19,13,58,35,23,44,22,11,90,37,9,93,38,9,130,60,13,123,56,13,112,48,10,105,44,9,105,44,9,106,44,8,101,42,8,101,42,7,103,44,8,92,38,8,76,33,8,63,28,8,60,29,11,70,31,9,82,34,9,90,37,9];
+const HERO=[["Blade Runner 2049",2017,{ref:BRFP,fx:"56%"}],["Dune",2021],["Stalker",1979],["2001: A Space Odyssey",1968],["Fallen Angels",1995]];
 const upd=()=>$("#hbgs").style.transform=`translate3d(${tx}px,${py+ty}px,0)`,day=n=>new Date(Date.now()-n*864e5).toISOString().slice(0,10);
-const hm=m=>m?`${Math.floor(m/60)}h ${m%60}m`:"",hbd=i=>i.bd||i.backdrop_path,hsrc=i=>M&&i.pt?IMG+"w780"+i.pt:IMG+"w1280"+hbd(i);
-async function heroPicks(){const r=await Promise.all(HERO.map(async([q,y])=>{try{
+const hm=m=>m?`${Math.floor(m/60)}h ${m%60}m`:"",hbd=i=>i.bd||i.backdrop_path,hsrc=i=>M&&i.pt&&!i.pref?IMG+"w780"+i.pt:IMG+(M&&i.bw&&i.bw<=2560?"original":"w1280")+hbd(i);
+function fpOf(im){const c=document.createElement("canvas");c.width=16;c.height=9;const x=c.getContext("2d");x.drawImage(im,0,0,16,9);return x.getImageData(0,0,16,9).data}
+function bestMatch(list,fp){return Promise.all(list.map(b=>new Promise(res=>{const im=new Image();im.crossOrigin="anonymous";
+  im.onload=()=>{try{const d=fpOf(im);let e=0,j=0;for(let k=0;k<d.length;k++){if(k%4===3)continue;e+=(d[k]-fp[j++])**2}res([e,b])}catch{res([Infinity,b])}};im.onerror=()=>res([Infinity,b]);im.src=IMG+"w300"+b.file_path}))).then(r=>{r.sort((a,b)=>a[0]-b[0]);return r[0]&&r[0][0]<Infinity?r[0][1]:null})}
+async function heroPicks(){const r=await Promise.all(HERO.map(async([q,y,o])=>{try{o=o||{};
   let id=localStorage.getItem("hid:"+q+y);
   if(!id){const s=await api("/search/movie",{query:q,year:y}),m=s.results.find(x=>x.backdrop_path&&x.poster_path);if(!m)return null;id=m.id;try{localStorage.setItem("hid:"+q+y,id)}catch{}}
   const d=await api("/movie/"+id,{append_to_response:"images",include_image_language:"en,null"});if(!d.poster_path||!d.backdrop_path)return null;
   const bs=((d.images||{}).backdrops||[]).filter(b=>!b.iso_639_1&&b.width>=1920).sort((p,q)=>q.vote_average-p.vote_average);
+  let pk=bs[0]||{file_path:d.backdrop_path,width:0};
+  if(o.ref){let c=null;try{c=JSON.parse(localStorage.getItem("hbd:"+d.id)||"null")}catch{}
+   if(!c){const tf=((d.images||{}).backdrops||[]).filter(b=>!b.iso_639_1).sort((p,q)=>q.vote_average-p.vote_average).slice(0,16);c=tf.length?await bestMatch(tf,o.ref):null;if(c)try{localStorage.setItem("hbd:"+d.id,JSON.stringify({file_path:c.file_path,width:c.width}))}catch{}}
+   if(c)pk=c}
   const ps=((d.images||{}).posters||[]).filter(p=>!p.iso_639_1&&p.height>=1200).sort((p,q)=>q.vote_average-p.vote_average);
-  lgc["movie"+d.id]=pick((d.images||{}).logos);return{...d,media_type:"movie",bd:bs[0]?bs[0].file_path:d.backdrop_path,pt:ps[0]?ps[0].file_path:""}}catch{return null}}));return r.filter(Boolean)}
+  lgc["movie"+d.id]=pick((d.images||{}).logos);return{...d,media_type:"movie",bd:pk.file_path,bw:pk.width,fx:o.fx,pref:o.ref?1:0,pt:ps[0]?ps[0].file_path:""}}catch{return null}}));return r.filter(Boolean)}
 async function heroFallback(){const tl=topOf(taste().l),mine=tl&&tl[0]!=="en"&&tl[1]>=3?tl[0]:"";
  const win=n=>({sort_by:"popularity.desc","primary_release_date.gte":day(n),"primary_release_date.lte":day(0),"vote_count.gte":40,"vote_average.gte":6});
  const[a,b]=await Promise.all([api("/discover/movie",win(60)),mine?api("/discover/movie",{...win(150),with_original_language:mine}):{results:[]}]);
@@ -56,7 +65,8 @@ async function heroFallback(){const tl=topOf(taste().l),mine=tl&&tl[0]!=="en"&&t
 async function heroItems(){const h=await heroPicks();return h.length>=3?h:heroFallback()}
 function setHero(n){hi=n;const i=hero[n],id=++hq,src=hsrc(i),im=new Image();
  const show=()=>{if(id!==hq)return;const A=[$("#hbgA"),$("#hbgB")],cu=A[hl],nw=A[1-hl];hl=1-hl;
-  nw.className="hbg";void nw.offsetWidth;nw.style.backgroundImage=`url(${src})`;nw.classList.add("on");cu.classList.remove("on");cu.classList.add("out");
+  nw.className="hbg";void nw.offsetWidth;nw.style.backgroundImage=`url(${src})`;nw.style.backgroundPosition=(i.fx||"50%")+" 50%";
+  if(M&&i.pref){const hi2=new Image();hi2.onload=()=>{if(id===hq)nw.style.backgroundImage=`url(${hi2.src})`};hi2.src=IMG+"original"+hbd(i)}nw.classList.add("on");cu.classList.remove("on");cu.classList.add("out");
   const c=$(".hcont");c.classList.remove("go");void c.offsetWidth;c.classList.add("go");
   const g=(i.genres||[]).slice(0,M?1:2).map(x=>x.name).join(", "),y=(i.release_date||i.first_air_date||"").slice(0,4);
   $("#hmeta").innerHTML=[`<b>${STAR}${(i.vote_average||0).toFixed(1)}</b>`,y,hm(i.runtime),esc(g)].filter(Boolean).join('<i class="dot"></i>');
