@@ -16,7 +16,7 @@ const KEY=()=>localStorage.getItem("cv_key")||(TMDB_KEY.startsWith("PASTE")?"":T
 async function api(p,q={}){if(!PX&&!KEY())throw Error("key");const ck="c:"+p+JSON.stringify(q);
  if(mem.has(ck))return mem.get(ck);
  try{const c=JSON.parse(localStorage.getItem(ck)||"null");if(c&&Date.now()-c.t<TTL){mem.set(ck,c.j);return c.j}}catch{}
- let j;try{j=await get(PX?"/api/tmdb":DIRECT,p,q)}catch(e){if(!PX||!KEY()||e.message==="401")throw e;j=await get(DIRECT,p,q)}
+ let j;try{j=await get(PX?"/api/tmdb":DIRECT,p,q)}catch(e){window.cvDbg&&cvDbg.log("api-fail",p+" via "+(PX?"proxy":"direct")+" -> "+(e&&(e.name==="AbortError"?"timeout 9s":e.message)));if(!PX||!KEY()||e.message==="401")throw e;j=await get(DIRECT,p,q)}
  mem.set(ck,j);
  try{localStorage.setItem(ck,JSON.stringify({t:Date.now(),j}))}catch{Object.keys(localStorage).filter(x=>x.startsWith("c:")).forEach(x=>localStorage.removeItem(x))}return j}
 const title=i=>i.title||i.name,kind=i=>i.media_type||(i.title?"movie":"tv");
@@ -82,7 +82,7 @@ const io=new IntersectionObserver(es=>es.forEach(async e=>{if(!e.isIntersecting)
 function setup(e){$("#hx").hidden=true;$("#rows").innerHTML=e.message==="key"||e.message==="401"?`<section class="setup"><h2>Connect TMDB</h2><p>themoviedb.org → Settings → API → "API Key (v3 auth)" paste karo.</p><input id="kin" placeholder="TMDB v3 API key"><button class="btn" id="ksv">Save &amp; load</button></section>`:`<section class="setup"><h2>Can't reach TMDB</h2><p>${esc(e.message)} — network ya ISP block ho sakta hai. Private DNS (dns.google) ya VPN try karo.</p><button class="btn" id="rt">Retry</button></section>`;
  if($("#rt"))$("#rt").onclick=()=>location.reload();
  if($("#ksv"))$("#ksv").onclick=()=>{localStorage.setItem("cv_key",$("#kin").value.trim());location.reload()}}
-async function home(){try{hero=await heroItems();await Promise.race([Promise.all(hero.map(logoOf)),new Promise(r=>setTimeout(r,1500))]);startHero()}catch(e){return setup(e)}
+async function home(){window.cvDbg&&cvDbg.log("home","start");try{hero=await heroItems();await Promise.race([Promise.all(hero.map(logoOf)),new Promise(r=>setTimeout(r,1500))]);startHero();window.cvDbg&&cvDbg.log("hero","ok "+hero.length+" items")}catch(e){window.cvDbg&&cvDbg.err("home-fail",e);return setup(e)}
  RW=buildRows();RW.forEach((r,i)=>{const s=document.createElement("section");s.className="row";s.dataset.i=i;
   s.innerHTML=`<div class="rh"><h2>${esc(r[0])}</h2><svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></div><div class="strip">${'<div class="card sk"></div>'.repeat(6)}</div><button class="ar l" aria-label="Back"><svg viewBox="0 0 24 24"><path d="m15 5-7 7 7 7"/></svg></button><button class="ar r" aria-label="Next"><svg viewBox="0 0 24 24"><path d="m9 5 7 7-7 7"/></svg></button>`;
   s.querySelector(".rh").onclick=()=>{reset(r[0],r[1],r[2]||"",r[3]||{},false);view("browse")};s.querySelectorAll(".ar").forEach(b=>b.onclick=()=>{const st=s.querySelector(".strip");st.scrollBy({left:(b.classList.contains("r")?1:-1)*st.clientWidth*.8,behavior:"smooth"})});$("#rows").append(s);io.observe(s)});
