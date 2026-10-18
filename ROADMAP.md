@@ -67,3 +67,8 @@
 - Home hero rebuilt from scratch with new class names (no old override conflicts); same layout logic for phone + desktop
 - Detail: full-screen on phone, fixed side padding, blank "similar" button removed, new Add-to-list button + status sheet with icons and toast
 - Pinch-zoom disabled so layout can't shift sideways
+
+## PART 3 — FX layer (fx.js + fx.css)
+- WebGL hero shader: liquid noise dissolve between slides, luminance depth-parallax (fake 3D), lens aberration + light at pointer, accent colour grade, drifting fog, film grain, vignette; phone tilt via gyroscope
+- Performance guards: 30fps + lower resolution on phones/low-end, pauses when hero offscreen/tab hidden, falls back to CSS hero without WebGL or with reduced-motion
+- 3D card tilt + glare, custom cursor, circular reveal from the tapped card, scroll reveals, detail backdrop parallax
