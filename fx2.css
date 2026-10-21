@@ -1,0 +1,11 @@
+/* CINEVAULT FX: circular reveal, row reveal, detail parallax, light mode */
+#modal{animation:none!important}
+.rv{opacity:0;transform:translate3d(0,36px,0);will-change:opacity,transform;transition:opacity .85s cubic-bezier(.22,1,.36,1),transform .85s cubic-bezier(.22,1,.36,1)}
+.rv.in{opacity:1;transform:none;will-change:auto}
+.tr{overflow:hidden}
+.trb{position:absolute;inset:-14% 0;z-index:0;background:center/cover no-repeat;transform:translate3d(0,var(--ty,0px),0) scale(1.04);will-change:transform}
+.tr::before{z-index:1}
+.tc{z-index:2;transform:translate3d(0,calc(var(--ty,0px)*.55),0);opacity:var(--fo,1)}
+.lite .rv,.lite .rv.in{opacity:1;transform:none;transition:none;will-change:auto}
+.lite .grain{display:none}.lite #modal{backdrop-filter:none!important;-webkit-backdrop-filter:none!important}.lite .hbg{animation:none!important}
+@media(prefers-reduced-motion:reduce){.rv{opacity:1;transform:none;transition:none}}

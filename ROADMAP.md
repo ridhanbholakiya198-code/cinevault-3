@@ -68,7 +68,9 @@
 - Detail: full-screen on phone, fixed side padding, blank "similar" button removed, new Add-to-list button + status sheet with icons and toast
 - Pinch-zoom disabled so layout can't shift sideways
 
-## PART 3 — FX layer (fx.js + fx.css)
-- WebGL hero shader: liquid noise dissolve between slides, luminance depth-parallax (fake 3D), lens aberration + light at pointer, accent colour grade, drifting fog, film grain, vignette; phone tilt via gyroscope
-- Performance guards: 30fps + lower resolution on phones/low-end, pauses when hero offscreen/tab hidden, falls back to CSS hero without WebGL or with reduced-motion
-- 3D card tilt + glare, custom cursor, circular reveal from the tapped card, scroll reveals, detail backdrop parallax
+## PART 3 — Smooth FX (final, kept only what looks good)
+- Circular reveal: detail opens from the tapped spot (exact radius, eased), content rises in
+- Rows rise into view on scroll; detail backdrop parallax on its own GPU layer, eased every frame
+- Performance governor: weak phones get light mode automatically (?lite=1 forces it)
+- Installable app (manifest + service worker): images cached, app files always fresh
+- Removed: WebGL hero shader, card tilt, custom cursor
