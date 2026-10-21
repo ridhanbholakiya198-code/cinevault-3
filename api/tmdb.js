@@ -15,7 +15,8 @@ module.exports = async (req, res) => {
     u.searchParams.delete("path");
     u.searchParams.set("api_key", key);
     const r = await fetch("https://api.themoviedb.org/3" + path + "?" + u.searchParams.toString());
-    res.setHeader("Cache-Control", "s-maxage=600, stale-while-revalidate=3600");
+    // only cache good answers: a cached error would keep showing "could not load" for minutes
+    res.setHeader("Cache-Control", r.ok ? "s-maxage=600, stale-while-revalidate=3600" : "no-store");
     return res.status(r.status).send(await r.text());
   } catch (e) {
     try { res.status(502).send(JSON.stringify({ error: "proxy failed", detail: String((e && e.message) || e).slice(0, 200) })); } catch (_) { }
