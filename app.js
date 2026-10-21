@@ -171,14 +171,30 @@ const money=n=>n?"$"+n.toLocaleString("en-US"):"Not disclosed",fd=s=>s?new Date(
 const when=s=>{const n=Math.ceil((new Date(s)-new Date(day(0)))/864e5);return n<=0?"today":n===1?"tomorrow":`in ${n} days`};
 const stat=(l,x)=>`<div class="stat"><small>${l}</small><strong>${x}</strong></div>`;let tok=0;
 function cat(d,t){const g=(d.genres||[]).map(x=>x.id),an=d.original_language==="ja"&&g.includes(16);return t==="tv"?(an?"Anime":g.includes(16)?"Animation":"Series"):g.includes(99)?"Documentary":an?"Anime film":g.includes(16)?"Animation":"Film"}
+const WJ=/^(Writer|Screenplay|Teleplay|Story|Novel|Comic Book|Characters|Author|Creator)$/,pn=a=>{const m={};return a.filter(x=>x&&!m[x]&&(m[x]=1))},pad=n=>String(n).padStart(2,"0");
+function crewOf(d,t){let cr;if(t==="tv"&&d.aggregate_credits&&(d.aggregate_credits.crew||[]).length)cr=d.aggregate_credits.crew;else cr=((d.credits&&d.credits.crew)||[]).map(c=>({name:c.name,jobs:[{job:c.job,episode_count:1}]}));
+ const sc=(c,re)=>Math.max(0,...(c.jobs||[]).filter(j=>re.test(j.job)).map(j=>j.episode_count||1)),by=re=>cr.filter(c=>sc(c,re)>0).sort((x,y)=>sc(y,re)-sc(x,re)).map(c=>c.name);
+ const dir=pn(by(/^Director$/)).slice(0,4),wr=pn([...(t==="tv"?(d.created_by||[]).map(c=>c.name):[]),...by(WJ)]).slice(0,6);return{dir,wr}}
+function crewHTML(d,t){const c=crewOf(d,t),b=(l,a)=>a.length?`<h3>${l}</h3><div class="chips g cw">${a.map(n=>`<i>${esc(n)}</i>`).join("")}</div>`:"";return b(c.dir.length>1?"Directors":"Director",c.dir)+b(c.wr.length>1?"Writers":"Writer",c.wr)}
+let ES=[],ESN=0;
+function trBack(tr){if(tr.classList.contains("pl")){tr.classList.remove("pl");tr.innerHTML=CUR.tc;if(!tr.querySelector(".trb"))tr.style.backgroundImage=CUR.bk?`url(${CUR.bk})`:"none";CUR.bind&&CUR.bind()}}
+function epReset(){const tr=$(".tr"),p=$("#epi");if(p){p.hidden=true;p.innerHTML=""}document.querySelectorAll(".ep.sel").forEach(x=>x.classList.remove("sel"));if(!tr||!CUR)return;tr.classList.remove("ep-on");trBack(tr);const g=tr.querySelector(".tbg");if(g)g.style.opacity=0;$(".tb").style.setProperty("--bk",CUR.bk?`url(${CUR.bk})`:"none")}
+function epPick(i){const e=ES[i],tr=$(".tr"),p=$("#epi");if(!e||!tr||!p)return;const row=document.querySelector(`.ep[data-i="${i}"]`);if(row&&row.classList.contains("sel")){epReset();return}
+ trBack(tr);document.querySelectorAll(".ep.sel").forEach(x=>x.classList.remove("sel"));if(row)row.classList.add("sel");tr.classList.add("ep-on");
+ const g=tr.querySelector(".tbg"),u=e.still_path?IMG+(innerWidth>900?"w1280":"w780")+e.still_path:"";
+ if(u){const im=new Image();im.onload=()=>{if(!row||!row.classList.contains("sel"))return;g.style.backgroundImage=`url(${u})`;g.style.opacity=1;$(".tb").style.setProperty("--bk",`url(${u})`)};im.src=u}else{g.style.opacity=0;toast("No poster for this episode yet")}
+ const cw=e.crew||[],dr=pn(cw.filter(c=>c.job==="Director").map(c=>c.name)),wr=pn(cw.filter(c=>/^(Writer|Screenplay|Teleplay|Story)$/.test(c.job)).map(c=>c.name));
+ p.innerHTML=`<small>S${pad(ESN)}E${pad(e.episode_number)}</small><h4>${esc(e.name)}</h4><p class="em">${fd(e.air_date)}${e.runtime?" · "+e.runtime+" min":""}</p>${e.overview?`<p>${esc(e.overview)}</p>`:""}${dr.length?`<p class="ec"><b>Director</b>${esc(dr.join(", "))}</p>`:""}${wr.length?`<p class="ec"><b>Writer</b>${esc(wr.join(", "))}</p>`:""}<button class="all" id="epb">Back to show</button>`;p.hidden=false;$("#epb").onclick=epReset;
+ $("#modal").scrollTo({top:0,behavior:"smooth"})}
 async function episodes(d,sn){const my=tok,el=$("#epw");if(!el)return;const ss=(d.seasons||[]).filter(s=>s.season_number>0),nx=d.next_episode_to_air;
  if(!ss.length){el.innerHTML='<p class="empty">No episode data yet.</p>';return}
  sn=sn||(ss.find(s=>nx&&s.season_number===nx.season_number)||ss[ss.length-1]).season_number;
  el.innerHTML=`<div class="eh"><select id="ssn">${ss.map(s=>`<option value="${s.season_number}"${s.season_number===sn?" selected":""}>Season ${s.season_number}</option>`).join("")}</select><span>${d.number_of_episodes||""} episodes</span></div>${nx?`<p class="nx">Episode ${nx.episode_number} releases ${when(nx.air_date)} · ${fd(nx.air_date)}</p>`:""}<div id="eps"><p class="empty">Loading…</p></div>`;
- $("#ssn").onchange=e=>episodes(d,+e.target.value);
+ $("#ssn").onchange=e=>{epReset();episodes(d,+e.target.value)};
  try{const s=await api(`/tv/${d.id}/season/${sn}`),n=day(0);if(my!==tok||!$("#eps"))return;
-  $("#eps").innerHTML=s.episodes.map(e=>{const up=!e.air_date||e.air_date>n;return`<div class="ep"><div class="eh2"><b>${e.episode_number}</b><span>${esc(e.name)}</span>${up?'<em class="up">UPCOMING</em>':e.vote_average?`<em>${STAR}${e.vote_average.toFixed(1)}</em>`:""}</div><div class="ed">${fd(e.air_date)}${e.runtime?" · "+e.runtime+" min":""}${up?"":`<p>${esc(e.overview)}</p>`}</div></div>`}).join("")||'<p class="empty">No episodes listed.</p>';
-  $("#eps").onclick=e=>{const r=e.target.closest(".ep");if(r)r.classList.toggle("open")}}catch{const x=my===tok&&$("#eps");if(x)x.innerHTML='<p class="empty">Could not load episodes.</p>'}}
+  ES=s.episodes||[];ESN=sn;
+  $("#eps").innerHTML=ES.map((e,k)=>{const up=!e.air_date||e.air_date>n;return`<div class="ep" data-i="${k}"><div class="et">${e.still_path?`<img loading="lazy" decoding="async" alt="" src="${IMG}w300${e.still_path}">`:""}</div><div class="eb"><div class="eh2"><b>${e.episode_number}.</b><span>${esc(e.name)}</span>${up?'<em class="up">UPCOMING</em>':e.vote_average?`<em>${STAR}${e.vote_average.toFixed(1)}</em>`:""}</div><p class="em">${fd(e.air_date)}${e.runtime?" · "+e.runtime+" min":""}</p>${up||!e.overview?"":`<p class="eo">${esc(e.overview)}</p>`}</div></div>`}).join("")||'<p class="empty">No episodes listed.</p>';
+  $("#eps").onclick=e=>{const r=e.target.closest(".ep");if(r)epPick(+r.dataset.i)}}catch{const x=my===tok&&$("#eps");if(x)x.innerHTML='<p class="empty">Could not load episodes.</p>'}}
 const pick=l=>{l=(l||[]).filter(x=>x.file_path);const x=l.filter(y=>y.iso_639_1==="en").sort((p,q)=>q.vote_average-p.vote_average)[0]||l.sort((p,q)=>q.vote_average-p.vote_average)[0];return x?IMG+(x.file_path.endsWith(".svg")?"original":"w500")+x.file_path:""};
 const lgc={};async function logoOf(i){const t=kind(i),k=t+i.id;if(k in lgc)return lgc[k];try{lgc[k]=pick((await api(`/${t}/${i.id}/images`,{include_image_language:"en,null"})).logos)}catch{lgc[k]=""}return lgc[k]}
 const RG=["IN","US","GB","CA","AU","DE","FR","JP","KR","BR"];let REG=localStorage.getItem("cv_reg")||((navigator.language||"").split("-")[1]||"IN").toUpperCase().replace(/[^A-Z]/g,"").slice(0,2)||"IN";if(!RG.includes(REG))RG.unshift(REG);
@@ -189,23 +205,23 @@ function prov(d){const el=$("#wp");if(!el)return;const r=((d["watch/providers"]|
 let CUR={};
 async function openDetail(t,id){$("#simp").hidden=$("#sheet").hidden=true;if($("#modal").hidden){history.pushState({m:1},"");$("#modal").hidden=false;document.body.style.overflow="hidden"}
  const my=++tok;$("#modal").scrollTop=0;$("#mc").innerHTML='<div class="tr"></div><p class="empty">Loading…</p>';
- try{const d=await api(`/${t}/${id}`,{append_to_response:"videos,credits,recommendations,similar,images,watch/providers",include_image_language:"en,null"});if(my!==tok)return;
+ try{const d=await api(`/${t}/${id}`,{append_to_response:"videos,credits,recommendations,similar,images,watch/providers"+(t==="tv"?",aggregate_credits":""),include_image_language:"en,null"});if(my!==tok)return;
  const vs=d.videos.results.filter(x=>x.site==="YouTube"),v=vs.find(x=>x.type==="Trailer")||vs.find(x=>x.type==="Teaser")||vs[0],nx=d.next_episode_to_air;
  const stt=t==="tv"?(nx?`Ongoing · next ep ${when(nx.air_date)}`:/Ended|Canceled/.test(d.status)?"Ended":"Returning"):(!d.release_date?"Upcoming":d.release_date>day(0)?`Releases ${fd(d.release_date)}`:"Released");
  const m={id,type:t,title:title(d),poster:d.poster_path,lang:d.original_language,genres:(d.genres||[]).map(g=>g.id)};learn(m,1);CUR={d,t,m};
  const cast=d.credits.cast.slice(0,20).map(c=>`<div>${c.profile_path?`<img loading="lazy" decoding="async" src="${IMG}w185${c.profile_path}" alt="">`:"<i></i>"}<b>${esc(c.name)}</b><small>${esc(c.character||"")}</small></div>`).join("");
  const run=d.runtime?d.runtime+" min":"",bk=d.backdrop_path?IMG+(innerWidth>900?"w1280":"w780")+d.backdrop_path:"",lg=pick(d.images&&d.images.logos);
- $("#mc").innerHTML=`<div class="tr" style="background-image:url(${bk})"><div class="tc">${lg?`<img class="tlg" src="${lg}" alt="">`:""}${v?'<button class="btn play" id="pl">Play trailer</button>':'<p class="notr">No trailer available</p>'}</div></div>
+ $("#mc").innerHTML=`<div class="tr" style="background-image:url(${bk})"><div class="tbg"></div><div class="tc">${lg?`<img class="tlg" src="${lg}" alt="">`:""}${v?'<button class="btn play" id="pl">Play trailer</button>':'<p class="notr">No trailer available</p>'}</div></div>
  <div class="mi"><div class="mw"><img class="dp" alt="" src="${d.poster_path?IMG+"w342"+d.poster_path:""}"><div class="mx">
  <div class="chips"><i class="c1">${cat(d,t)}</i><i>${(d.release_date||d.first_air_date||"").slice(0,4)||"TBA"}</i><i>${STAR}${(d.vote_average||0).toFixed(1)}</i><i>${stt}</i></div>
  <h2${lg?' class="sr"':""}>${esc(title(d))}</h2><p class="tag">${esc(d.tagline||"")}</p>
- <div class="act"><button class="pill" id="bkm">${BM}<span>Add to list</span></button></div>
+ <div class="act"><button class="pill" id="bkm">${BM}<span>Add to list</span></button></div><div id="epi" class="epi" hidden></div>
  <p class="ovt">${esc(d.overview||"No overview yet.")}</p><button class="all" id="rm">Read more</button>
- ${cast?`<h3>Cast</h3><div class="strip cast">${cast}</div>`:""}
+ ${cast?`<h3>Cast</h3><div class="strip cast">${cast}</div>`:""}${crewHTML(d,t)}
  <div class="chips g">${(d.genres||[]).map(g=>`<i>${esc(g.name)}</i>`).join("")}</div>
  <div class="stats">${stat("Rating",(d.vote_average||0).toFixed(1)+"/10")}${stat("Votes",(d.vote_count||0).toLocaleString())}${t==="movie"?stat("Budget",money(d.budget))+stat("Box office",money(d.revenue)):stat("Seasons",d.number_of_seasons||"—")+stat("Episodes",d.number_of_episodes||"—")}${run?stat("Runtime",run):""}</div>
  <div id="wp"></div>${t==="tv"?'<h3>Episodes</h3><div id="epw"></div>':""}<h3>More like this</h3><div class="strip" id="rec"></div></div></div></div>`;
- if(v)$("#pl").onclick=()=>{$(".tr").classList.add("pl");$(".tr").innerHTML=`<iframe src="https://www.youtube-nocookie.com/embed/${v.key}?autoplay=1&rel=0&playsinline=1" referrerpolicy="strict-origin-when-cross-origin" allow="autoplay;fullscreen;picture-in-picture" allowfullscreen></iframe>`};
+ CUR.bk=bk;CUR.tc=$(".tr").innerHTML;CUR.bind=()=>{const b=$("#pl");if(b)b.onclick=()=>{$(".tr").classList.add("pl");$(".tr").innerHTML=`<iframe src="https://www.youtube-nocookie.com/embed/${v.key}?autoplay=1&rel=0&playsinline=1" referrerpolicy="strict-origin-when-cross-origin" allow="autoplay;fullscreen;picture-in-picture" allowfullscreen></iframe>`}};CUR.bind();
  $("#rm").onclick=e=>{const o=$(".ovt").classList.toggle("open");e.target.textContent=o?"Less":"Read more"};$("#bkm").onclick=openSheet;
  const st=$("#rec");[...d.recommendations.results,...d.similar.results].filter((x,i,r)=>x.poster_path&&r.findIndex(y=>y.id===x.id)===i).slice(0,20).forEach(x=>st.append(card(x,t)));
  if(st.children.length)inf(st,n=>api(`/${t}/${id}/recommendations`,{page:n}),t);else st.previousElementSibling.remove(),st.remove();
