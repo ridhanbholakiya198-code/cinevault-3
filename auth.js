@@ -30,7 +30,9 @@ const IC = {
 // ---------- local list helpers ----------
 const readList = () => jget(LS, {});
 const writeList = v => { try { localStorage.setItem(LS, JSON.stringify(v)) } catch { } };
-const clean = i => ({ id: i.id, type: i.type, title: String(i.title || "").slice(0, 300), poster: i.poster || "", lang: i.lang || "", genres: (i.genres || []).slice(0, 30), status: i.status || "", fav: !!i.fav, sub: !!i.sub, u: Number(i.u) || 0 });
+const noLists = () => { try { return localStorage.getItem("cv_nolists") === "1" } catch { return false } };
+const extraLists = i => (!noLists() && Array.isArray(i.lists) && i.lists.length > 1) ? { lists: i.lists.slice(0, 5) } : {};
+const clean = i => ({ id: i.id, type: i.type, title: String(i.title || "").slice(0, 300), poster: i.poster || "", lang: i.lang || "", genres: (i.genres || []).slice(0, 30), status: i.status || "", ...extraLists(i), fav: !!i.fav, sub: !!i.sub, u: Number(i.u) || 0 });
 const isEmpty = i => !i.status && !i.fav && !i.sub;
 const sig = i => JSON.stringify(clean(i));
 const count = () => Object.values(readList()).filter(i => !isEmpty(i)).length;
@@ -110,7 +112,7 @@ async function startSync(u) {
       if (c.type === "removed") { if (k in known) { delete known[k]; delete L[k]; dirty = 1 } }
       else {
         const r = clean(c.doc.data()), sg = JSON.stringify(r);
-        if (known[k] !== sg && (!L[k] || r.u >= (L[k].u || 0))) { L[k] = r; known[k] = sg; dirty = 1 }
+        if (known[k] !== sg && (!L[k] || r.u >= (L[k].u || 0))) { if (L[k] && L[k].lists && L[k].lists.length > 1 && !r.lists && (r.u || 0) === (L[k].u || 0)) { known[k] = sg } else { L[k] = r; known[k] = sg; dirty = 1 } }
       }
     });
     if (dirty) { writeList(L); changed() }
@@ -118,6 +120,16 @@ async function startSync(u) {
 }
 
 async function commit(col, ops) {
+  try { await commitRaw(col, ops) }
+  catch (e) {
+    // older Firestore rules don't know the "lists" field yet: keep syncing the main list, keep extra lists on this device
+    if (e && e.code === "permission-denied" && ops.some(o => o[0] === "s" && o[2] && o[2].lists)) {
+      try { localStorage.setItem("cv_nolists", "1") } catch { }
+      await commitRaw(col, ops.map(o => o[0] === "s" && o[2] && o[2].lists ? ["s", o[1], (({ lists, ...r }) => r)(o[2])] : o));
+    } else throw e
+  }
+}
+async function commitRaw(col, ops) {
   const { fs } = fb;
   for (let i = 0; i < ops.length; i += 400) {
     const b = fs.writeBatch(db);

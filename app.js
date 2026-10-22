@@ -123,7 +123,7 @@ async function named(list){const ck="n:"+list.map(x=>x[0]).join("|");
 function inf(st,load,ty,box,vert,p0){let p=p0==null?1:p0,busy=0,end=0;const sc=box||st,more=async()=>{if(busy||end)return;busy=1;
  try{const d=await load(++p);if(!d.results.length||p>=Math.min(d.total_pages||1,25))end=1;d.results.filter(i=>i.poster_path&&i.media_type!=="person").forEach(i=>st.append(card(i,ty)))}catch{p--}busy=0};
  sc.addEventListener("scroll",()=>{if(vert?sc.scrollTop+sc.clientHeight>sc.scrollHeight-700:sc.scrollLeft+sc.clientWidth>sc.scrollWidth-700)more()},{passive:true});return more}
-async function loadRow(sec){if(sec._l)return;sec._l=1;io.unobserve(sec);const[,p,ty,q,,mix,nm]=RW[sec.dataset.i],st=sec.querySelector(".strip");
+async function loadRow(sec){if(sec._l||sec.dataset.i==null)return;sec._l=1;io.unobserve(sec);const[,p,ty,q,,mix,nm]=RW[sec.dataset.i],st=sec.querySelector(".strip");
  try{if(nm){const it=await named(nm);if(!it.length)return sec.remove();st.innerHTML="";it.forEach(i=>st.append(card(i,"")));return}
   const[d,u]=await Promise.all([api(p,q||{}),mix?api("/movie/upcoming"):0]);let it=d.results.filter(i=>i.poster_path);if(!it.length&&!u)return sec.remove();
   if(p==="/movie/upcoming"){it=it.filter(i=>i.release_date>day(0)).sort((a,b)=>a.release_date<b.release_date?-1:1).map(i=>({...i,soon:1,media_type:"movie"}));if(!it.length)return sec.remove();st.innerHTML="";it.forEach(i=>st.append(card(i,"")));return}
@@ -137,7 +137,7 @@ function heroLogo(i){logoOf(i).then(l=>{if(l&&hero[hi]===i)$("#htitle").innerHTM
 async function home(){heroItems().then(h=>{hero=h;startHero();h.forEach(i=>{if(!((kind(i)+i.id) in lgc))heroLogo(i)})}).catch(setup);
  RW=buildRows();RW.forEach((r,i)=>{const s=document.createElement("section");s.className="row";s.dataset.i=i;
   s.innerHTML=`<div class="rh"><h2>${r[0]==="In cinemas now"?'<i class="live"></i>':""}${esc(r[0])}</h2><svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></div><div class="strip">${'<div class="card sk"></div>'.repeat(6)}</div><button class="ar l" aria-label="Back"><svg viewBox="0 0 24 24"><path d="m15 5-7 7 7 7"/></svg></button><button class="ar r" aria-label="Next"><svg viewBox="0 0 24 24"><path d="m9 5 7 7-7 7"/></svg></button>`;
-  s.querySelector(".rh").onclick=async()=>{if(r[6]){B={path:"",type:"",q:{},f:0,page:1,busy:0,end:1};$("#btitle").textContent=r[0];$("#bar").hidden=true;$("#bgrid").innerHTML="";(await named(r[6])).forEach(i=>$("#bgrid").append(card(i,"")));view("browse");return}reset(r[0],r[1],r[2]||"",r[3]||{},false);view("browse")};s.querySelectorAll(".ar").forEach(b=>b.onclick=()=>{const st=s.querySelector(".strip");st.scrollBy({left:(b.classList.contains("r")?1:-1)*st.clientWidth*.8,behavior:"smooth"})});$("#rows").append(s);io.observe(s)});
+  s.querySelector(".rh").onclick=async()=>{if(r[6]){B={path:"",type:"",q:{},f:0,page:1,busy:0,end:1};$("#btitle").textContent=r[0];$("#bar").hidden=true;$("#bgrid").innerHTML="";(await named(r[6])).forEach(i=>$("#bgrid").append(card(i,"")));view("browse");return}reset(r[0],r[1],r[2]||"",r[3]||{},false);view("browse")};s.querySelectorAll(".ar").forEach(b=>b.onclick=()=>{const st=s.querySelector(".strip");st.scrollBy({left:(b.classList.contains("r")?1:-1)*st.clientWidth*.8,behavior:"smooth"})});$("#rows").append(s);io.observe(s)});(()=>{const fr=frRow(),r1=$("#rows").children[1];r1?r1.after(fr):$("#rows").append(fr)})();
 
  if(!(navigator.connection&&navigator.connection.saveData))document.querySelectorAll("#rows .row").forEach((r,k)=>setTimeout(()=>loadRow(r),1200+k*300))}
 // ---- Browse: infinite scroll grid (filters, See all, search all use this) ----
@@ -167,7 +167,7 @@ async function go(v){$("#q").value="";if(v==="search"){view("home");$("#q").focu
  if(v==="browse"&&!B.f){await fillGenres("movie");filt()}view(v)}
 document.querySelectorAll("[data-v]").forEach(a=>a.onclick=e=>{e.preventDefault();go(a.dataset.v)});
 let st;$("#q").oninput=e=>{clearTimeout(st);const q=e.target.value.trim();if(!q)return view("home");
- st=setTimeout(()=>{saveQ(q);reset(`Results for “${q}”`,"/search/multi","",{query:q},0);view("browse")},350)};
+ st=setTimeout(()=>{saveQ(q);reset(`Results for “${q}”`,"/search/multi","",{query:q},0);view("browse");frSearch(q)},350)};
 addEventListener("popstate",()=>{if(SKIPPOP){SKIPPOP=0;return}if(!$("#trl").hidden){closeTr(1);return}if(window.CVA&&CVA.back())return;if(!$("#modal").hidden){if(navBack())history.pushState({m:1},"");else hideModal()}else view("home",1)});
 // ---- Detail: tabs, data appears on tap ----
 const money=n=>n?"$"+n.toLocaleString("en-US"):"Not disclosed",fd=s=>s?new Date(s).toLocaleDateString("en-GB",{day:"numeric",month:"short",year:"numeric"}):"TBA";
@@ -211,11 +211,15 @@ function prov(d,tab){const el=$("#wp");if(!el)return;const r=((d["watch/provider
 let CUR={};
 let NAV=[],VIEW=null,SKIPPOP=0;
 const shareURL=(k,id)=>PX?`${location.origin}/s/${k}/${id}`:`${location.origin}/#${k}-${id}`;
-function openFromHash(){const m=(location.hash||"").match(/^#(movie|tv|person)-(\d+)$/);if(!m)return false;history.replaceState(history.state,"",location.pathname+location.search);m[1]==="person"?openPerson(+m[2]):openDetail(m[1],+m[2]);return true}
+function openFromHash(){const h=location.hash||"",clr=()=>history.replaceState(history.state,"",location.pathname+location.search);let m;
+ if(m=h.match(/^#(movie|tv|person|collection)-(\d+)$/)){clr();m[1]==="person"?openPerson(+m[2]):m[1]==="collection"?openCollection(+m[2]):openDetail(m[1],+m[2])}
+ else if(m=h.match(/^#fr-([a-z0-9]+)$/)){clr();openFranchise(m[1])}
+ else if(m=h.match(/^#list=([mt\d,]+)(?:&n=(.*))?$/)){clr();let n="Shared list";try{n=decodeURIComponent(m[2]||"")||n}catch{}openSharedList(m[1].split(",").filter(x=>/^[mt]\d+$/.test(x)).slice(0,500),n.slice(0,60))}
+ else return false;return true}
 function navIn(bk,v){if(!bk){if(!$("#modal").hidden&&VIEW)NAV.push(VIEW);else NAV=[]}VIEW=v;$(".tb").style.setProperty("--p",0)}
-function navBack(){if(!NAV.length)return false;const v=NAV.pop();v.k==="p"?openPerson(v.id,v.r,1):openDetail(v.t,v.id,1);return true}
+function navBack(){if(!NAV.length)return false;const v=NAV.pop();v.k==="p"?openPerson(v.id,v.r,1):v.k==="f"?openFranchise(v.key,1):v.k==="c"?openCollection(v.id,1):v.k==="d"?openDetail(v.t,v.id,1):0;return true}
 const PJ=/^(Writer|Screenplay|Teleplay|Story|Novel|Comic Book|Creator|Characters)$/;
-async function openPerson(id,role,bk){$("#simp").hidden=$("#sheet").hidden=true;navIn(bk,{k:"p",id,r:role});$("#modal").classList.add("pp");
+async function openPerson(id,role,bk){$("#simp").hidden=$("#sheet").hidden=true;navIn(bk,{k:"p",id,r:role});$("#modal").classList.add("pp");$("#modal").classList.remove("nosh");
  if($("#modal").hidden){history.pushState({m:1},"");$("#modal").hidden=false;document.body.style.overflow="hidden"}
  const my=++tok;CUR={};$("#modal").scrollTop=0;$("#tl").removeAttribute("src");$("#tt").textContent="";$("#mc").innerHTML='<p class="empty" style="padding-top:110px">Loading…</p>';
  try{const d=await api(`/person/${id}`,{append_to_response:"combined_credits"});if(my!==tok)return;
@@ -233,9 +237,9 @@ function openTr(key){const o=$("#trl");$("#trp").innerHTML=`<iframe src="https:/
  try{const f=o.requestFullscreen||o.webkitRequestFullscreen;f&&f.call(o);if(screen.orientation&&screen.orientation.lock)screen.orientation.lock("landscape").catch(()=>{})}catch(_){}}
 function closeTr(pop){const o=$("#trl");if(!o||o.hidden)return;o.hidden=true;$("#trp").innerHTML="";try{if(document.fullscreenElement)document.exitFullscreen();if(screen.orientation&&screen.orientation.unlock)screen.orientation.unlock()}catch(_){}if(!pop&&history.state&&history.state.t){SKIPPOP=1;history.back()}}
 $("#trx").onclick=()=>closeTr();
-$("#mc").addEventListener("click",e=>{const g=e.target.closest("[data-g]");if(g&&CUR.t){openGenre(CUR.t,+g.dataset.g);return}const p=e.target.closest("[data-p]");if(p)openPerson(+p.dataset.p,p.dataset.r)});
+$("#mc").addEventListener("click",e=>{const fb=e.target.closest("[data-f],[data-col]");if(fb){fb.dataset.col?openCollection(+fb.dataset.col):openFranchise(fb.dataset.f);return}const g=e.target.closest("[data-g]");if(g&&CUR.t){openGenre(CUR.t,+g.dataset.g);return}const p=e.target.closest("[data-p]");if(p)openPerson(+p.dataset.p,p.dataset.r)});
 
-async function openDetail(t,id,bk){$("#simp").hidden=$("#sheet").hidden=true;navIn(bk,{k:"d",t,id});$("#modal").classList.remove("pp");if($("#modal").hidden){history.pushState({m:1},"");$("#modal").hidden=false;document.body.style.overflow="hidden"}
+async function openDetail(t,id,bk){$("#simp").hidden=$("#sheet").hidden=true;navIn(bk,{k:"d",t,id});$("#modal").classList.remove("pp","nosh");if($("#modal").hidden){history.pushState({m:1},"");$("#modal").hidden=false;document.body.style.overflow="hidden"}
  const my=++tok;$("#modal").scrollTop=0;$("#mc").innerHTML='<div class="tr"></div><p class="empty">Loading…</p>';
  try{let d;try{d=await api(`/${t}/${id}`,{append_to_response:"videos,credits,recommendations,similar,images,watch/providers"+(t==="tv"?",aggregate_credits":""),include_image_language:"en,null"})}catch(e1){if(my!==tok)return;d=await api(`/${t}/${id}`,{append_to_response:"videos,credits,images"+(t==="tv"?",aggregate_credits":""),include_image_language:"en,null"})}if(my!==tok)return;
  d.videos=d.videos||{results:[]};d.credits=d.credits||{cast:[],crew:[]};d.recommendations=d.recommendations||{results:[]};d.similar=d.similar||{results:[]};
@@ -250,7 +254,7 @@ async function openDetail(t,id,bk){$("#simp").hidden=$("#sheet").hidden=true;nav
  <h2${lg?' class="sr"':""}>${esc(title(d))}</h2><p class="tag">${esc(d.tagline||"")}</p>
  <div class="act"><button class="pill" id="bkm">${BM}<span>Add to list</span></button></div><div id="epi" class="epi" hidden></div>
  <p class="ovt">${esc(d.overview||"No overview yet.")}</p><button class="all" id="rm">Read more</button>
- ${cast?`<h3>Cast</h3><div class="strip cast">${cast}</div>`:""}${crewHTML(d,t)}
+ ${cast?`<h3>Cast</h3><div class="strip cast">${cast}</div>`:""}${crewHTML(d,t)}<div id="frs"></div>
  <div class="chips g">${(d.genres||[]).map(g=>`<i data-g="${g.id}">${esc(g.name)}</i>`).join("")}</div>
  <div class="stats">${stat("Rating",(d.vote_average||0).toFixed(1)+"/10")}${stat("Votes",(d.vote_count||0).toLocaleString())}${t==="movie"?stat("Budget",money(d.budget))+stat("Box office",money(d.revenue)):stat("Seasons",d.number_of_seasons||"—")+stat("Episodes",d.number_of_episodes||"—")}${run?stat("Runtime",run):""}</div>
  <div id="wp"></div>${t==="tv"?'<h3>Episodes</h3><div id="epw"></div>':""}<h3>More like this</h3><div class="strip" id="rec"></div></div></div></div>`;
@@ -258,30 +262,34 @@ async function openDetail(t,id,bk){$("#simp").hidden=$("#sheet").hidden=true;nav
  $("#rm").onclick=e=>{const o=$(".ovt").classList.toggle("open");e.target.textContent=o?"Less":"Read more"};$("#bkm").onclick=openSheet;
  const st=$("#rec");[...d.recommendations.results,...d.similar.results].filter((x,i,r)=>x.poster_path&&r.findIndex(y=>y.id===x.id)===i).slice(0,20).forEach(x=>st.append(card(x,t)));
  if(st.children.length)inf(st,n=>api(`/${t}/${id}/recommendations`,{page:n}),t);else st.previousElementSibling.remove(),st.remove();
- prov(d);const tb=$(".tb");tb.classList.remove("s");tb.style.setProperty("--bk",bk?`url(${bk})`:"none");if(lg)$("#tl").src=lg;else $("#tl").removeAttribute("src");$("#tt").textContent=lg?"":title(d);if(t==="tv")episodes(d);syncTb();if(d.poster_path)dominant(d.poster_path).then(c=>root.style.setProperty("--accent",c));
+ prov(d);frStrip(d,t);const tb=$(".tb");tb.classList.remove("s");tb.style.setProperty("--bk",bk?`url(${bk})`:"none");if(lg)$("#tl").src=lg;else $("#tl").removeAttribute("src");$("#tt").textContent=lg?"":title(d);if(t==="tv")episodes(d);syncTb();if(d.poster_path)dominant(d.poster_path).then(c=>root.style.setProperty("--accent",c));
  }catch(e){if(my===tok){$("#mc").innerHTML='<div class="fail"><p class="empty">Could not load details.</p><button class="btn" id="rtd">Try again</button></div>';$("#rtd").onclick=()=>openDetail(t,id,1)}}}
 const BM='<svg viewBox="0 0 24 24"><path d="M6 3h12v18l-6-4.5L6 21z"/></svg>',CHK='<svg viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg>',FOLDER='<svg viewBox="0 0 24 24"><path d="M3 18.5V6a2 2 0 0 1 2-2h4l2 2h7a2 2 0 0 1 2 2v2"/><path d="M5 20h13.6a2 2 0 0 0 1.9-1.4l1.5-5.6a1 1 0 0 0-1-1.2H8a2 2 0 0 0-1.9 1.4z"/></svg>';
 const getE=()=>store.get()[CUR.m.type+CUR.m.id]||{};
-function upd2(fn){const m=CUR.m,k=m.type+m.id,l=store.get(),c=l[k]||{...m};fn(c);c.u=Date.now();l[k]=c;store.set(l);if(c.status||c.fav||c.sub)learn(m,3);syncTb();if(c.status||c.fav||c.sub)window.CVA&&CVA.afterSave()}
-const SI={Watching:["#5ad1ff",'<circle cx="12" cy="12" r="3"/><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/>'],Completed:["#6ee7a0",'<circle cx="12" cy="12" r="9"/><path d="m8 12.5 3 3 5-6"/>'],"On-Hold":["#ffd166",'<circle cx="12" cy="12" r="9"/><path d="M10 9v6M14 9v6"/>'],Dropped:["#ff7a7a",'<circle cx="12" cy="12" r="9"/><path d="m9 9 6 6M15 9l-6 6"/>'],"Plan to Watch":["#b794f6",'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>']};
+function upd2(fn){const m=CUR.m,k=m.type+m.id,l=store.get(),c=l[k]||{...m};fn(c);c.u=Date.now();l[k]=c;store.set(l);if(c.status||c.fav||c.sub)learn(m,3);syncTb();if((c.status||c.fav||c.sub)&&$("#sheet").hidden)window.CVA&&CVA.afterSave()}
+const SI={Watching:'<circle cx="12" cy="12" r="3"/><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/>',Completed:'<circle cx="12" cy="12" r="9"/><path d="m8 12.5 3 3 5-6"/>',"On-Hold":'<circle cx="12" cy="12" r="9"/><path d="M10 9v6M14 9v6"/>',Dropped:'<circle cx="12" cy="12" r="9"/><path d="m9 9 6 6M15 9l-6 6"/>',"Plan to Watch":'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>'};
 const ic=p=>`<svg viewBox="0 0 24 24">${p}</svg>`;
 function toast(t){const e=$("#toast");e.textContent=t;e.classList.add("on");clearTimeout(e._t);e._t=setTimeout(()=>e.classList.remove("on"),1800)}
-function syncTb(){const e=getE(),s=e.status,b=$("#bkm");$("#hr").classList.toggle("on",!!e.fav);$("#trb").classList.toggle("dim",!CUR.v);
- if(b){b.classList.toggle("set",!!s);b.style.setProperty("--c",s?SI[s][0]:"");b.innerHTML=s?`${ic(SI[s][1])}<span>${s}</span><svg class="cv" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg>`:`${BM}<span>Add to list</span>`}}
-function openSheet(){const cur=getE().status||"";$("#shs").textContent=CUR.m.title;
- $("#sopts").innerHTML=Object.keys(SI).map(s=>`<button data-s="${s}" style="--c:${SI[s][0]}" class="${s===cur?"on":""}"><i>${ic(SI[s][1])}</i><span>${s}</span>${s===cur?CHK:""}</button>`).join("")+(cur?`<button data-s="None" class="rm"><i>${ic('<path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/>')}</i><span>Remove from list</span></button>`:"");$("#sheet").hidden=false}
-$("#sopts").onclick=e=>{const b=e.target.closest("button");if(!b)return;const s=b.dataset.s;upd2(c=>c.status=s==="None"?"":s);$("#sheet").hidden=true;toast(s==="None"?"Removed from list":"Added to "+s)};
-$("#sheet").onclick=e=>{if(e.target.id==="sheet")$("#sheet").hidden=true};
+function syncTb(){const e=getE(),ls=lsOf(e),b=$("#bkm");$("#hr").classList.toggle("on",!!e.fav);$("#trb").classList.toggle("dim",!CUR.v);
+ if(b){b.classList.toggle("set",!!ls.length);b.innerHTML=ls.length?`${ic('<path d="m5 12.5 4.5 4.5L19 7.5"/>')}<span>${ls.join(" · ")}</span><svg class="cv" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg>`:`${BM}<span>Add to list</span>`}}
+let SHD=0;function closeSheet(){$("#sheet").hidden=true;if(SHD){SHD=0;window.CVA&&CVA.afterSave()}}
+function openSheet(){SHD=0;const cur=lsOf(getE());$("#shs").textContent=CUR.m.title;
+ $("#sopts").innerHTML=STATUS.map(s=>`<button data-s="${s}" class="${cur.includes(s)?"on":""}" role="checkbox" aria-checked="${cur.includes(s)}"><i>${ic(SI[s])}</i><span>${s}</span><em class="ck">${CHK}</em></button>`).join("")+`<div class="sf"><button data-s="None" class="rm"${cur.length?"":" hidden"}>Remove from all</button><button data-s="Done" class="dn">Done</button></div>`;$("#sheet").hidden=false}
+$("#sopts").onclick=e=>{const b=e.target.closest("button");if(!b)return;const s=b.dataset.s;if(s==="Done"){closeSheet();return}SHD=1;
+ if(s==="None")upd2(c=>{c.lists=[];c.status=""});else upd2(c=>{let l=lsOf(c);l=l.includes(s)?l.filter(x=>x!==s):[...l,s];c.lists=l;c.status=l[0]||""});
+ const now=lsOf(getE());$("#sopts").querySelectorAll("button[data-s]").forEach(x=>{if(STATUS.includes(x.dataset.s)){const on=now.includes(x.dataset.s);x.classList.toggle("on",on);x.setAttribute("aria-checked",on)}});$("#sopts .rm").hidden=!now.length;
+ toast(s==="None"?"Removed from all lists":now.includes(s)?"Added to "+s:"Removed from "+s)};
+$("#sheet").onclick=e=>{if(e.target.id==="sheet")closeSheet()};
 $("#hr").onclick=()=>upd2(c=>c.fav=!c.fav);$("#trb").onclick=()=>{if(CUR.v)openTr(CUR.v.key);else toast("No trailer available")};
-$("#sh").onclick=()=>{const v=VIEW,nm=CUR.m?CUR.m.title:$("#tt").textContent;if(!v||!nm)return;const k=v.k==="p"?"person":v.t,u=shareURL(k,v.id),x={title:nm+" on CineVault",url:u};
+$("#sh").onclick=()=>{const v=VIEW,nm=CUR.m?CUR.m.title:$("#tt").textContent;if(!v||!nm)return;if(v.k==="l")return;const k=v.k==="p"?"person":v.k==="f"?"franchise":v.k==="c"?"collection":v.t,u=shareURL(k,v.k==="f"?v.key:v.id),x={title:nm+" on CineVault",url:u};
  if(navigator.share)navigator.share(x).catch(()=>{});else if(navigator.clipboard)navigator.clipboard.writeText(u).then(()=>toast("Link copied")).catch(()=>toast(u));else toast(u)};
 $("#simp").onclick=e=>{if(e.target.id==="simp")$("#simp").hidden=true};
-function hideModal(){tok++;NAV=[];VIEW=null;closeTr(1);$("#modal").classList.remove("pp");$("#simp").hidden=$("#sheet").hidden=true;$("#modal").hidden=true;$("#mc").innerHTML="";document.body.style.overflow="";if(!$("#list").hidden)renderList()}
+function hideModal(){tok++;NAV=[];VIEW=null;closeTr(1);$("#modal").classList.remove("pp","nosh");$("#simp").hidden=$("#sheet").hidden=$("#lsheet").hidden=true;$("#modal").hidden=true;$("#mc").innerHTML="";document.body.style.overflow="";if(!$("#list").hidden)renderList()}
 const close=()=>history.state&&history.state.m?history.back():hideModal();
-$("#mx").onclick=()=>{if(!navBack())close()};$("#modal").onclick=e=>{if(e.target.id==="modal")close()};addEventListener("keydown",e=>{if(e.key!=="Escape")return;if(!$("#sheet").hidden||!$("#simp").hidden){$("#sheet").hidden=$("#simp").hidden=true}else if(!$("#modal").hidden)close()});
+$("#mx").onclick=()=>{if(!navBack())close()};$("#modal").onclick=e=>{if(e.target.id==="modal")close()};addEventListener("keydown",e=>{if(e.key!=="Escape")return;if(!$("#sheet").hidden||!$("#simp").hidden){closeSheet();$("#simp").hidden=true}else if(!$("#modal").hidden)close()});
 // ---- My list ----
 let tab="Watching";
-function renderList(){const all=Object.values(store.get()),T=[...STATUS,"Favourites","Subscribed"],f=(n,i)=>n==="Favourites"?i.fav:n==="Subscribed"?i.sub:i.status===n;
+function renderList(){const all=Object.values(store.get()),T=[...STATUS,"Favourites"],f=(n,i)=>n==="Favourites"?i.fav:inL(i,n);
  $("#tabs").innerHTML="";T.forEach(n=>{const c=all.filter(i=>f(n,i)).length,b=document.createElement("button");b.className=n===tab?"on":"";b.innerHTML=`${n}<small>${c||""}</small>`;b.onclick=()=>{tab=n;renderList()};$("#tabs").append(b)});
  const items=all.filter(i=>f(tab,i));$("#lgrid").innerHTML=items.length?"":`<div class="void">${FOLDER}<p>${tab} is empty</p><span>Open any title and tap the bookmark to save it here.</span></div>`;
  items.forEach(i=>$("#lgrid").append(card({id:i.id,title:i.title,poster_path:i.poster,vote_average:0},i.type)));window.CVA&&CVA.listNote()}

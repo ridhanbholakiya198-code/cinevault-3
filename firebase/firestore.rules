@@ -5,7 +5,7 @@ service cloud.firestore {
     function owner(uid) { return request.auth != null && request.auth.uid == uid; }
 
     function okItem(d) {
-      return d.keys().hasOnly(['id','type','title','poster','lang','genres','status','fav','sub','u'])
+      return d.keys().hasOnly(['id','type','title','poster','lang','genres','status','lists','fav','sub','u'])
         && d.keys().hasAll(['id','type','title','status'])
         && (d.id is number || d.id is string)
         && d.type in ['movie','tv']
@@ -14,6 +14,7 @@ service cloud.firestore {
         && (!('poster' in d) || (d.poster is string && d.poster.size() <= 300))
         && (!('lang' in d) || (d.lang is string && d.lang.size() <= 10))
         && (!('genres' in d) || (d.genres is list && d.genres.size() <= 30))
+        && (!('lists' in d) || (d.lists is list && d.lists.size() <= 5 && d.lists.hasOnly(['Watching','Completed','On-Hold','Dropped','Plan to Watch'])))
         && (!('fav' in d) || d.fav is bool)
         && (!('sub' in d) || d.sub is bool)
         && (!('u' in d) || d.u is number);
