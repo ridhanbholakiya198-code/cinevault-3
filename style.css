@@ -537,3 +537,12 @@ html,body{background:#000}
 .fcard{min-width:0}.fcard .fi{width:100%;box-sizing:border-box}
 .fcard .fm{grid-template-rows:1fr 1fr}.fcard .fm img{min-height:0}
 #sheet:not([hidden])~#toast,#lsheet:not([hidden])~#toast{bottom:auto;top:max(18px,env(safe-area-inset-top))}
+
+/* ======== My list header: one clean row; "saved on this device" note sits under it ======== */
+.lhd .rt{white-space:nowrap}
+.lhd+.cva-note{margin-top:4px}
+@media(max-width:520px){.lshare span{display:none}.lshare{padding:11px}}
+/* ======== auto franchise pages ======== */
+.fnote{margin:10px 0 0;color:var(--mute);font-size:13px;max-width:62ch}
+.fgh{grid-column:1/-1;margin:22px 0 -2px;font:400 26px/1.1 "Bebas Neue";letter-spacing:.06em;display:flex;align-items:baseline;gap:10px;border-bottom:1px solid #ffffff10;padding-bottom:8px}.fgh small{color:var(--mute);font:500 13px "DM Sans";letter-spacing:0}
+.fc.sd img{opacity:.5;filter:saturate(.6)}.fc .sdt{position:absolute;left:8px;bottom:62px;font:500 10px "DM Sans";letter-spacing:.1em;text-transform:uppercase;padding:3px 8px;border-radius:99px;background:#000c;border:1px solid #ffffff26;color:#d8d3c8;font-style:normal;z-index:2}

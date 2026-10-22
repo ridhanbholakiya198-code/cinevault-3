@@ -1,7 +1,6 @@
 // Link-preview page for shared things: /s/<movie|tv|person|collection>/<id>, /s/franchise/<key>, /s/list/x?n=<name>&d=m603,t1396
 // Gives WhatsApp / Telegram / iMessage a proper title + image, then sends the visitor into the app.
 const esc = (t) => String(t || "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
-const FRN = { mcu: "Marvel Cinematic Universe", xmen: "X-Men", dc: "DC Universe", starwars: "Star Wars", hp: "Harry Potter", lotr: "The Lord of the Rings", tf: "Transformers" };
 module.exports = async (req, res) => {
   const u = new URL(req.url || "/", "http://x");
   const kind = u.searchParams.get("kind") || "", id = u.searchParams.get("id") || "";
@@ -19,10 +18,14 @@ module.exports = async (req, res) => {
         desc = String(j.overview || j.biography || desc).replace(/\s+/g, " ").slice(0, 200);
         const p = j.backdrop_path || j.poster_path || j.profile_path; if (p) img = "https://image.tmdb.org/t/p/w780" + p; good = true;
       }
-    } else if (kind === "franchise" && FRN[id]) {
+    } else if (kind === "franchise" && /^[mt]\d{1,9}$/.test(id)) {
       target = "/#fr-" + id; path = "/s/franchise/" + id;
-      title = FRN[id] + " - every film & series in release order | CineVault";
-      desc = "Explore the whole " + FRN[id] + " collection on CineVault, in release order."; good = true;
+      const j = key ? await tmdb("/" + (id[0] === "t" ? "tv" : "movie") + "/" + id.slice(1)) : null;
+      const nm = j ? (j.title || j.name || "") : "";
+      title = (nm ? nm + " - full franchise, in order" : "Franchise in order") + " | CineVault";
+      desc = "Every part, spin-off and series of the " + (nm || "franchise") + " universe, sorted automatically on CineVault.";
+      if (j && (j.backdrop_path || j.poster_path)) img = "https://image.tmdb.org/t/p/w780" + (j.backdrop_path || j.poster_path);
+      good = true;
     } else if (kind === "list") {
       const d = (u.searchParams.get("d") || ""), n = (u.searchParams.get("n") || "Shared list").replace(/[^\w \-'&.,!?]/g, "").slice(0, 60) || "Shared list";
       if (/^[mt]\d{1,9}(,[mt]\d{1,9}){0,499}$/.test(d)) {

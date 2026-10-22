@@ -200,7 +200,7 @@ function listNote() {
   const sec = $("#list"); if (!sec || sec.hidden || user || hint() || jget(NAG, {}).never) return;
   const d = document.createElement("div"); d.className = "cva-note";
   d.innerHTML = `${IC.mark}<p>Your list is saved on this device only. <button data-a="auth">Sign in</button> to back it up and open it anywhere.</p>`;
-  sec.querySelector("h2").after(d);
+  (sec.querySelector(".lhd") || sec.querySelector("h2")).after(d);
 }
 
 // ---------- messages / busy ----------

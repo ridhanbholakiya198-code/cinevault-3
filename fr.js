@@ -1,83 +1,113 @@
-/* CineVault franchises & collections: X-Men, MCU, DC, Star Wars, Harry Potter, Middle-earth, Transformers + any TMDB collection.
-   Everything is looked up by NAME at runtime (no hard-coded ids that can go stale) and cached, always shown in release order. */
-const SWRX=/star wars|mandalorian|andor|ahsoka|obi-wan|boba fett|the acolyte|skeleton crew|bad batch|clone wars|rogue one|solo:|visions|rebels|resistance|young jedi|ewok|droids/i;
-const FR=[
-{k:"mcu",n:"Marvel Cinematic Universe",s:"Every Marvel Studios film & series",co:[420],aka:["mcu","marvel","marvel studios","marvel cinematic universe","avengers","iron man","captain america","thor","guardians of the galaxy","black panther","doctor strange","ant-man","infinity saga"]},
-{k:"xmen",n:"X-Men",s:"X-Men, Wolverine & Deadpool",coll:["X-Men Collection","Wolverine Collection","Deadpool Collection"],mv:["The New Mutants","Deadpool & Wolverine"],tv:["X-Men '97","Legion","The Gifted","X-Men: The Animated Series","X-Men: Evolution","Wolverine and the X-Men"],det:/x-men|wolverine|deadpool/i,aka:["x-men","x men","xmen","wolverine","deadpool","mutants","logan"]},
-{k:"dc",n:"DC Universe",s:"Batman, Superman, Justice League & more",dco:["DC Films","DC Studios","DC Entertainment","DC Comics"],coll:["The Dark Knight Collection","Superman Collection","Wonder Woman Collection","Aquaman Collection","Shazam Collection","Joker Collection","The Batman Collection","Suicide Squad Collection"],det:/batman|superman|justice league|wonder woman|aquaman|shazam|suicide squad|green lantern|peacemaker|creature commandos/i,aka:["dc","dceu","dcu","dc comics","dc universe","batman","superman","justice league","wonder woman","aquaman","joker","shazam","suicide squad"]},
-{k:"starwars",n:"Star Wars",s:"The saga, spin-offs & series",coll:["Star Wars Collection"],co:[1],rx:SWRX,det:/star wars/i,aka:["star wars","starwars","mandalorian","andor","ahsoka","jedi","clone wars"]},
-{k:"hp",n:"Harry Potter",s:"The Wizarding World",coll:["Harry Potter Collection","Fantastic Beasts Collection"],mv:["Harry Potter 20th Anniversary: Return to Hogwarts"],tv:["Harry Potter"],det:/harry potter|fantastic beasts/i,aka:["harry potter","hp","wizarding world","fantastic beasts","hogwarts"]},
-{k:"lotr",n:"The Lord of the Rings",s:"Middle-earth: LOTR & The Hobbit",coll:["The Lord of the Rings Collection","The Hobbit Collection"],mv:["The Lord of the Rings: The War of the Rohirrim"],tv:["The Lord of the Rings: The Rings of Power"],det:/lord of the rings|the hobbit|rings of power/i,aka:["lotr","lord of the rings","the lord of the rings","hobbit","the hobbit","middle earth","rings of power"]},
-{k:"tf",n:"Transformers",s:"Films & animated series",coll:["Transformers Collection"],mv:["Transformers One","Bumblebee"],tv:["Transformers: Prime","Transformers: EarthSpark","Transformers: Animated","Transformers: Cyberverse","Transformers: Robots in Disguise","Transformers: Rescue Bots","Transformers: Beast Wars"],det:/transformers/i,aka:["transformers","optimus prime","bumblebee","beast wars"]}
-];
+/* CineVault franchises, collections & universes.
+   Nothing here is a hand-made list of members: for ANY film or series the engine finds its relatives on its own
+   (TMDB collection + Wikidata series/universe graph + title-stem fallback), then sorts them into
+   Core story / All / Groups / Timeline automatically. Only the home-row entry points and two "suggested watch order" packs are fixed data. */
+const FR_SEEDS=[
+["Marvel Cinematic Universe","movie","Iron Man","Films & series, Iron Man onwards"],
+["X-Men","movie","X-Men","Its own universe & timeline"],
+["DC Universe","movie","Man of Steel","Superman, Justice League & more"],
+["The Dark Knight","movie","Batman Begins","Nolan's Batman trilogy"],
+["Star Wars","movie","Star Wars","A galaxy far, far away"],
+["Harry Potter","movie","Harry Potter and the Philosopher's Stone","The Wizarding World"],
+["The Lord of the Rings","movie","The Lord of the Rings: The Fellowship of the Ring","Middle-earth"],
+["Transformers","movie","Transformers","Robots in disguise"],
+["Fast & Furious","movie","The Fast and the Furious","Ride or die"]];
+// optional "suggested in-universe order" packs: only used when a franchise already found by the engine contains >= 6 of these titles
+const eq=a=>a.map(s=>new RegExp("^"+s+"$"));
+const FR_TL=[
+{n:"Suggested story order (MCU)",s:eq(["captain america the first avenger","agent carter","captain marvel","iron man","iron man 2","the incredible hulk","thor","the avengers","thor the dark world","iron man 3","captain america the winter soldier","guardians of the galaxy","guardians of the galaxy vol 2","avengers age of ultron","ant man","captain america civil war","black widow","black panther","spider man homecoming","doctor strange","thor ragnarok","ant man and the wasp","avengers infinity war","avengers endgame","wandavision","the falcon and the winter soldier","loki","spider man far from home","shang chi and the legend of the ten rings","eternals","spider man no way home","doctor strange in the multiverse of madness","hawkeye","moon knight","ms marvel","thor love and thunder","she hulk attorney at law","black panther wakanda forever","ant man and the wasp quantumania","guardians of the galaxy vol 3","secret invasion","the marvels","echo","deadpool and wolverine","agatha all along","captain america brave new world","thunderbolts"])},
+{n:"Suggested story order (Star Wars)",s:[/acolyte/,/phantom menace/,/attack of the clones/,/clone wars/,/revenge of the sith/,/bad batch/,/^solo/,/obi wan/,/^andor$/,/rebels/,/rogue one/,/^star wars$|new hope/,/empire strikes back/,/return of the jedi/,/mandalorian/,/boba fett/,/ahsoka/,/skeleton crew/,/force awakens/,/last jedi/,/rise of skywalker/]}];
 const nrm=s=>String(s||"").toLowerCase().replace(/&/g,"and").replace(/[^a-z0-9]+/g," ").trim();
 const frGet=k=>{try{return JSON.parse(localStorage.getItem(k)||"null")}catch{return null}};
 const frSet=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch{}};
 const frToday=()=>new Date().toISOString().slice(0,10);
-const frIt=(x,t)=>({id:x.id,t,title:x.title||x.name||"",poster:x.poster_path||"",d:x.release_date||x.first_air_date||""});
-// name -> TMDB id (collection / company), remembered
-async function frResolve(kind,name){const ids=frGet("cv_frid")||{},key=kind+":"+name;if(ids[key]!==undefined)return ids[key];
- let id=0;try{const d=await api("/search/"+kind,{query:name}),n=nrm(name),b=n.replace(/ collection$/,""),r=d.results||[];
-  const hit=r.find(x=>nrm(x.name||x.title)===n)||(kind==="collection"?r.find(x=>nrm(x.name).startsWith(b))||r.find(x=>nrm(x.name).includes(b)):null);id=hit?hit.id:0}catch{return null}
- ids[key]=id;frSet("cv_frid",ids);return id}
-async function frFind(kind,name){try{const d=await api("/search/"+kind,{query:name}),n=nrm(name),r=(d.results||[]).filter(x=>x.poster_path);
- const eq=r.filter(x=>nrm(x.name||x.title)===n).sort((a,b)=>(b.popularity||0)-(a.popularity||0))[0];return eq?[frIt(eq,kind)]:[]}catch{return null}}
-const frSort=a=>a.sort((x,y)=>{const p=x.d||"9999",q=y.d||"9999";return p<q?-1:p>q?1:x.title<y.title?-1:1});
-async function frLoad(f){const ck="cv_fr_"+f.k,c=frGet(ck);if(c&&c.items&&c.items.length&&Date.now()-c.t<432e5)return c.items;
- const jobs=[],today=frToday();let fail=0;const J=(p,fn)=>jobs.push(Promise.resolve(p).then(fn).catch(()=>{fail++;return[]}));
- (f.coll||[]).forEach(nm=>J(frResolve("collection",nm),async id=>{if(id===null)throw 0;return id?((await api("/collection/"+id)).parts||[]).map(x=>frIt(x,"movie")):[]}));
- (f.mv||[]).forEach(nm=>J(frFind("movie",nm),r=>{if(r===null)throw 0;return r}));
- (f.tv||[]).forEach(nm=>J(frFind("tv",nm),r=>{if(r===null)throw 0;return r}));
- const cids=[...(f.co||[])];const rc=await Promise.all((f.dco||[]).map(n=>frResolve("company",n)));rc.forEach(x=>x&&cids.push(x));
- if(cids.length){const w=cids.slice(0,6).join("|"),bad=x=>(x.genre_ids||[]).some(g=>g===10767||g===10763||g===10764||g===99);
-  const dm=(q,tt)=>J(api("/discover/"+tt,{with_companies:w,sort_by:"popularity.desc",...q}),d=>(d.results||[]).filter(x=>x.poster_path&&!bad(x)).map(x=>frIt(x,tt)).filter(x=>!f.rx||f.rx.test(x.title)));
-  [1,2,3].forEach(p=>dm({"vote_count.gte":40,page:p},"movie"));dm({"primary_release_date.gte":today},"movie");
-  [1,2].forEach(p=>dm({"vote_count.gte":40,page:p},"tv"));dm({"first_air_date.gte":today},"tv")}
- const all=(await Promise.all(jobs)).flat(),seen={},items=frSort(all.filter(x=>x.poster&&!seen[x.t+x.id]&&(seen[x.t+x.id]=1)));
- if(items.length&&fail<=Math.ceil(jobs.length*.3))frSet(ck,{t:Date.now(),items});else if(!items.length)throw Error("empty");return items}
-async function frColl(id){const ck="cv_frc_"+id,c=frGet(ck);if(c&&Date.now()-c.t<432e5)return c.r;const d=await api("/collection/"+id),r={name:d.name,overview:d.overview||"",items:frSort((d.parts||[]).filter(x=>x.poster_path).map(x=>frIt(x,"movie")))};frSet(ck,{t:Date.now(),r});return r}
-// which franchises / collection does a title belong to?
-function frFor(d,t){const nm=nrm(d.title||d.name),raw=d.title||d.name||"",bc=d.belongs_to_collection,col=nrm(bc&&bc.name),co=(d.production_companies||[]).map(c=>c.id),ids=frGet("cv_frid")||{},out=[];
- for(const f of FR){let h=false;
-  if(col&&(f.coll||[]).some(c=>nrm(c)===col))h=true;
-  else if((f.co||[]).some(c=>co.includes(c))&&(!f.rx||f.rx.test(raw)))h=true;
-  else if((f.dco||[]).some(n=>ids["company:"+n]&&co.includes(ids["company:"+n])))h=true;
-  else if([...(f.tv||[]),...(f.mv||[])].some(n=>nrm(n)===nm))h=true;
-  else if(f.det&&f.det.test(raw))h=true;
-  else{const c=frGet("cv_fr_"+f.k);if(c&&c.items&&c.items.some(x=>x.id===d.id&&x.t===t))h=true}
-  if(h)out.push({k:f.k,n:f.n,fr:f})}
- if(!out.length&&bc&&bc.id)out.push({col:bc.id,n:bc.name});return out.slice(0,2)}
+const frDate=(a,b)=>{const p=a.d||"9999",q=b.d||"9999";return p<q?-1:p>q?1:(a.title||"")<(b.title||"")?-1:1};
+const frTok=(t,id)=>(t==="tv"?"t":"m")+id;
+// ---------- finding relatives automatically ----------
+async function frWiki(q){if(!/^Q\d+$/.test(q))throw 0;
+ const sp=`SELECT ?g ?gl ?tm ?tt ?d WHERE{wd:${q} wdt:P8345|wdt:P179|wdt:P1434 ?g. ?w wdt:P8345|wdt:P179|wdt:P1434 ?g. OPTIONAL{?w wdt:P4947 ?tm} OPTIONAL{?w wdt:P4983 ?tt} FILTER(BOUND(?tm)||BOUND(?tt)) OPTIONAL{?w wdt:P577 ?d1} OPTIONAL{?w wdt:P580 ?d2} BIND(COALESCE(?d1,?d2) AS ?d) ?g rdfs:label ?gl. FILTER(LANG(?gl)="en")} LIMIT 700`;
+ const ac=new AbortController(),to=setTimeout(()=>ac.abort(),12000);
+ try{const r=await fetch("https://query.wikidata.org/sparql?format=json&query="+encodeURIComponent(sp),{signal:ac.signal});if(!r.ok)throw 0;const j=await r.json(),rows=(j.results&&j.results.bindings)||[],gs={},items=[];
+  rows.forEach(b=>{const g=b.g&&b.g.value,d=b.d?String(b.d.value).slice(0,10):"";[["movie",b.tm],["tv",b.tt]].forEach(([t,x])=>{if(!x)return;const id=+x.value;if(!id)return;items.push({t,id,d});(gs[g]=gs[g]||{n:b.gl?b.gl.value:"",s:new Set()}).s.add(t+id)})});
+  const top=Object.values(gs).sort((a,b)=>b.s.size-a.s.size)[0];return{label:top?top.n:"",items}}finally{clearTimeout(to)}}
+const frStem=t=>String(t||"").split(/[:\-–—]/)[0].replace(/\s+(\d+|[ivx]+)$/i,"").replace(/\b(returns|again|begins|reloaded|forever)$/i,"").trim();
+const frClean=s=>String(s||"").replace(/\s*\([^)]*(series|franchise|universe)[^)]*\)\s*$/i,"").replace(/ Collection$/,"").trim();
+async function frGraph(fk){const ck="cv_frg_"+fk,c=frGet(ck);if(c&&c.g&&c.g.items&&Date.now()-c.t<432e5)return c.g;
+ const t=fk[0]==="t"?"tv":"movie",id=+fk.slice(1),d=await api(`/${t}/${id}`,{append_to_response:"external_ids"});
+ const mem=new Map(),add=(t2,id2,date)=>{const k=t2+id2,o=mem.get(k);if(!o)mem.set(k,{t:t2,id:id2,d:date||""});else if(date&&!o.d)o.d=date};
+ add(t,id,d.release_date||d.first_air_date);let colName="",wl="",jobs=[];
+ const col=d.belongs_to_collection;if(col&&col.id){colName=frClean(col.name);jobs.push(api("/collection/"+col.id).then(cc=>{(cc.parts||[]).forEach(p=>add("movie",p.id,p.release_date))}).catch(()=>{}))}
+ const q=d.external_ids&&d.external_ids.wikidata_id;if(q)jobs.push(frWiki(q).then(r=>{wl=frClean(r.label);r.items.forEach(x=>add(x.t,x.id,x.d))}).catch(()=>{}));
+ await Promise.all(jobs);
+ if(mem.size<3){const stem=frStem(d.title||d.name),lang=d.original_language;if(stem.length>=5){for(const kind of["movie","tv"]){try{const r=await api("/search/"+kind,{query:stem});(r.results||[]).filter(x=>x.original_language===lang&&nrm(x.title||x.name).startsWith(nrm(stem))).forEach(x=>add(kind,x.id,x.release_date||x.first_air_date))}catch{}}}colName=colName||frStem(d.title||d.name)}
+ let items=[...mem.values()].sort(frDate);if(items.length>220){const me=mem.get(t+id);items=[me,...items.filter(x=>x!==me).slice(0,219)].sort(frDate)}
+ const g={label:wl||colName||frStem(d.title||d.name),items,seed:{t,id}};if(items.length>1)frSet(ck,{t:Date.now(),g});return g}
+// light details per title (kept small), used for sorting titles into Core / Side / Groups
+async function frDetail(t,id){const k="cv_fd_"+t[0]+id,c=frGet(k);if(c)return c;
+ const d=await api(`/${t}/${id}`,{},1),r={id,t,title:d.title||d.name||"",poster:d.poster_path||"",d:d.release_date||d.first_air_date||"",rt:t==="movie"?(d.runtime||0):((d.episode_run_time||[])[0]||0),g:(d.genres||[]).map(x=>x.id),tp:d.type||"",vc:d.vote_count||0,col:d.belongs_to_collection?{id:d.belongs_to_collection.id,name:frClean(d.belongs_to_collection.name)}:null,co:(d.production_companies||[]).slice(0,2).map(x=>x.name)};frSet(k,r);return r}
+const SIDE_RX=/\blego\b|making of|behind the scenes|assembled|special presentation|one shot|featurette|recap|marvel studios legends/i;
+function frSide(r){if(SIDE_RX.test(nrm(r.title)))return"Side story";
+ if(r.t==="movie"){if(r.rt&&r.rt<40)return"Short";if(r.g.includes(99))return"Doc"}
+ else{if(["Documentary","Reality","Talk Show","News","Video"].includes(r.tp)||r.g.includes(99))return"Doc";if(r.g.includes(10762))return"Kids"}
+ if(r.d&&r.d<frToday()&&r.vc<6)return"Minor";return""}
+function frTimeline(list){for(const p of FR_TL){const slots=p.s.map(()=>[]);list.forEach(x=>{const n=nrm(x.title),i=p.s.findIndex(rx=>rx.test(n));if(i>=0)slots[i].push(x)});
+  if(slots.filter(a=>a.length).length>=6){const flat=slots.flat(),used=new Set(flat);return{name:p.n,items:[...flat,...list.filter(x=>!used.has(x))]}}}return null}
+// ---------- cards ----------
 function frCard(i,k,o){const up=i.d&&i.d>frToday(),c=card({id:i.id,title:i.title,poster_path:i.poster,vote_average:0,soon:up?1:0,release_date:i.d},i.t);c.classList.add("fc");if(o&&o.cur)c.classList.add("cur");
  c.insertAdjacentHTML("afterbegin",`<i class="no">${String(k+1).padStart(2,"0")}</i>`);c.querySelector("span").insertAdjacentHTML("beforeend",`<small>${i.d?i.d.slice(0,4):"TBA"}${i.t==="tv"?" · Series":""}</small>`);
+ if(i.side){c.classList.add("sd");c.insertAdjacentHTML("beforeend",`<em class="sdt">${esc(i.side)}</em>`)}
  const e=store.get()[i.t+i.id];if(e&&inL(e,"Completed"))c.insertAdjacentHTML("beforeend",`<u class="dn">${CHK}</u>`);return c}
-// strip on the detail page
-function frStrip(d,t){const box=$("#frs");if(!box)return;const L=frFor(d,t);if(!L.length){box.remove();return}
- box.innerHTML=L.map((x,i)=>`<div class="fr-b"><button class="fr-t" ${x.col?`data-col="${x.col}"`:`data-f="${x.k}"`}><span><small>PART OF</small><b>${esc(x.n)}</b></span><em>See all in release order<svg viewBox="0 0 24 24"><path d="m9 5 7 7-7 7"/></svg></em></button><div class="strip fr-s" data-i="${i}">${'<div class="card sk"></div>'.repeat(5)}</div></div>`).join("");
- box.querySelectorAll(".fr-s").forEach(st=>{const x=L[+st.dataset.i];let done=0;const go=async()=>{if(done)return;done=1;try{const items=x.col?(await frColl(x.col)).items:await frLoad(x.fr);st.innerHTML="";let cur=null;items.forEach((i,k)=>{const c=frCard(i,k,{cur:i.id===d.id&&i.t===t});if(c.classList.contains("cur"))cur=c;st.append(c)});if(cur)st.scrollLeft=Math.max(0,cur.offsetLeft-24)}catch{st.closest(".fr-b").remove()}};
-  if("IntersectionObserver" in window){const o=new IntersectionObserver(es=>{if(es.some(e=>e.isIntersecting)){o.disconnect();go()}},{rootMargin:"500px"});o.observe(st)}else go()})}
-// tiles (home row + search)
-function frTile(f){const e=document.createElement("div");e.className="card fcard";const c=frGet("cv_fr_"+f.k),ps=((c&&c.items)||[]).filter(x=>x.poster).slice(0,4);
- e.innerHTML=`<div class="fi">${ps.length?`<div class="fm">${ps.map(x=>`<img alt="" loading="lazy" src="${IMG}w185${x.poster}">`).join("")}</div>`:""}<b class="ft">COLLECTION</b><strong>${esc(f.n)}</strong><small>${esc(f.s)}</small></div><span>${esc(f.n)}</span>`;e.onclick=()=>openFranchise(f.k);return e}
+// ---------- strip on every detail page ----------
+function frStrip(d,t){const box=$("#frs");if(!box)return;const fk=frTok(t,d.id);
+ if(!(d.belongs_to_collection||(d.external_ids&&d.external_ids.wikidata_id))&&!(frGet("cv_frg_"+fk))){/* nothing to ask the graph yet: try the title-stem fallback only for distinctive titles */if(frStem(d.title||d.name).length<5){box.remove();return}}
+ let done=0;const go=async()=>{if(done)return;done=1;try{const g=await frGraph(fk);if($("#frs")!==box)return;if(g.items.length<3){box.remove();return}
+   const me=g.items.findIndex(x=>x.t===t&&x.id===d.id),a=Math.max(0,Math.min(me-3,g.items.length-14)),win=g.items.slice(a,a+14);
+   box.innerHTML=`<div class="fr-b"><button class="fr-t" data-f="${fk}"><span><small>PART OF</small><b>${esc(g.label)}</b></span><em>See all ${g.items.length}<svg viewBox="0 0 24 24"><path d="m9 5 7 7-7 7"/></svg></em></button><div class="strip fr-s">${'<div class="card sk"></div>'.repeat(5)}</div></div>`;
+   const st=box.querySelector(".fr-s");let cur=null,filled=0;
+   await Promise.all(win.map(async(it,j)=>{try{const r=await frDetail(it.t,it.id);if(!r.poster)return;const c=frCard({...r,side:""},a+j,{cur:it.t===t&&it.id===d.id});c.style.order=j;if(!filled++)st.innerHTML="";st.append(c);if(c.classList.contains("cur"))cur=c}catch{}}));
+   if(!filled)box.remove();else if(cur)st.scrollLeft=Math.max(0,cur.offsetLeft-24)}catch{if($("#frs")===box)box.remove()}};
+ if("IntersectionObserver" in window){const o=new IntersectionObserver(es=>{if(es.some(e=>e.isIntersecting)){o.disconnect();go()}},{rootMargin:"600px"});o.observe(box)}else go()}
+// ---------- home tiles & search ----------
+async function frSeedTok(s){const ck="cv_frs_"+s[0],c=frGet(ck);if(c)return c;try{const d=await api("/search/"+s[1],{query:s[2]}),n=nrm(s[2]),r=d.results||[],hit=r.filter(x=>nrm(x.title||x.name)===n).sort((a,b)=>(b.popularity||0)-(a.popularity||0))[0]||r[0];if(!hit)return"";const k=frTok(s[1],hit.id);frSet(ck,k);return k}catch{return""}}
+async function frOpenSeed(s){const k=await frSeedTok(s);if(k)openFranchise(k,0,s[0]);else toast("Could not open - check your connection")}
+function frTile(s){const e=document.createElement("div");e.className="card fcard";const k=frGet("cv_frs_"+s[0]),ps=(k&&frGet("cv_frt_"+k))||[];
+ e.innerHTML=`<div class="fi">${ps.length?`<div class="fm">${ps.map(p=>`<img alt="" loading="lazy" src="${IMG}w185${p}">`).join("")}</div>`:""}<b class="ft">COLLECTION</b><strong>${esc(s[0])}</strong><small>${esc(s[3])}</small></div><span>${esc(s[0])}</span>`;e.onclick=()=>frOpenSeed(s);return e}
+function frAutoTile(label,n,fk){const e=document.createElement("div");e.className="card fcard";e.innerHTML=`<div class="fi"><b class="ft">COLLECTION</b><strong>${esc(label)}</strong><small>${n} titles · auto</small></div><span>${esc(label)}</span>`;e.onclick=()=>openFranchise(fk,0,label);return e}
 function frColTile(c){const e=document.createElement("div");e.className="card fcard one";e.innerHTML=`<div class="fi"><img alt="" loading="lazy" src="${IMG}${P}${c.poster_path}"><b class="ft">COLLECTION</b></div><span>${esc(c.name)}</span>`;e.onclick=()=>openCollection(c.id);return e}
 function frRow(){const s=document.createElement("section");s.className="row";
  s.innerHTML=`<div class="rh"><h2>Universes &amp; Collections</h2></div><div class="strip"></div><button class="ar l" aria-label="Back"><svg viewBox="0 0 24 24"><path d="m15 5-7 7 7 7"/></svg></button><button class="ar r" aria-label="Next"><svg viewBox="0 0 24 24"><path d="m9 5 7 7-7 7"/></svg></button>`;
- const st=s.querySelector(".strip");FR.forEach(f=>st.append(frTile(f)));s.querySelectorAll(".ar").forEach(b=>b.onclick=()=>st.scrollBy({left:(b.classList.contains("r")?1:-1)*st.clientWidth*.8,behavior:"smooth"}));return s}
-async function frSearch(q){const nq=nrm(q);if(nq.length<2)return;const g=$("#bgrid"),mine=()=>$("#q").value.trim()===q;if(!g)return;
- const hits=FR.filter(f=>[f.n,f.k,...f.aka].some(a=>{a=nrm(a);return nq===a||(nq.length>=3&&(a.startsWith(nq)||nq.startsWith(a+" ")))}));
- hits.map(frTile).reverse().forEach(t=>g.prepend(t));
- try{const d=await api("/search/collection",{query:q}),known=new Set(FR.flatMap(f=>(f.coll||[]).map(nrm))),cols=(d.results||[]).filter(c=>c.poster_path&&!known.has(nrm(c.name))).slice(0,3);
-  if(!mine())return;const at=g.querySelectorAll(".fcard").length;cols.map(frColTile).reverse().forEach(t=>{const ref=g.children[hits.length];ref?ref.before(t):g.append(t)})}catch{}}
-// pages
-async function frPage(o,bk,view){$("#simp").hidden=$("#sheet").hidden=$("#lsheet").hidden=true;navIn(bk,view);$("#modal").classList.add("pp");$("#modal").classList.remove("nosh");
+ const st=s.querySelector(".strip");FR_SEEDS.forEach(f=>st.append(frTile(f)));s.querySelectorAll(".ar").forEach(b=>b.onclick=()=>st.scrollBy({left:(b.classList.contains("r")?1:-1)*st.clientWidth*.8,behavior:"smooth"}));return s}
+async function frSearch(q){const nq=nrm(q);if(nq.length<2)return;const g=$("#bgrid"),mine=()=>$("#q").value.trim()===q;if(!g)return;let label="",top=null;
+ try{const m=await api("/search/multi",{query:q});top=(m.results||[]).find(x=>(x.media_type==="movie"||x.media_type==="tv")&&x.poster_path);
+  if(top&&mine()){const fk=frTok(top.media_type,top.id),gr=await frGraph(fk);if(mine()&&gr.items.length>=3){label=gr.label;g.prepend(frAutoTile(gr.label,gr.items.length,fk))}}}catch{}
+ try{const d=await api("/search/collection",{query:q}),cols=(d.results||[]).filter(c=>c.poster_path&&(!label||(nrm(c.name).indexOf(nrm(label))<0&&nrm(label).indexOf(nrm(c.name.replace(/ collection$/i,"")))<0))).slice(0,3);
+  if(!mine())return;cols.map(frColTile).reverse().forEach(t=>{const ref=g.querySelector(".fcard");ref?ref.after(t):g.prepend(t)})}catch{}}
+// ---------- pages ----------
+function frShell(title,bk,view){$("#simp").hidden=$("#sheet").hidden=$("#lsheet").hidden=true;navIn(bk,view);$("#modal").classList.add("pp");$("#modal").classList.remove("nosh");
  if($("#modal").hidden){history.pushState({m:1},"");$("#modal").hidden=false;document.body.style.overflow="hidden"}
- const my=++tok;CUR={};$("#modal").scrollTop=0;$("#tl").removeAttribute("src");$("#tt").textContent=o.title;
- $("#mc").innerHTML=`<div class="fr-h"><small>COLLECTION</small><h2>${esc(o.title)}</h2><p class="fs">${esc(o.sub||"")}</p></div><div class="pp-g fr-g">${'<div class="card sk"></div>'.repeat(8)}</div>`;
- try{const r=await o.load();if(my!==tok)return;const items=Array.isArray(r)?r:r.items,sub=o.sub||(r&&r.overview)||"",ttl=(r&&r.name)||o.title;
-  const films=items.filter(x=>x.t==="movie").length,ser=items.length-films,L=store.get(),done=items.filter(i=>{const e=L[i.t+i.id];return e&&inL(e,"Completed")}).length;let tv="All";
-  $("#mc").innerHTML=`<div class="fr-h"><small>COLLECTION · RELEASE ORDER</small><h2>${esc(ttl)}</h2>${sub?`<p class="fs">${esc(sub)}</p>`:""}<p class="fc2">${items.length} titles${films&&ser?` · ${films} films · ${ser} series`:""}</p>${done?`<div class="fp"><i style="width:${Math.round(done/items.length*100)}%"></i></div><p class="fc2">${done} of ${items.length} completed</p>`:""}</div>${films&&ser?'<div class="pp-b"><div class="wtabs" id="ftabs"></div></div>':""}<div class="pp-g fr-g" id="fgr"></div>`;
-  const draw=()=>{if($("#ftabs")){$("#ftabs").innerHTML=["All","Films","Series"].map(n=>`<button data-n="${n}" class="${n===tv?"on":""}">${n}</button>`).join("");$("#ftabs").querySelectorAll("button").forEach(b=>b.onclick=()=>{tv=b.dataset.n;draw()})}
-   const g=$("#fgr");g.innerHTML="";items.forEach((i,k)=>{if(tv==="Films"&&i.t!=="movie"||tv==="Series"&&i.t!=="tv")return;g.append(frCard(i,k))});if(!g.children.length)g.innerHTML='<p class="empty">Nothing here yet.</p>'};draw();
- }catch(e){if(my===tok){$("#mc").innerHTML='<div class="fail"><p class="empty">Could not load this collection.</p><button class="btn" id="rtd">Try again</button></div>';$("#rtd").onclick=()=>o.again()}}}
-function openFranchise(k,bk){const f=FR.find(x=>x.k===k);if(!f)return;const again=()=>{localStorage.removeItem("cv_fr_"+k);openFranchise(k,1)};frPage({title:f.n,sub:f.s,load:()=>frLoad(f),again},bk,{k:"f",key:k})}
-function openCollection(id,bk){frPage({title:"Collection",sub:"",load:async()=>{const r=await frColl(id);$("#tt").textContent=r.name;return r},again:()=>{localStorage.removeItem("cv_frc_"+id);openCollection(id,1)}},bk,{k:"c",id});
- frColl(id).then(r=>{if(VIEW&&VIEW.k==="c"&&VIEW.id===id){$("#tt").textContent=r.name;const h=$(".fr-h h2");if(h)h.textContent=r.name}}).catch(()=>{})}
+ const my=++tok;CUR={};$("#modal").scrollTop=0;$("#tl").removeAttribute("src");$("#tt").textContent=title;
+ $("#mc").innerHTML=`<div class="fr-h"><small>COLLECTION</small><h2>${esc(title)}</h2><p class="fc2">Finding every part…</p></div><div class="pp-g fr-g">${'<div class="card sk"></div>'.repeat(8)}</div>`;return my}
+async function frRender(my,g,name,fk){const label=name||g.label,items=g.items.slice().sort(frDate);$("#tt").textContent=label;
+ if(items.length<2){$("#mc").innerHTML=`<div class="fr-h"><small>COLLECTION</small><h2>${esc(label)}</h2></div><div class="fail"><p class="empty">Nothing else found in this franchise yet.</p></div>`;return}
+ $("#mc").innerHTML=`<div class="fr-h"><small>COLLECTION · AUTO</small><h2>${esc(label)}</h2><p class="fc2" id="fcn">Loading 0 of ${items.length}…</p><p class="fnote" id="fnt" hidden></p><div id="fprog"></div></div><div class="pp-b"><div class="wtabs" id="ftabs" hidden></div></div><div class="pp-g fr-g" id="fgr"></div>`;
+ const grid=$("#fgr"),rec={},ph=items.map(()=>{const e=document.createElement("div");e.className="card sk";grid.append(e);return e});let done=0,fin=false,next=0;
+ const work=async()=>{while(next<items.length&&my===tok){const k=next++,it=items[k];try{const r=await frDetail(it.t,it.id);if(my!==tok)return;rec[it.t+it.id]=r;if(!fin&&r.poster){const c=frCard(r,k);ph[k].replaceWith(c);ph[k]=c}else if(!r.poster)ph[k].remove()}catch{if(ph[k])ph[k].remove()}done++;if($("#fcn")&&done<items.length)$("#fcn").textContent=`Loading ${done} of ${items.length}…`}};
+ await Promise.all([1,2,3,4,5,6].map(work));if(my!==tok)return;fin=true;
+ const list=Object.values(rec).filter(r=>r.title&&r.poster).map(r=>({...r,side:frSide(r)})).sort(frDate),core=list.filter(x=>!x.side),side=list.length-core.length;
+ if(fk)frSet("cv_frt_"+fk,core.slice(0,4).map(x=>x.poster));
+ const tl=frTimeline(core),groups={};list.forEach(x=>{const k=x.col?x.col.name:(x.co[0]||(x.t==="tv"?"Series":"Other"));(groups[k]=groups[k]||[]).push(x)});
+ const gl=Object.entries(groups).sort((a,b)=>frDate(a[1][0],b[1][0]));
+ const tabs=[...(side?["Core"]:[]),"All",...(gl.length>1?["Groups"]:[]),...(tl?["Timeline"]:[])];let tv=side?"Core":"All";
+ const L=store.get(),dn=core.filter(i=>{const e=L[i.t+i.id];return e&&inL(e,"Completed")}).length,films=core.filter(x=>x.t==="movie").length,ser=core.length-films;
+ $("#fcn").textContent=`${core.length} main titles${films&&ser?` · ${films} films · ${ser} series`:""}${side?` · ${side} side stories`:""}`;
+ if(dn)$("#fprog").innerHTML=`<div class="fp"><i style="width:${Math.round(dn/core.length*100)}%"></i></div><p class="fc2">${dn} of ${core.length} completed</p>`;
+ const note={Core:"Main films & series only. Shorts, documentaries, LEGO and kids' spin-offs are under All.",All:"Everything found, in release order. Faded cards are side stories.",Groups:"Grouped by saga / studio: separate universes stay separate.",Timeline:tl?tl.name+". Placement of some titles is debated.":""};
+ const draw=()=>{$("#ftabs").hidden=tabs.length<2;$("#ftabs").innerHTML=tabs.map(n=>`<button data-n="${n}" class="${n===tv?"on":""}">${n}</button>`).join("");$("#ftabs").querySelectorAll("button").forEach(b=>b.onclick=()=>{tv=b.dataset.n;draw()});
+  const nt=$("#fnt");nt.hidden=!note[tv];nt.textContent=note[tv]||"";grid.innerHTML="";
+  if(tv==="Groups")gl.forEach(([n,a])=>{grid.insertAdjacentHTML("beforeend",`<h3 class="fgh">${esc(n)}<small>${a.length}</small></h3>`);a.forEach((i,k)=>grid.append(frCard(i,k)))});
+  else(tv==="Core"?core:tv==="Timeline"?tl.items:list).forEach((i,k)=>grid.append(frCard(i,k)))};draw()}
+async function openFranchise(fk,bk,name){const my=frShell(name||"Collection",bk,{k:"f",key:fk});
+ try{const g=await frGraph(fk);if(my!==tok)return;await frRender(my,g,name,fk)}catch(e){if(my===tok){$("#mc").innerHTML='<div class="fail"><p class="empty">Could not load this collection.</p><button class="btn" id="rtd">Try again</button></div>';$("#rtd").onclick=()=>{localStorage.removeItem("cv_frg_"+fk);openFranchise(fk,1,name)}}}}
+async function frColl(id){const ck="cv_frc_"+id,c=frGet(ck);if(c&&Date.now()-c.t<432e5)return c.r;const d=await api("/collection/"+id),r={name:d.name,items:(d.parts||[]).filter(x=>x.poster_path).map(x=>({t:"movie",id:x.id,d:x.release_date||""}))};frSet(ck,{t:Date.now(),r});return r}
+async function openCollection(id,bk){const my=frShell("Collection",bk,{k:"c",id});
+ try{const r=await frColl(id);if(my!==tok)return;await frRender(my,{label:frClean(r.name),items:r.items},"",null)}catch{if(my===tok){$("#mc").innerHTML='<div class="fail"><p class="empty">Could not load this collection.</p><button class="btn" id="rtd">Try again</button></div>';$("#rtd").onclick=()=>{localStorage.removeItem("cv_frc_"+id);openCollection(id,1)}}}}
