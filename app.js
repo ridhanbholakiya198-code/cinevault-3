@@ -210,6 +210,8 @@ function prov(d,tab){const el=$("#wp");if(!el)return;const r=((d["watch/provider
  $("#rg").onchange=e=>{REG=e.target.value;localStorage.setItem("cv_reg",REG);prov(d,cu)}}
 let CUR={};
 let NAV=[],VIEW=null,SKIPPOP=0;
+const shareURL=(k,id)=>PX?`${location.origin}/s/${k}/${id}`:`${location.origin}/#${k}-${id}`;
+function openFromHash(){const m=(location.hash||"").match(/^#(movie|tv|person)-(\d+)$/);if(!m)return false;history.replaceState(history.state,"",location.pathname+location.search);m[1]==="person"?openPerson(+m[2]):openDetail(m[1],+m[2]);return true}
 function navIn(bk,v){if(!bk){if(!$("#modal").hidden&&VIEW)NAV.push(VIEW);else NAV=[]}VIEW=v;$(".tb").style.setProperty("--p",0)}
 function navBack(){if(!NAV.length)return false;const v=NAV.pop();v.k==="p"?openPerson(v.id,v.r,1):openDetail(v.t,v.id,1);return true}
 const PJ=/^(Writer|Screenplay|Teleplay|Story|Novel|Comic Book|Creator|Characters)$/;
@@ -271,7 +273,8 @@ function openSheet(){const cur=getE().status||"";$("#shs").textContent=CUR.m.tit
 $("#sopts").onclick=e=>{const b=e.target.closest("button");if(!b)return;const s=b.dataset.s;upd2(c=>c.status=s==="None"?"":s);$("#sheet").hidden=true;toast(s==="None"?"Removed from list":"Added to "+s)};
 $("#sheet").onclick=e=>{if(e.target.id==="sheet")$("#sheet").hidden=true};
 $("#hr").onclick=()=>upd2(c=>c.fav=!c.fav);$("#trb").onclick=()=>{if(CUR.v)openTr(CUR.v.key);else toast("No trailer available")};
-$("#sh").onclick=()=>{const nm=CUR.m?CUR.m.title:$("#tt").textContent;if(!nm)return;const x={title:nm+" on CineVault",url:location.origin};navigator.share?navigator.share(x).catch(()=>{}):navigator.clipboard&&navigator.clipboard.writeText(x.url)};
+$("#sh").onclick=()=>{const v=VIEW,nm=CUR.m?CUR.m.title:$("#tt").textContent;if(!v||!nm)return;const k=v.k==="p"?"person":v.t,u=shareURL(k,v.id),x={title:nm+" on CineVault",url:u};
+ if(navigator.share)navigator.share(x).catch(()=>{});else if(navigator.clipboard)navigator.clipboard.writeText(u).then(()=>toast("Link copied")).catch(()=>toast(u));else toast(u)};
 $("#simp").onclick=e=>{if(e.target.id==="simp")$("#simp").hidden=true};
 function hideModal(){tok++;NAV=[];VIEW=null;closeTr(1);$("#modal").classList.remove("pp");$("#simp").hidden=$("#sheet").hidden=true;$("#modal").hidden=true;$("#mc").innerHTML="";document.body.style.overflow="";if(!$("#list").hidden)renderList()}
 const close=()=>history.state&&history.state.m?history.back():hideModal();
@@ -288,4 +291,4 @@ $("#modal").addEventListener("scroll",()=>{const r=$(".tr"),h=r?r.offsetHeight:1
 const it=$("#intro");if(it){if(sessionStorage.getItem("cv_i"))it.remove();else{sessionStorage.setItem("cv_i","1");setTimeout(()=>it.remove(),2700)}}
 $("#yr").textContent=new Date().getFullYear();$("#up").onclick=()=>scrollTo({top:0,behavior:"smooth"});document.querySelectorAll("[data-acc]").forEach(a=>a.onclick=e=>{e.preventDefault();$("#acc").click()});
 if(M)$("#q").placeholder="Search";
-home();
+home();openFromHash();addEventListener("hashchange",openFromHash);
