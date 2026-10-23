@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CVAddonStreams demo</title>
+<style>body{margin:0;background:#0b0b0d;color:#eee;font-family:system-ui,sans-serif}</style>
+</head>
+<body>
+<div id="cv-addons"></div>
+<script src="addon-streams.js"></script>
+<script>
+  // In CineVault: get the IMDb id from TMDB (external_ids) and call load() when a title opens.
+  var widget = CVAddonStreams.mount('#cv-addons', { imdbId: 'tt0000001', type: 'movie' });
+  // widget.load({ imdbId: 'tt1234567', type: 'movie' });
+  // series: widget.load({ imdbId: 'tt1234567', type: 'series', season: 1, episode: 2 });
+</script>
+</body>
+</html>
