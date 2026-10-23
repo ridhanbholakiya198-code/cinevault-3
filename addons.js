@@ -201,6 +201,7 @@ export function initAddons(h) {
       };
       st.before(b);
     }
+
     const bad = t => { m.className = "cva-msg bad"; m.textContent = t || "This stream couldn’t be played. The source may block browsers, or the format (for example MKV) may be unsupported."; m.hidden = false };
     let hls = null;
     el._onclose = () => { if (hls) hls.destroy(); const v = st.querySelector("video"); if (v) v.pause() };
