@@ -184,10 +184,21 @@ export function initAddons(h) {
     box.innerHTML = `${TOP}<h3 class="cva-s" style="margin-top:10px">${esc(s.label)}</h3><div class="cv-ad-st"></div><div class="cva-msg" hidden></div>`;
     box.querySelector('[data-a="close"]').onclick = () => closeOv(el);
     const st = box.querySelector(".cv-ad-st"), m = box.querySelector(".cva-msg");
-    if(s.url && /^https?:\/\//i.test(s.url) && s.kind!=="youtube" && s.kind!=="torrent"){
-      const b=document.createElement("button"); b.textContent="Open in VLC";
-      b.style.cssText="margin:10px;padding:10px;color:var(--fg);background:#222;border-radius:20px";
-      b.onclick=()=>{const u=new URL(s.url);location.href="intent://"+u.host+u.pathname+u.search+"#Intent;scheme="+u.protocol.slice(0,-1)+";package=org.videolan.vlc;type=video/*;end"};
+    if (s.url && /^https?:\/\//i.test(s.url) &&
+        s.kind !== "youtube" && s.kind !== "torrent") {
+      const b = document.createElement("button");
+      b.type = "button";
+      b.textContent = "Play in VLC";
+      b.style.cssText = "margin:10px;padding:10px;color:var(--fg);background:#222;border-radius:20px";
+      b.onclick = () => {
+        const u = new URL(s.url);
+        const intent = "intent://" + u.host + u.pathname + u.search +
+          "#Intent;scheme=" + u.protocol.slice(0,-1) +
+          ";package=org.videolan.vlc;type=video/*;S.browser_fallback_url=" +
+          encodeURIComponent("https://play.google.com/store/apps/details?id=org.videolan.vlc") +
+          ";end";
+        location.href = intent;
+      };
       st.before(b);
     }
     const bad = t => { m.className = "cva-msg bad"; m.textContent = t || "This stream couldn’t be played. The source may block browsers, or the format (for example MKV) may be unsupported."; m.hidden = false };
