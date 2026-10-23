@@ -121,11 +121,28 @@ export function initAddons(h) {
   /* ---------- streams for the details page ---------- */
   function classify(s, addon, key) {
     if (!s || typeof s !== "object") return null;
-    const label = String(s.title || s.name || addon || "Play").split("\n")[0].slice(0, 80), base = { key, label, addon };
-    if (typeof s.url === "string") { const u = httpsUrl(s.url); return u && !/^magnet:/i.test(s.url) && !(s.behaviorHints && s.behaviorHints.notWebReady) ? { ...base, kind: "direct", url: u } : null }
+    const label = String(s.title || s.name || addon || "Play").split("\n")[0].slice(0, 80);
+    const base = { key, label, addon };
+    if (typeof s.url === "string" && !/^magnet:/i.test(s.url)) {
+      const u = httpsUrl(s.url);
+      if (u && !(s.behaviorHints && s.behaviorHints.notWebReady)) return { ...base, kind: "direct", url: u };
+    }
     if (typeof s.ytId === "string" && /^[\w-]{11}$/.test(s.ytId)) return { ...base, kind: "youtube", id: s.ytId };
-    if (typeof s.externalUrl === "string") { const u = httpsUrl(s.externalUrl); return u ? { ...base, kind: "external", url: u } : null }
-    return null; // torrent / infoHash and anything else: ignored
+    if (typeof s.externalUrl === "string") {
+      const u = httpsUrl(s.externalUrl);
+      if (u) return { ...base, kind: "external", url: u };
+    }
+    if (typeof s.infoHash === "string" && /^[a-f0-9]{40}$/i.test(s.infoHash)) {
+      const magnet = (s.url && /^magnet:/i.test(s.url)) ? s.url : buildMagnet(s.infoHash, s.sources, label);
+      return { ...base, kind: "torrent", infoHash: s.infoHash, magnet };
+    }
+    return null;
+  }
+
+  function buildMagnet(hash, sources, name) {
+    const tr = (sources || []).map(s => String(s).replace(/^tracker:/i, "")).filter(Boolean)
+      .map(t => "&tr=" + encodeURIComponent(t)).join("");
+    return "magnet:?xt=urn:btih:" + hash + "&dn=" + encodeURIComponent(name || "video") + tr;
   }
 
   async function streams(el, o) {
@@ -173,6 +190,16 @@ export function initAddons(h) {
     if (s.kind === "youtube") {
       const f = document.createElement("iframe"); f.src = "https://www.youtube-nocookie.com/embed/" + s.id; f.title = "YouTube player";
       f.allow = "fullscreen; picture-in-picture; encrypted-media"; f.allowFullscreen = true; st.append(f); return;
+
+    if (s.kind === "torrent") {
+      const f = document.createElement("iframe");
+      f.src = "https://webtor.io/embed?magnet=" + encodeURIComponent(s.magnet) + "&player=1";
+      f.allow = "fullscreen; autoplay; encrypted-media";
+      f.allowFullscreen = true;
+      f.style.cssText = "width:100%;height:70vh;border:0;border-radius:10px";
+      st.append(f);
+      return;
+    }
     }
     const v = document.createElement("video"); v.controls = true; v.playsInline = true; v.addEventListener("error", () => bad()); st.append(v);
     if (/\.m3u8(\?|#|$)/i.test(s.url) && !v.canPlayType("application/vnd.apple.mpegurl")) {
