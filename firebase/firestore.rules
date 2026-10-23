@@ -20,6 +20,17 @@ service cloud.firestore {
         && (!('u' in d) || d.u is number);
     }
 
+    function okAddon(d) {
+      return d.keys().hasOnly(['name','manifestUrl','baseUrl','createdAt'])
+        && d.keys().hasAll(['manifestUrl','baseUrl'])
+        && d.manifestUrl is string && d.manifestUrl.size() <= 500
+        && d.manifestUrl.matches('^https://[^?#]+/manifest\\.json$')
+        && d.baseUrl is string && d.baseUrl.size() <= 500
+        && d.baseUrl.matches('^https://[^?#]+$')
+        && (!('name' in d) || (d.name is string && d.name.size() <= 200))
+        && (!('createdAt' in d) || d.createdAt is timestamp);
+    }
+
     match /users/{uid} {
       allow read, delete: if owner(uid);
       allow create, update: if owner(uid)
@@ -31,6 +42,13 @@ service cloud.firestore {
         allow create, update: if owner(uid)
           && key.matches('^(movie|tv)[0-9]{1,12}$')
           && okItem(request.resource.data);
+      }
+
+      match /addons/{id} {
+        allow read, delete: if owner(uid);
+        allow create, update: if owner(uid)
+          && id.matches('^[a-f0-9]{20}$')
+          && okAddon(request.resource.data);
       }
     }
   }

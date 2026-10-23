@@ -2,6 +2,7 @@
 // Loads as an ES module AFTER app.js. The app works 100% without it (guest mode).
 // Firebase SDK is loaded lazily (only for returning users, or when someone opens sign-in) to keep first load fast.
 import { legalHTML } from "./legal.js";
+import { initAddons } from "./addons.js";
 
 const $ = s => document.querySelector(s);
 const esc = s => String(s == null ? "" : s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
@@ -22,6 +23,7 @@ const IC = {
   dl: I('<path d="M12 4v11M7 11l5 5 5-5M5 20h14"/>'),
   doc: I('<path d="M7 3h7l5 5v13H7z"/><path d="M14 3v5h5M10 13h6M10 17h6"/>'),
   shield: I('<path d="M12 3 5 6v6c0 4.5 3 7.7 7 9 4-1.3 7-4.5 7-9V6z"/><path d="m9 12 2 2 4-4"/>'),
+  plug: I('<path d="M9 3v5M15 3v5M6 8h12v3a6 6 0 0 1-12 0zM12 17v4"/>'),
   out: I('<path d="M10 4H5v16h5M15 8l4 4-4 4M19 12H9"/>'),
   trash: I('<path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/>'),
   g: '<svg viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84A11 11 0 0 0 12 23z"/><path fill="#FBBC05" d="M5.84 14.1a6.6 6.6 0 0 1 0-4.2V7.06H2.18a11 11 0 0 0 0 9.88z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15A10.9 10.9 0 0 0 12 1 11 11 0 0 0 2.18 7.06l3.66 2.84C6.71 7.31 9.14 5.38 12 5.38z"/></svg>'
@@ -321,7 +323,7 @@ ${pwUser ? `<label class="cva-f"><span>Password</span><input name="dpw" type="pa
   return `${TOP}<div class="cva-me"><div class="cva-av">${av}</div><h3 class="cva-h">${esc(name)}</h3>${mail ? `<p class="cva-mail">${esc(mail)}</p>` : ""}
 <p class="cva-sync ${syncBad ? "bad" : ""}"><i></i>${!user ? (fbErr ? "Couldn’t reach sign-in service" : "Connecting…") : syncBad ? "Saved on this device · sync paused" : `Synced · ${count()} saved title${count() === 1 ? "" : "s"}`}</p></div>
 <div class="cva-msg" hidden></div>
-${row("list", "list", "My list", "#e0a030")}${row("export", "dl", "Export my data", "#5ad1ff")}${row("terms", "doc", "Terms of Use", "#b794f6")}${row("privacy", "shield", "Privacy Policy", "#6ee7a0")}
+${row("list", "list", "My list", "#e0a030")}${row("export", "dl", "Export my data", "#5ad1ff")}${row("terms", "doc", "Terms of Use", "#b794f6")}${row("privacy", "shield", "Privacy Policy", "#6ee7a0")}${row("addons", "plug", "Extensions / Add-ons", "#7dd3fc")}
 ${row("out", "out", "Sign out", "#ffd166")}${row("del", "trash", "Delete account", "#ff7a7a")}`;
 }
 
@@ -339,6 +341,7 @@ async function acctClick(el, e) {
   if (a === "close") return closeOv(el);
   if (a === "list") { closeOv(el); setTimeout(() => typeof go === "function" && go("list"), 60); return }
   if (a === "terms" || a === "privacy") return openLegal(a);
+  if (a === "addons") return AD.open();
   if (a === "export") return exportData();
   if (a === "acct") { box.innerHTML = accountHTML(); return }
   if (a === "del") { box.innerHTML = accountHTML(1); return }
@@ -381,6 +384,7 @@ async function delAccount(el) {
     if (unsub) { unsub(); unsub = null } clearTimeout(timer); pending = null;
     const col = fs.collection(db, "users", u.uid, "list"), s = await fs.getDocs(col);
     await commit(col, s.docs.map(d => ["d", d.id]));
+    try { const ac = fs.collection(db, "users", u.uid, "addons"), as = await fs.getDocs(ac); await commit(ac, as.docs.map(d => ["d", d.id])) } catch { } // saved add-ons go too
     await fs.deleteDoc(fs.doc(db, "users", u.uid));
     await au.deleteUser(u);
     try { localStorage.removeItem(LS); localStorage.removeItem(HINT) } catch { }
@@ -425,7 +429,8 @@ document.addEventListener("click", e => {
 });
 $("#acc") && ($("#acc").onclick = () => (user || hint()) ? openAccount() : openAuth("signin"));
 
-window.CVA = { push, afterSave, back, listNote, open: () => ((user || hint()) ? openAccount() : openAuth("signin")) };
+const AD = initAddons({ esc, say, openOv, closeOv, TOP, hasHint: () => !!hint(), ready: ensureFb, state: () => ({ user, auth, db, fs: fb && fb.fs }) });
+window.CVA = { streams: AD.streams, push, afterSave, back, listNote, open: () => ((user || hint()) ? openAccount() : openAuth("signin")) };
 paintBtn(); listNote();
 
 // Returning users: restore session quietly after first paint

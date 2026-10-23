@@ -68,6 +68,7 @@ export function legalHTML(tab, S) {
 <p><b>If you create an account:</b></p>
 <ul>
 <li><b>Firebase Authentication</b> holds your email, display name, profile photo link (if you use Google), sign-in method and a unique user ID. Passwords are handled by Firebase; we never see them.</li>
+<li><b>Add-ons you choose</b> — if you add a Stremio-compatible add-on, its web address is saved to your account. When you open a film, your browser asks that add-on (not CineVault) for matching links, sending the film’s IMDb ID. CineVault includes no add-ons and does not host or index any sources.</li>
 <li><b>Our database</b> holds your list entries (title ID, type, title, poster path, language, genre IDs, status, favourite and alert flags, last-updated time) and the version and time you accepted these Terms and this Policy.</li>
 </ul>
 <p><b>We do not collect:</b> payment details, GPS location, contacts, advertising IDs, or analytics. We show no third-party ads and we do not sell personal data.</p>
