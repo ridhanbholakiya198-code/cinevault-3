@@ -1,0 +1,7 @@
+Delete these from your project (not shipped here):
+
+  workers/cors-proxy.js          open CORS proxy, removed on purpose
+  
+If you already deployed that Worker on Cloudflare, delete it in the dashboard too.
+Also remove NEXT_PUBLIC_CORS_PROXY_URL from your env (Vercel/Cloudflare settings and .env files).
+AddonManager and WhereToWatch fall back to direct browser requests when it is unset.
