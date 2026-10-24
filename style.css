@@ -546,3 +546,34 @@ html,body{background:#000}
 .fnote{margin:10px 0 0;color:var(--mute);font-size:13px;max-width:62ch}
 .fgh{grid-column:1/-1;margin:22px 0 -2px;font:400 26px/1.1 "Bebas Neue";letter-spacing:.06em;display:flex;align-items:baseline;gap:10px;border-bottom:1px solid #ffffff10;padding-bottom:8px}.fgh small{color:var(--mute);font:500 13px "DM Sans";letter-spacing:0}
 .fc.sd img{opacity:.5;filter:saturate(.6)}.fc .sdt{position:absolute;left:8px;bottom:62px;font:500 10px "DM Sans";letter-spacing:.1em;text-transform:uppercase;padding:3px 8px;border-radius:99px;background:#000c;border:1px solid #ffffff26;color:#d8d3c8;font-style:normal;z-index:2}
+
+/* ===== Detail page: section tabs (v8) ===== */
+.cvt{display:flex;gap:2px;margin:22px 0 4px;overflow-x:auto;scrollbar-width:none;border-bottom:1px solid #ffffff17;-webkit-overflow-scrolling:touch}
+.cvt::-webkit-scrollbar{display:none}
+.mx .cvt{margin-left:-20px;margin-right:-20px;padding:0 12px}
+@media(min-width:900px){.mx .cvt{margin-left:0;margin-right:0;padding:0}}
+.cvt button{position:relative;flex:0 0 auto;padding:14px 16px 13px;background:none;border:0;color:var(--mute);font:400 21px/1 "Bebas Neue";letter-spacing:.12em;cursor:pointer;transition:color .25s;-webkit-tap-highlight-color:transparent}
+.cvt button::after{content:"";position:absolute;left:16px;right:16px;bottom:-1px;height:2px;border-radius:2px;background:var(--accent);box-shadow:0 0 14px var(--accent);transform:scaleX(0);transform-origin:left;transition:transform .35s cubic-bezier(.2,.8,.2,1)}
+.cvt button:hover{color:#fff}.cvt button.on{color:#fff}.cvt button.on::after{transform:scaleX(1)}
+.cvt-pane{padding-top:6px}.cvt-pane[hidden]{display:none}
+.cvt-pane.in{animation:cvtIn .38s cubic-bezier(.2,.8,.2,1)}
+@keyframes cvtIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+/* details pane: quiet eyebrow labels instead of loud headings */
+.cvt-pane h3{font:500 11px "DM Sans";letter-spacing:.24em;text-transform:uppercase;color:var(--mute);margin:20px 0 10px}
+.cvt-pane .chips.cw{margin-bottom:4px}
+.cvt-gen{margin-top:20px}
+.mx .cvt-pane .stats,.cvt-pane .stats{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin:18px 0 6px;padding:0;overflow:visible}
+.cvt-pane .stat{border:1px solid #ffffff14;border-left:2px solid var(--accent);border-radius:14px;padding:12px 16px;background:linear-gradient(135deg,#ffffff0a,#ffffff03)}
+.cvt-pane .stat small{font-size:11px;letter-spacing:.16em;text-transform:uppercase}
+.cvt-pane .stat strong{font-size:26px;display:block;margin-top:2px}
+@media(min-width:900px){.cvt-pane .stats{grid-template-columns:repeat(4,1fr)}}
+/* cast pane: avatar grid */
+.cvt-pane .cvt-cast{display:grid!important;grid-template-columns:repeat(auto-fill,minmax(92px,1fr));gap:20px 12px;overflow:visible;padding-top:14px}
+.cvt-pane .cvt-cast>div{flex:none;text-align:center}
+.cvt-pane .cvt-cast img,.cvt-pane .cvt-cast i{width:100%;max-width:92px;margin:0 auto}
+.cvt-pane .cvt-cast small{display:block}
+@media(min-width:900px){.cvt-pane .cvt-cast{grid-template-columns:repeat(auto-fill,minmax(110px,1fr))}}
+/* watch pane: official providers get a quieter header than add-ons */
+.cvt-pane[data-cvpane="watch"] .eh h3{font:400 24px "Bebas Neue";letter-spacing:.1em;text-transform:none;color:var(--fg);margin:12px 0 8px}
+.cvt-pane .stats{grid-template-columns:repeat(2,minmax(0,1fr))}.cvt-pane .stat{min-width:0;flex:none}.cvt-pane .stat strong{font-size:clamp(20px,6vw,26px);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+@media(min-width:900px){.cvt-pane .stats{grid-template-columns:repeat(4,minmax(0,1fr))}}

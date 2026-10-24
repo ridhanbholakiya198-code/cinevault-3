@@ -213,3 +213,17 @@
 .cvp-wt .cvp-wtop,.cvp-wt.is-fs .cvp-wtop,.cvp-wt.is-fs.idle .cvp-wtop{left:auto!important;right:max(12px,env(safe-area-inset-right))!important;width:auto;transition:opacity .35s}
 .cvp-wt.idle .cvp-wtop,.cvp-wt.is-fs.idle .cvp-wtop{opacity:0;pointer-events:none}
 .cvp-wt .cvp-hot,.cvp-wt.is-fs .cvp-hot{display:block;position:absolute;top:0;right:0;left:auto;width:132px;height:64px;z-index:5}
+
+/* ===== v8: quality + language rail ===== */
+.cvs-bar{position:relative;align-items:stretch;gap:0;margin:6px 0 14px;border-bottom:1px solid #ffffff17}
+.cvs-chips{flex:1;min-width:0;gap:2px;padding:0;-webkit-mask-image:linear-gradient(90deg,#000 calc(100% - 22px),#0000);mask-image:linear-gradient(90deg,#000 calc(100% - 22px),#0000)}
+.cvs-chips button{position:relative;display:inline-flex;align-items:baseline;gap:6px;padding:12px 14px 12px;border:0;border-radius:0;background:none;color:var(--mute);font:400 20px/1 "Bebas Neue";letter-spacing:.1em;transition:color .25s}
+.cvs-chips button small{opacity:1;font:500 11px "DM Sans";letter-spacing:.02em;color:#ffffff6e;transform:translateY(-6px)}
+.cvs-chips button::after{content:"";position:absolute;left:14px;right:14px;bottom:-1px;height:2px;border-radius:2px;background:var(--accent);box-shadow:0 0 12px var(--accent);transform:scaleX(0);transform-origin:left;transition:transform .32s cubic-bezier(.2,.8,.2,1)}
+.cvs-chips button:hover,.cvs-chips button.on{color:#fff;background:none}
+.cvs-chips button.on::after{transform:scaleX(1)}
+.cvs-chips button.on small{color:var(--accent)}
+.cvs-lang{align-self:center;margin:0 0 0 6px;padding:8px 14px 8px 11px;max-width:132px;border:1px solid #ffffff2e;background:#0b0b0d;font:500 13px "DM Sans";letter-spacing:.02em;box-shadow:-14px 0 14px #000}
+.cvs-lang.on{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 12%,#000);color:#fff}
+.cvs-lang.on svg{stroke:var(--accent)}
+@media(min-width:700px){.cvs-chips{flex-wrap:nowrap;overflow-x:auto;-webkit-mask-image:none;mask-image:none}.cvs-lang{box-shadow:none;max-width:200px}}
