@@ -3,7 +3,7 @@
 // Only HTTPS direct video / HLS, YouTube and external links are used. Torrent / info-hash entries are ignored on purpose.
 // Loaded by auth.js, which passes in its own Firebase + overlay helpers.
 
-import { httpUrl, classify, sortStreams, dedupe, launch, copyText, linkOf } from "./cv-stream-utils.js";
+import { httpUrl, classify, sortStreams, dedupe, launch, copyText, linkOf, platform } from "./cv-stream-utils.js";
 import { createStreamsUI } from "./cv-streams-ui.js";
 import { openPlayer } from "./cv-player.js";
 
@@ -133,7 +133,7 @@ export function initAddons(h) {
 
   let ui = null; // last streams UI, used by the player to open the action sheet
   const actions = {
-    playBrowser: s => { css().then(() => openPlayer(s, { openOv, closeOv, esc, say, device: x => ui && ui.openMenu(x, { view: "device" }) })) },
+    playBrowser: s => { css().then(() => openPlayer(s, { openOv, closeOv, esc, say, device: x => (platform() === "ios" && x.kind !== "torrent" && ui) ? ui.openMenu(x, { view: "device" }) : say(launch(x, "")) })) },
     launch: (s, app) => say(launch(s, app)),
     copy: async s => say((await copyText(linkOf(s))) ? (s.kind === "torrent" ? "Magnet link copied" : "Link copied") : "Couldn’t copy. Long-press the link instead."),
     open: s => { const u = s.kind === "youtube" ? "https://www.youtube.com/watch?v=" + s.id : s.url; window.open(u, "_blank", "noopener,noreferrer") },

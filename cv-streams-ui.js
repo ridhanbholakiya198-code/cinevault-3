@@ -114,8 +114,9 @@ export function createStreamsUI(el, deps) {
       else {
         const blocked = s.kind === "direct" && !s.secure;
         l += sheetBtn("browser", ICO.play, "Play in browser", blocked ? "Not possible: this link is http, not https" : s.kind === "torrent" ? "Streams through Webtor" : "Built-in player", blocked ? "disabled" : "");
-        if (s.kind === "direct") l += sheetBtn("device", ICO.phone, "Play in device player", plat === "android" ? "VLC, MX Player, Just Player…" : plat === "ios" ? "VLC, Infuse" : "VLC or any desktop player");
-        else if (s.kind === "torrent") l += sheetBtn("app", ICO.phone, "Open in torrent app", "Needs a torrent app. Video players can’t open magnets", 'data-app=""');
+        if (s.kind === "direct") l += plat === "ios" ? sheetBtn("device", ICO.phone, "Play in device player", "VLC, Infuse")
+          : sheetBtn("app", ICO.phone, "Play in device player", plat === "android" ? "Opens your phone’s app chooser" : "Downloads a playlist for VLC", 'data-app=""');
+        else if (s.kind === "torrent") l += sheetBtn("app", ICO.phone, "Play in device player", "Opens your torrent / streaming app", 'data-app=""');
         else if (s.kind === "youtube") l += sheetBtn("open", ICO.ext, "Open in YouTube", "YouTube app or website");
       }
       l += sheetBtn("copy", ICO.copy, s.kind === "torrent" ? "Copy magnet link" : "Copy stream link", "");
@@ -182,17 +183,18 @@ export function createStreamsUI(el, deps) {
     const ov = menuEl = openOv("langpick", "cv-menu cv-lang"), box = ov.querySelector(".cva-box");
     const lc = langCounts(), codes = Object.keys(lc).sort((a, b) => (a === "multi") - (b === "multi") || lc[b] - lc[a]);
     if (S.lang !== "all" && !codes.includes(S.lang)) codes.push(S.lang);
-    const tile = c => { const n = langName(c), on = S.lang === c; return `<button type="button" class="cvl-t${on ? " on" : ""}" data-l="${esc(c)}" data-q="${esc((n.native + " " + n.en).toLowerCase())}"><span class="cvl-n">${esc(n.native)}</span><small>${esc(n.en)}</small><b>${lc[c] || 0}</b>${on ? `<i>${ICO.check}</i>` : ""}</button>` };
-    box.innerHTML = `<div class="cvm-h"><i class="cvm-grip"></i><div class="cvm-hd"><div class="cvm-ti">Language</div><div class="cvm-me">Show only links with this audio</div></div><button type="button" class="cvm-x" data-a="close" aria-label="Close">${ICO.x}</button></div>` +
-      (codes.length > 7 ? `<input class="cvl-q" type="search" placeholder="Search language" autocomplete="off" aria-label="Search language">` : "") +
-      `<div class="cvl-g"><button type="button" class="cvl-t cvl-all${S.lang === "all" ? " on" : ""}" data-l="all" data-q="all languages"><span class="cvl-n">All languages</span><small>${S.list.length} links</small>${S.lang === "all" ? `<i>${ICO.check}</i>` : ""}</button>${codes.map(tile).join("")}</div>`;
+    const row = (c, name, alt, n, on) => `<button type="button" class="cvl-r${on ? " on" : ""}" data-l="${esc(c)}" data-q="${esc((name + " " + alt).toLowerCase())}"><span class="cvl-n">${esc(name)}${alt && alt !== name ? `<em>${esc(alt)}</em>` : ""}</span><b>${n}</b><i>${ICO.check}</i></button>`;
+    const rows = codes.map(c => { const n = langName(c); return row(c, n.en, n.native, lc[c] || 0, S.lang === c) }).join("");
+    box.innerHTML = `<div class="cvm-h"><i class="cvm-grip"></i><div class="cvm-hd"><div class="cvm-ti">Audio language</div></div><button type="button" class="cvm-x" data-a="close" aria-label="Close">${ICO.x}</button></div>` +
+      (codes.length > 12 ? `<input class="cvl-q" type="search" placeholder="Search" autocomplete="off" aria-label="Search language">` : "") +
+      `<div class="cvl-g">${row("all", "All languages", "", S.list.length, S.lang === "all")}${rows}</div>`;
     if (matchMedia("(min-width:700px)").matches) {
       const w = box.offsetWidth, h = box.offsetHeight; let x = rect.right - w, y = rect.bottom + 8;
       if (x < 8) x = 8; if (x + w > innerWidth - 8) x = innerWidth - w - 8; if (y + h > innerHeight - 8) y = Math.max(8, rect.top - h - 8);
       box.style.left = x + "px"; box.style.top = y + "px";
     }
     const q = box.querySelector(".cvl-q");
-    if (q) q.addEventListener("input", () => { const t = q.value.trim().toLowerCase(); box.querySelectorAll(".cvl-t:not(.cvl-all)").forEach(b => { b.hidden = !!t && !b.dataset.q.includes(t) }) });
+    if (q) q.addEventListener("input", () => { const t = q.value.trim().toLowerCase(); box.querySelectorAll(".cvl-r").forEach(b => { b.hidden = !!t && b.dataset.l !== "all" && !b.dataset.q.includes(t) }) });
     ov.addEventListener("click", e => {
       if (e.target.closest('[data-a="close"]')) return closeOv(ov);
       const b = e.target.closest("[data-l]"); if (!b) return;

@@ -34,6 +34,22 @@ function subLang(n) {
   return { code: "", label: n.replace(SUB, "").slice(-26) };
 }
 
+// VLC-style picture modes (same names and order as VLC for Android).
+const FITS = [["fit", "Best fit"], ["crop", "Fit screen"], ["stretch", "Fill"], ["16:9", "16:9"], ["4:3", "4:3"], ["orig", "Center"]];
+const SHAPES = [["16:9", 16 / 9, "Standard 16:9"], ["2.39", 2.39, "Cinema wide 2.39:1"], ["4:3", 4 / 3, "Old 4:3"]];
+const QW = { "4K": 3840, "1440p": 2560, "1080p": 1920, "720p": 1280, "480p": 854 };
+// The Webtor player lives in a locked cross-origin frame, so we cannot reach its <video>.
+// Instead we scale the whole frame, assuming the movie has ratio R0 and is letterboxed inside W×H.
+function emulate(mode, W, H, R0, nativeW) {
+  const A = W / H, dw = A >= R0 ? H * R0 : W, dh = A >= R0 ? H : W / R0;
+  if (mode === "fit") return [1, 1];
+  if (mode === "crop") { const k = Math.max(W / dw, H / dh); return [k, k] }
+  if (mode === "stretch") return [W / dw, H / dh];
+  if (mode === "orig") { const k = (nativeW / (window.devicePixelRatio || 1)) / dw; return [k, k] }
+  const [a, b] = mode.split(":").map(Number), R = a / b, tw = A >= R ? H * R : W, th = A >= R ? H : W / R;
+  return [tw / dw, th / dh];
+}
+
 let hlsP = null, wtSeq = 0;
 const loadHls = () => window.Hls ? Promise.resolve(window.Hls) : (hlsP ||= new Promise((res, rej) => {
   const s = document.createElement("script"); s.src = HLS_SRC; s.async = true;
@@ -61,17 +77,59 @@ export function openPlayer(s, h) {
 
   /* ---------- Webtor (torrent / magnet) ---------- */
   function webtor() {
-    const magnet = s.magnet;
-    box.innerHTML = `<div class="cvp cvp-wt"><div class="cvp-wtop"><button type="button" class="cvp-ib" data-c="close" aria-label="Close player">${ic("back")}</button><span class="cvp-ttl">${esc(title)}</span>` +
-      `<button type="button" class="cvp-pill" data-c="copy">Copy magnet</button><a class="cvp-pill" target="_blank" rel="noopener noreferrer" href="https://webtor.io/#?magnet=${encodeURIComponent(magnet)}">webtor.io ↗</a>` +
-      `<button type="button" class="cvp-ib" data-c="dev" aria-label="Open in torrent app" title="Open in torrent app">${ic("phone")}</button></div><div class="cvp-wtp"></div></div>`;
-    const host = box.querySelector(".cvp-wtp");
-    box.addEventListener("click", async e => {
+    const magnet = s.magnet, nativeW = QW[s.q] || 1280;
+    const B = (c, a, i, x = "") => `<button type="button" class="cvp-ib ${x}" data-c="${c}" aria-label="${a}">${ic(i)}</button>`;
+    box.innerHTML = `<div class="cvp cvp-wt"><div class="cvp-wtop">${B("close", "Close player", "back")}<span class="cvp-ttl">${esc(title)}</span>` +
+      `${B("tune", "Picture and more", "fit")}${B("fs", "Fullscreen", "fs")}${B("dev", "Open in device player", "phone")}</div>` +
+      `<div class="cvp-hot"></div><div class="cvp-wtp"></div><div class="cvp-menu" hidden></div><div class="cvp-lab"></div><div class="cvp-toast" role="status"></div></div>`;
+    const q = x => box.querySelector(x), root = q(".cvp"), host = q(".cvp-wtp"), menu = q(".cvp-menu");
+    let fitI = Math.max(0, FITS.findIndex(f => f[0] === store.get("cv_pl_fit"))), shapeI = Math.max(0, SHAPES.findIndex(f => f[0] === store.get("cv_wt_shape"))), idleT;
+    const isFs = () => document.fullscreenElement || document.webkitFullscreenElement;
+    const label = t => { const e = q(".cvp-lab"); e.textContent = t; e.classList.add("on"); clearTimeout(label.t); label.t = setTimeout(() => e.classList.remove("on"), 1100) };
+    const toast = t => { const e = q(".cvp-toast"); e.textContent = t; e.classList.add("on"); clearTimeout(toast.t); toast.t = setTimeout(() => e.classList.remove("on"), 2000) };
+    function apply() {
+      const m = host.firstElementChild; if (!m) return;
+      const W = host.clientWidth, H = host.clientHeight; if (!W || !H) return;
+      const [sx, sy] = emulate(FITS[fitI][0], W, H, SHAPES[shapeI][1], nativeW);
+      m.style.transformOrigin = "50% 50%"; m.style.transform = (sx === 1 && sy === 1) ? "" : `scale(${sx.toFixed(4)},${sy.toFixed(4)})`;
+    }
+    const setFit = i => { fitI = (i + FITS.length) % FITS.length; store.set("cv_pl_fit", FITS[fitI][0]); apply(); label(FITS[fitI][1]); if (!menu.hidden) renderMenu() };
+    function renderMenu() {
+      let m = "<h4>Picture</h4>"; FITS.forEach((f, i) => m += `<button type="button" class="it${i === fitI ? " on" : ""}" data-a="fit" data-i="${i}">${f[1]}</button>`);
+      m += "<h4>Movie shape</h4>"; SHAPES.forEach((f, i) => m += `<button type="button" class="it${i === shapeI ? " on" : ""}" data-a="shape" data-i="${i}">${f[2]}</button>`);
+      m += "<p>These options zoom the whole player frame and assume the movie shape above. If black bars look wrong, change the shape. Fit screen and Fill may move Webtor’s own controls, so choose Best fit to reset.</p>";
+      m += `<h4>More</h4><button type="button" class="it" data-a="copy">Copy magnet link</button><a class="it" target="_blank" rel="noopener noreferrer" href="https://webtor.io/#?magnet=${encodeURIComponent(magnet)}">Open on webtor.io</a>`;
+      menu.innerHTML = m;
+    }
+    menu.addEventListener("click", async e => {
+      const b = e.target.closest("[data-a]"); if (!b) return; const a = b.dataset.a, i = +b.dataset.i;
+      if (a === "fit") setFit(i);
+      else if (a === "shape") { shapeI = i; store.set("cv_wt_shape", SHAPES[i][0]); apply(); renderMenu(); label(SHAPES[i][2]) }
+      else if (a === "copy") { menu.hidden = true; say((await copyText(magnet)) ? "Magnet copied" : "Couldn’t copy") }
+    });
+    const fs = () => {
+      const d = document;
+      if (isFs()) { try { (d.exitFullscreen || d.webkitExitFullscreen).call(d) } catch { } try { screen.orientation.unlock() } catch { } }
+      else if (root.requestFullscreen) root.requestFullscreen().then(() => { try { screen.orientation.lock("landscape") } catch { } }).catch(() => toast("Fullscreen isn’t available here"));
+      else toast("Fullscreen isn’t supported on this browser");
+    };
+    function wake() { root.classList.remove("idle"); clearTimeout(idleT); idleT = setTimeout(() => { if (isFs() && menu.hidden) root.classList.add("idle") }, 3200) }
+    const onFs = () => { root.classList.toggle("is-fs", !!isFs()); apply(); wake() };
+    document.addEventListener("fullscreenchange", onFs);
+    const ro = window.ResizeObserver ? new ResizeObserver(apply) : null; if (ro) ro.observe(host);
+    ["pointerdown", "mousemove"].forEach(t => q(".cvp-hot").addEventListener(t, wake));
+    const mo = new MutationObserver(apply); mo.observe(host, { childList: true, subtree: true });
+
+    box.addEventListener("click", e => {
+      if (!e.target.isConnected) return;
+      if (!menu.hidden && !e.target.closest(".cvp-menu") && !e.target.closest('[data-c="tune"]')) menu.hidden = true;
       const c = e.target.closest("[data-c]"); if (!c) return;
-      if (c.dataset.c === "close") close();
-      else if (c.dataset.c === "copy") say((await copyText(magnet)) ? "Magnet copied" : "Couldn’t copy");
-      else if (c.dataset.c === "dev") toDevice();
-      else if (c.dataset.c === "retry") start();
+      const k = c.dataset.c;
+      if (k === "close") close();
+      else if (k === "tune") { menu.hidden = !menu.hidden; if (!menu.hidden) renderMenu(); wake() }
+      else if (k === "fs") fs();
+      else if (k === "dev") toDevice();
+      else if (k === "retry") start();
     });
     function start() {
       host.innerHTML = "";
@@ -79,8 +137,8 @@ export function openPlayer(s, h) {
       window.webtor = window.webtor || [];
       try {
         window.webtor.push({
-          id, baseUrl: "https://webtor.io", magnet, width: "100%", height: "100%", header: true, controls: true, lang: "en",
-          features: { p2pProgress: true, title: true, settings: true, fullscreen: true, subtitles: true, opensubtitles: true, continue: true, playpause: true, currentTime: true, timeline: true, duration: true, volume: true, chromecast: true, browse: true, download: true },
+          id, baseUrl: "https://webtor.io", magnet, width: "100%", height: "100%", header: false, controls: true, lang: "en", title,
+          features: { p2pProgress: true, title: true, settings: true, fullscreen: !root.requestFullscreen, subtitles: true, opensubtitles: true, continue: true, playpause: true, currentTime: true, timeline: true, duration: true, volume: true, chromecast: true, browse: true, download: true },
         });
       } catch (err) { return fail("Webtor could not start: " + (err && err.message)) }
       if (!document.getElementById("wt-sdk")) {
@@ -89,10 +147,15 @@ export function openPlayer(s, h) {
         sc.onerror = () => { sc.remove(); fail("The Webtor player could not be loaded. Check your connection.") };
         document.head.append(sc);
       }
+      apply();
     }
     function fail(msg) { host.innerHTML = `<div class="cvp-msg"><p>${esc(msg)}</p><button type="button" class="cvp-pill on" data-c="retry">Try again</button></div>` }
-    ov._onclose = () => { host.innerHTML = ""; box.innerHTML = "" };
-    start();
+    ov._onclose = () => {
+      document.removeEventListener("fullscreenchange", onFs); if (ro) ro.disconnect(); mo.disconnect(); clearTimeout(idleT);
+      try { if (isFs()) (document.exitFullscreen || document.webkitExitFullscreen).call(document); screen.orientation.unlock() } catch { }
+      host.innerHTML = ""; box.innerHTML = "";
+    };
+    start(); wake();
   }
 
   /* ---------- Native player ---------- */
@@ -121,7 +184,6 @@ export function openPlayer(s, h) {
     }
 
     /* aspect ratio / crop / zoom (like VLC) */
-    const FITS = [["fit", "Best fit"], ["crop", "Crop to fill"], ["stretch", "Stretch"], ["16:9", "16:9"], ["4:3", "4:3"], ["orig", "Original size"]];
     let fitI = Math.max(0, FITS.findIndex(f => f[0] === store.get("cv_pl_fit"))), zoom = 1;
     const label = t => { const e = q(".cvp-lab"); e.textContent = t; e.classList.add("on"); clearTimeout(label.t); label.t = setTimeout(() => e.classList.remove("on"), 1100) };
     function applyFit() {
