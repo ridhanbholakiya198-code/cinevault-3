@@ -95,10 +95,10 @@ export function openPlayer(s, h) {
     }
     const setFit = i => { fitI = (i + FITS.length) % FITS.length; store.set("cv_pl_fit", FITS[fitI][0]); apply(); label(FITS[fitI][1]); if (!menu.hidden) renderMenu() };
     function renderMenu() {
-      let m = "<h4>Picture</h4>"; FITS.forEach((f, i) => m += `<button type="button" class="it${i === fitI ? " on" : ""}" data-a="fit" data-i="${i}">${f[1]}</button>`);
-      m += "<h4>Movie shape</h4>"; SHAPES.forEach((f, i) => m += `<button type="button" class="it${i === shapeI ? " on" : ""}" data-a="shape" data-i="${i}">${f[2]}</button>`);
-      m += "<p>These options zoom the whole player frame and assume the movie shape above. If black bars look wrong, change the shape. Fit screen and Fill may move Webtor’s own controls, so choose Best fit to reset.</p>";
-      m += `<h4>More</h4><button type="button" class="it" data-a="copy">Copy magnet link</button><a class="it" target="_blank" rel="noopener noreferrer" href="https://webtor.io/#?magnet=${encodeURIComponent(magnet)}">Open on webtor.io</a>`;
+      let m = '<h4>Picture</h4><div class="cvp-g">'; FITS.forEach((f, i) => m += `<button type="button" class="it${i === fitI ? " on" : ""}" data-a="fit" data-i="${i}">${f[1]}</button>`);
+      m += '</div><h4>Movie shape</h4><div class="cvp-g g3">'; SHAPES.forEach((f, i) => m += `<button type="button" class="it${i === shapeI ? " on" : ""}" data-a="shape" data-i="${i}">${f[0] === "2.39" ? "2.39:1" : f[0]}</button>`);
+      m += '</div><p>Zooms the whole frame using the movie shape. If bars look wrong, change the shape.</p>';
+      m += `<div class="cvp-g"><button type="button" class="it" data-a="copy">Copy magnet</button><a class="it" target="_blank" rel="noopener noreferrer" href="https://webtor.io/#?magnet=${encodeURIComponent(magnet)}">webtor.io</a></div>`;
       menu.innerHTML = m;
     }
     menu.addEventListener("click", async e => {
