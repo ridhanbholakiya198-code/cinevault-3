@@ -34,6 +34,48 @@ export function qualityGroup(q) {
   return q === "4K" || q === "1440p" ? "4K" : q === "1080p" ? "1080p" : q === "720p" ? "720p" : "Other";
 }
 
+
+/* ---------- language detection (flags, words, scripts) ---------- */
+const FLAG2 = { "🇬🇧": "en", "🇺🇸": "en", "🇦🇺": "en", "🇨🇦": "en", "🇮🇳": "hi", "🇷🇺": "ru", "🇺🇦": "uk", "🇯🇵": "ja", "🇰🇷": "ko", "🇨🇳": "zh", "🇹🇼": "zh", "🇭🇰": "zh", "🇫🇷": "fr", "🇩🇪": "de", "🇮🇹": "it", "🇪🇸": "es", "🇲🇽": "es", "🇵🇹": "pt", "🇧🇷": "pt", "🇳🇱": "nl", "🇵🇱": "pl", "🇹🇷": "tr", "🇸🇦": "ar", "🇪🇬": "ar", "🇹🇭": "th", "🇻🇳": "vi", "🇮🇩": "id", "🇸🇪": "sv", "🇳🇴": "no", "🇩🇰": "da", "🇫🇮": "fi", "🇬🇷": "el", "🇮🇱": "he", "🇨🇿": "cs", "🇭🇺": "hu", "🇷🇴": "ro", "🇵🇰": "ur", "🇧🇩": "bn" };
+const LANG_WORDS = [
+  ["en", /\b(english|eng)\b/i], ["hi", /\b(hindi|hin)\b/i], ["ta", /\btamil\b/i], ["te", /\btelugu\b/i], ["ml", /\bmalayalam\b/i], ["kn", /\bkannada\b/i],
+  ["bn", /\bbengali\b/i], ["pa", /\bpunjabi\b/i], ["mr", /\bmarathi\b/i], ["gu", /\bgujarati\b/i], ["ur", /\burdu\b/i], ["ru", /\b(russian|rus)\b/i],
+  ["es", /\b(spanish|espanol|español|castellano|latino)\b/i], ["fr", /\b(french|francais|vff|vfq|vf2|truefrench)\b/i], ["de", /\b(german|deutsch|ger)\b/i],
+  ["it", /\b(italian|ita)\b/i], ["pt", /\b(portuguese|dublado|pt-br|ptbr)\b/i], ["ja", /\b(japanese|jpn)\b/i], ["ko", /\b(korean|kor)\b/i],
+  ["zh", /\b(chinese|mandarin|cantonese)\b/i], ["ar", /\barabic\b/i], ["tr", /\bturkish\b/i], ["pl", /\b(polish|lektor)\b/i], ["nl", /\bdutch\b/i],
+  ["th", /\bthai\b/i], ["vi", /\bvietnamese\b/i], ["id", /\bindonesian\b/i],
+];
+const SCRIPTS = [["ru", /[\u0400-\u04FF]/], ["hi", /[\u0900-\u097F]/], ["ta", /[\u0B80-\u0BFF]/], ["te", /[\u0C00-\u0C7F]/], ["kn", /[\u0C80-\u0CFF]/], ["ml", /[\u0D00-\u0D7F]/],
+  ["bn", /[\u0980-\u09FF]/], ["pa", /[\u0A00-\u0A7F]/], ["gu", /[\u0A80-\u0AFF]/], ["ar", /[\u0600-\u06FF]/], ["he", /[\u0590-\u05FF]/], ["th", /[\u0E00-\u0E7F]/],
+  ["ko", /[\uAC00-\uD7AF]/], ["ja", /[\u3040-\u30FF]/], ["zh", /[\u4E00-\u9FFF]/]];
+const INDIAN = ["hi", "ta", "te", "ml", "kn", "bn", "pa", "mr", "gu", "ur"];
+
+// Returns the audio languages a release probably carries. "multi" = dual / multi audio.
+export function detectLangs(name, body, flags) {
+  const text = (name + "\n" + body).replace(/\b[\w-]+[ ._-]*(subs?|subtitles?|subbed)\b/gi, " "); // "ENG SUBS" is not audio
+  const out = new Set();
+  LANG_WORDS.forEach(([c, re]) => re.test(text) && out.add(c));
+  SCRIPTS.forEach(([c, re]) => re.test(body) && out.add(c));
+  (flags || []).forEach(f => { const c = FLAG2[f]; if (c && c !== "hi") out.add(c) });
+  if ((flags || []).includes("🇮🇳") && !INDIAN.some(c => out.has(c))) out.add("hi");
+  const multi = /\b(multi|dual[ ._-]?audio|multi[ ._-]?audio|dual)\b/i.test(text);
+  let guess = false;
+  if (!out.size && !multi) { out.add("en"); guess = true }
+  if (multi) out.add("multi");
+  return { langs: [...out], guess };
+}
+
+const dnCache = {};
+export function langName(code) {
+  if (code === "multi") return { native: "Multi audio", en: "Dual or multi language" };
+  const mk = l => { try { return dnCache[l] ||= new Intl.DisplayNames([l], { type: "language" }) } catch { return null } };
+  let en = code, native = code;
+  try { en = (mk("en") && mk("en").of(code)) || code } catch { }
+  try { native = (mk(code) && mk(code).of(code)) || en } catch { native = en }
+  native = native.charAt(0).toUpperCase() + native.slice(1);
+  return { native, en };
+}
+
 export function parseMeta(s, addon) {
   const name = String(s.name || ""), body = String(s.title || s.description || "");
   const blob = name + "\n" + body + "\n" + String((s.behaviorHints && s.behaviorHints.filename) || "");
@@ -43,11 +85,12 @@ export function parseMeta(s, addon) {
   const flags = [...new Set(body.match(/[\u{1F1E6}-\u{1F1FF}]{2}/gu) || [])].slice(0, 3);
   const tags = TAGS.filter(([, re]) => re.test(blob)).map(t => t[0]).slice(0, 4);
   const deb = /^\[([A-Za-z]{2,4})([+\-]?|\s[^\]]*)\]/.exec(name.split("\n")[0]);
+  const lg = detectLangs(name, body, flags);
   const lines = body.split("\n").map(x => x.trim()).filter(Boolean);
   let head = (lines[0] || name.split("\n")[0] || addon || "Stream").replace(/^\[[^\]]*\]\s*/, "");
   if (/^\S+$/.test(head)) head = head.replace(/\.(?!\d)|(?<!\d)\.|_/g, " ");
   return {
-    q, qr, tags, flags,
+    q, qr, tags, flags, langs: lg.langs, langGuess: lg.guess,
     size: size ? size[1].replace(/\s+/g, " ").trim() : "",
     seeders: seed ? +seed[1] : -1,
     src: src ? src[1].trim().slice(0, 30) : "",

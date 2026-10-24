@@ -1,9 +1,9 @@
 // CineVault — "From your add-ons" section.
 // Collapsible, filterable, compact rows. Tap = play in browser. Hold / right-click / ⋮ = action sheet
 // (browser or device player). Works on Android (touch) and desktop (mouse + keyboard).
-import { qualityGroup, platform, ANDROID_APPS, IOS_APPS } from "./cv-stream-utils.js";
+import { qualityGroup, platform, ANDROID_APPS, IOS_APPS, langName } from "./cv-stream-utils.js";
 
-const OPEN_KEY = "cv_ad_open", LIMIT = 8, HOLD_MS = 460;
+const OPEN_KEY = "cv_ad_open", LANG_KEY = "cv_ad_lang", LIMIT = 8, HOLD_MS = 460;
 const ls = { get: k => { try { return localStorage.getItem(k) } catch { return null } }, set: (k, v) => { try { localStorage.setItem(k, v) } catch { } } };
 const svg = p => `<svg viewBox="0 0 24 24" aria-hidden="true">${p}</svg>`;
 const ICO = {
@@ -17,6 +17,8 @@ const ICO = {
   ext: svg('<path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/>'),
   dl: svg('<path d="M12 4v11M7 11l5 5 5-5M5 20h14"/>'),
   x: svg('<path d="M6 6l12 12M18 6 6 18"/>'),
+  globe: svg('<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.6 2.7 3.9 5.7 3.9 9s-1.3 6.3-3.9 9c-2.6-2.7-3.9-5.7-3.9-9S9.4 5.7 12 3z"/>'),
+  check: svg('<path d="m5 12.5 4.5 4.5L19 7.5"/>'),
 };
 const KIND_TAG = { direct: "LINK", torrent: "TOR", youtube: "YT", external: "WEB" };
 
@@ -25,19 +27,22 @@ export function createStreamsUI(el, deps) {
   if (el._cvs) el._cvs.destroy();
   const ac = new AbortController(), sig = { signal: ac.signal };
 
-  const S = { list: [], filter: "all", showAll: false, open: ls.get(OPEN_KEY) !== "0", loading: false, loadText: "", failed: [], done: false, note: null };
+  const S = { list: [], filter: "all", lang: ls.get(LANG_KEY) || "all", showAll: false, open: ls.get(OPEN_KEY) !== "0", loading: false, loadText: "", failed: [], done: false, note: null };
   let menuEl = null, lpTimer = 0, lpFired = false, lpStart = null, lastMenu = 0;
 
   /* ---------- rendering ---------- */
+  const langPass = s => S.lang === "all" || s.langs.includes(S.lang);
+  const baseList = () => S.list.filter(langPass);
   const chipDefs = () => {
-    const c = {}; S.list.forEach(s => { const g = qualityGroup(s.q); c[g] = (c[g] || 0) + 1 });
-    const out = [["all", "All", S.list.length]];
+    const base = baseList(), c = {}; base.forEach(s => { const g = qualityGroup(s.q); c[g] = (c[g] || 0) + 1 });
+    const out = [["all", "All", base.length]];
     ["4K", "1080p", "720p", "Other"].forEach(g => c[g] && out.push([g, g, c[g]]));
-    const nd = S.list.filter(s => s.kind === "direct").length, nt = S.list.filter(s => s.kind === "torrent").length;
+    const nd = base.filter(s => s.kind === "direct").length, nt = base.filter(s => s.kind === "torrent").length;
     if (nd && nt) out.push(["k:direct", "Direct", nd], ["k:torrent", "Torrent", nt]);
     return out.length > 2 ? out : [];
   };
-  const passes = s => S.filter === "all" || (S.filter.startsWith("k:") ? s.kind === S.filter.slice(2) : qualityGroup(s.q) === S.filter);
+  const langCounts = () => { const c = {}; S.list.forEach(s => s.langs.forEach(l => { c[l] = (c[l] || 0) + 1 })); return c };
+  const passes = s => langPass(s) && (S.filter === "all" || (S.filter.startsWith("k:") ? s.kind === S.filter.slice(2) : qualityGroup(s.q) === S.filter));
 
   function metaHTML(s) {
     const p = [];
@@ -74,12 +79,16 @@ export function createStreamsUI(el, deps) {
     } else if (!n) {
       body = `<div class="cvs-empty"><p>No streams found for this title from your add-ons.</p><button type="button" data-retry>Try again</button></div>`;
     } else {
-      const chips = chipDefs(), rows = S.list.map((s, i) => [s, i]).filter(x => passes(x[0]));
+      const chips = chipDefs(), rows = S.list.map((s, i) => [s, i]).filter(x => passes(x[0])), lc = langCounts();
+      const showLang = Object.keys(lc).length > 1 || S.lang !== "all";
       const shown = S.showAll ? rows : rows.slice(0, LIMIT);
+      const ln = S.lang === "all" ? "Language" : langName(S.lang).native;
       body = (S.loading ? `<p class="cvs-st">${esc(S.loadText)}</p>` : "") +
-        (chips.length ? `<div class="cvs-chips" role="toolbar" aria-label="Filter streams">${chips.map(c => `<button type="button" data-f="${esc(c[0])}" class="${c[0] === S.filter ? "on" : ""}">${esc(c[1])}<small>${c[2]}</small></button>`).join("")}</div>` : "") +
-        `<ul class="cvs-list" role="list">${shown.map(x => rowHTML(x[0], x[1])).join("")}</ul>` +
-        (rows.length > LIMIT ? `<button type="button" class="cvs-more" data-more>${S.showAll ? "Show fewer" : "Show all " + rows.length}</button>` : "");
+        ((chips.length || showLang) ? `<div class="cvs-bar">${chips.length ? `<div class="cvs-chips" role="toolbar" aria-label="Filter streams">${chips.map(c => `<button type="button" data-cvf="${esc(c[0])}" class="${c[0] === S.filter ? "on" : ""}">${esc(c[1])}<small>${c[2]}</small></button>`).join("")}</div>` : '<div class="cvs-chips"></div>'}` +
+          (showLang ? `<button type="button" class="cvs-lang${S.lang !== "all" ? " on" : ""}" data-lang aria-haspopup="dialog" aria-label="Choose language">${ICO.globe}<span>${esc(ln)}</span></button>` : "") + `</div>` : "") +
+        (rows.length ? `<ul class="cvs-list" role="list">${shown.map(x => rowHTML(x[0], x[1])).join("")}</ul>` +
+          (rows.length > LIMIT ? `<button type="button" class="cvs-more" data-more>${S.showAll ? "Show fewer" : "Show all " + rows.length}</button>` : "")
+          : `<div class="cvs-empty"><p>No ${S.lang !== "all" ? esc(langName(S.lang).en) + " " : ""}links match these filters.</p><button type="button" data-reset>Show everything</button></div>`);
     }
     if (S.done && S.failed.length) body += `<p class="cvs-fail">${esc(S.failed.join(", "))} didn’t respond.</p>`;
     el.innerHTML = `<section class="cvs" data-open="${S.open ? 1 : 0}"><div class="eh cvs-eh"><h3>From your add-ons${count}</h3>` +
@@ -88,8 +97,8 @@ export function createStreamsUI(el, deps) {
   }
 
   /* ---------- action sheet ---------- */
-  function sheetBtn(act, icon, title, sub, extra = "") {
-    return `<button type="button" class="cvm-b" data-act="${act}" ${extra}><span class="cvm-i">${icon}</span><span class="cvm-t"><b>${esc(title)}</b>${sub ? `<small>${esc(sub)}</small>` : ""}</span>${act === "device" ? `<span class="cvm-c">${ICO.fwd}</span>` : ""}</button>`;
+  function sheetBtn(act, _icon, title, sub, extra = "") { // text-only rows on pure black
+    return `<button type="button" class="cvm-b" data-act="${act}" ${extra}><span class="cvm-t"><b>${esc(title)}</b>${sub ? `<small>${esc(sub)}</small>` : ""}</span>${act === "device" ? `<span class="cvm-c">${ICO.fwd}</span>` : ""}</button>`;
   }
   function openMenu(s, pos = {}) {
     if (menuEl && document.body.contains(menuEl)) return;
@@ -165,6 +174,33 @@ export function createStreamsUI(el, deps) {
     ov._onclose = () => { menuEl = null };
   }
 
+  /* ---------- language picker ---------- */
+  function setLang(l) { S.lang = l; S.showAll = false; if (S.filter !== "all" && !S.list.some(passes)) S.filter = "all"; ls.set(LANG_KEY, l) }
+  function openLang(rect) {
+    if (menuEl && document.body.contains(menuEl)) return;
+    lastMenu = Date.now();
+    const ov = menuEl = openOv("langpick", "cv-menu cv-lang"), box = ov.querySelector(".cva-box");
+    const lc = langCounts(), codes = Object.keys(lc).sort((a, b) => (a === "multi") - (b === "multi") || lc[b] - lc[a]);
+    if (S.lang !== "all" && !codes.includes(S.lang)) codes.push(S.lang);
+    const tile = c => { const n = langName(c), on = S.lang === c; return `<button type="button" class="cvl-t${on ? " on" : ""}" data-l="${esc(c)}" data-q="${esc((n.native + " " + n.en).toLowerCase())}"><span class="cvl-n">${esc(n.native)}</span><small>${esc(n.en)}</small><b>${lc[c] || 0}</b>${on ? `<i>${ICO.check}</i>` : ""}</button>` };
+    box.innerHTML = `<div class="cvm-h"><i class="cvm-grip"></i><div class="cvm-hd"><div class="cvm-ti">Language</div><div class="cvm-me">Show only links with this audio</div></div><button type="button" class="cvm-x" data-a="close" aria-label="Close">${ICO.x}</button></div>` +
+      (codes.length > 7 ? `<input class="cvl-q" type="search" placeholder="Search language" autocomplete="off" aria-label="Search language">` : "") +
+      `<div class="cvl-g"><button type="button" class="cvl-t cvl-all${S.lang === "all" ? " on" : ""}" data-l="all" data-q="all languages"><span class="cvl-n">All languages</span><small>${S.list.length} links</small>${S.lang === "all" ? `<i>${ICO.check}</i>` : ""}</button>${codes.map(tile).join("")}</div>`;
+    if (matchMedia("(min-width:700px)").matches) {
+      const w = box.offsetWidth, h = box.offsetHeight; let x = rect.right - w, y = rect.bottom + 8;
+      if (x < 8) x = 8; if (x + w > innerWidth - 8) x = innerWidth - w - 8; if (y + h > innerHeight - 8) y = Math.max(8, rect.top - h - 8);
+      box.style.left = x + "px"; box.style.top = y + "px";
+    }
+    const q = box.querySelector(".cvl-q");
+    if (q) q.addEventListener("input", () => { const t = q.value.trim().toLowerCase(); box.querySelectorAll(".cvl-t:not(.cvl-all)").forEach(b => { b.hidden = !!t && !b.dataset.q.includes(t) }) });
+    ov.addEventListener("click", e => {
+      if (e.target.closest('[data-a="close"]')) return closeOv(ov);
+      const b = e.target.closest("[data-l]"); if (!b) return;
+      setLang(b.dataset.l); closeOv(ov); render();
+    });
+    ov._onclose = () => { menuEl = null };
+  }
+
   /* ---------- actions ---------- */
   function tap(s, btn) {
     if (s.kind === "external") return deps.open(s);
@@ -179,7 +215,9 @@ export function createStreamsUI(el, deps) {
   /* ---------- events (delegated, one set per section) ---------- */
   el.addEventListener("click", e => {
     if (e.target.closest("[data-toggle]")) { S.open = !S.open; ls.set(OPEN_KEY, S.open ? "1" : "0"); return render() }
-    const f = e.target.closest("[data-f]"); if (f) { S.filter = f.dataset.f; S.showAll = false; return render() }
+    const f = e.target.closest("[data-cvf]"); if (f) { S.filter = f.dataset.cvf; S.showAll = false; return render() }
+    const lg = e.target.closest("[data-lang]"); if (lg) return openLang(lg.getBoundingClientRect());
+    if (e.target.closest("[data-reset]")) { S.filter = "all"; setLang("all"); return render() }
     if (e.target.closest("[data-more]")) { S.showAll = !S.showAll; return render() }
     if (e.target.closest("[data-retry]")) return deps.retry && deps.retry();
     if (e.target.closest("[data-note]")) return S.note && S.note.run && S.note.run();

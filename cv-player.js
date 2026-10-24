@@ -17,6 +17,7 @@ const IC = {
   cc: "M19 4H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2zM11 11H9.5v-.5h-2v3h2V13H11v1a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1v-4a1 1 0 0 1 1-1h3a1 1 0 0 1 1 1zm7 0h-1.5v-.5h-2v3h2V13H18v1a1 1 0 0 1-1 1h-3a1 1 0 0 1-1-1v-4a1 1 0 0 1 1-1h3a1 1 0 0 1 1 1z",
   pip: "M19 11h-8v6h8zm4 8V4.98C23 3.88 22.1 3 21 3H3c-1.1 0-2 .88-2 1.98V19c0 1.1.9 2 2 2h18c1.1 0 2-.9 2-2zm-2 .02H3V4.97h18z",
   fs: "M7 14H5v5h5v-2H7zM5 10h2V7h3V5H5zm12 7h-3v2h5v-5h-2zM14 5v2h3v3h2V5z",
+  fit: "M19 12h-2v3h-3v2h5v-5zM7 9h3V7H5v5h2zm14-6H3c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h18c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16.01H3V4.99h18v14.02z",
   phone: "M17 1H7a2 2 0 0 0-2 2v18a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V3a2 2 0 0 0-2-2zm0 17H7V5h10z",
 };
 const ic = n => `<svg viewBox="0 0 24 24" width="26" height="26" fill="currentColor" aria-hidden="true"><path d="${IC[n]}"/></svg>`;
@@ -98,15 +99,15 @@ export function openPlayer(s, h) {
   function native() {
     const T = (c, a, extra = "") => `<button type="button" class="cvp-ib ${extra}" data-c="${c}" aria-label="${a}"></button>`;
     box.innerHTML = `<div class="cvp"><video class="cvp-v" playsinline preload="auto"></video><div class="cvp-layer"></div>` +
-      `<div class="cvp-load on"><div class="cvp-spin"></div><div class="cvp-ls">Loading…</div></div><div class="cvp-skip"></div>` +
+      `<div class="cvp-load on"><div class="cvp-spin"></div><div class="cvp-ls">Loading…</div></div><div class="cvp-skip"></div><div class="cvp-lab"></div>` +
       `<div class="cvp-top">${T("close", "Close player")}<span class="cvp-ttl">${esc(title)}</span>${T("dev", "Open in device player")}</div>` +
       `<div class="cvp-bot"><div class="cvp-bar"><div class="cvp-bf"></div><div class="cvp-pf"></div><div class="cvp-th"></div><div class="cvp-tip">0:00</div></div>` +
       `<div class="cvp-row">${T("pp", "Play or pause")}${T("rw", "Back 10 seconds")}${T("ff", "Forward 10 seconds", "fw")}` +
       `<div class="cvp-row cvp-vg">${T("mu", "Mute")}<input class="cvp-vr" type="range" min="0" max="1" step=".05" value="1" aria-label="Volume"></div>` +
-      `<span class="cvp-tm">0:00 / 0:00</span><span class="cvp-sp"></span>${T("cc", "Subtitles, audio and speed")}${T("pip", "Picture in picture")}${T("fs", "Fullscreen")}</div></div>` +
+      `<span class="cvp-tm">0:00 / 0:00</span><span class="cvp-sp"></span>${T("fit", "Aspect ratio, crop and zoom")}${T("cc", "Subtitles, audio and speed")}${T("pip", "Picture in picture")}${T("fs", "Fullscreen")}</div></div>` +
       `<div class="cvp-menu" hidden></div><input class="cvp-sf" type="file" accept=".srt,.vtt" hidden><div class="cvp-toast" role="status"></div></div>`;
     const q = x => box.querySelector(x), root = q(".cvp"), v = q(".cvp-v"), load = q(".cvp-load"), menu = q(".cvp-menu"), bar = q(".cvp-bar");
-    const map = { close: "back", dev: "phone", rw: "rw", ff: "rw", cc: "cc", pip: "pip", fs: "fs" };
+    const map = { close: "back", dev: "phone", rw: "rw", ff: "rw", fit: "fit", cc: "cc", pip: "pip", fs: "fs" };
     Object.entries(map).forEach(([c, i]) => { const b = q(`[data-c="${c}"]`); if (b) b.innerHTML = ic(i) });
     const $pp = q('[data-c="pp"]'), $mu = q('[data-c="mu"]');
     const key = "cvp:" + hash(s.url || ""); let started = false, failing = false, hls = null, subN = {};
@@ -118,6 +119,27 @@ export function openPlayer(s, h) {
       q(".cvp-ls").innerHTML = `<b>This stream can’t play in the browser</b><span>${esc(msg)}</span>` +
         `<span class="cvp-acts"><button type="button" class="cvp-pill on" data-c="dev">Open in device player</button><button type="button" class="cvp-pill" data-c="close">Close</button></span>`;
     }
+
+    /* aspect ratio / crop / zoom (like VLC) */
+    const FITS = [["fit", "Best fit"], ["crop", "Crop to fill"], ["stretch", "Stretch"], ["16:9", "16:9"], ["4:3", "4:3"], ["orig", "Original size"]];
+    let fitI = Math.max(0, FITS.findIndex(f => f[0] === store.get("cv_pl_fit"))), zoom = 1;
+    const label = t => { const e = q(".cvp-lab"); e.textContent = t; e.classList.add("on"); clearTimeout(label.t); label.t = setTimeout(() => e.classList.remove("on"), 1100) };
+    function applyFit() {
+      const m = FITS[fitI][0], W = root.clientWidth, H = root.clientHeight;
+      v.removeAttribute("style"); v.style.transform = zoom !== 1 ? `scale(${zoom})` : "";
+      if (m === "fit") v.style.objectFit = "contain"; else if (m === "crop") v.style.objectFit = "cover"; else if (m === "stretch") v.style.objectFit = "fill";
+      else {
+        let w, h;
+        if (m === "orig") { const d = window.devicePixelRatio || 1; w = (v.videoWidth || W) / d; h = (v.videoHeight || H) / d }
+        else { const [a, b] = m.split(":").map(Number), R = a / b; if (W / H > R) { h = H; w = H * R } else { w = W; h = W / R } }
+        Object.assign(v.style, { objectFit: "fill", inset: "auto", left: "50%", top: "50%", width: w + "px", height: h + "px", marginLeft: -w / 2 + "px", marginTop: -h / 2 + "px" });
+      }
+    }
+    const setFit = (i, say = true) => { fitI = (i + FITS.length) % FITS.length; zoom = 1; applyFit(); store.set("cv_pl_fit", FITS[fitI][0]); if (say) label(FITS[fitI][1]); if (!menu.hidden) renderMenu() };
+    applyFit();
+    v.addEventListener("loadedmetadata", applyFit);
+    if (window.ResizeObserver) new ResizeObserver(applyFit).observe(root);
+    document.addEventListener("fullscreenchange", applyFit);
 
     /* source */
     if (/\.m3u8(\?|#|$)/i.test(s.url) && !v.canPlayType("application/vnd.apple.mpegurl")) {
@@ -147,12 +169,13 @@ export function openPlayer(s, h) {
       m += '<button type="button" class="it" data-a="addsub">Add subtitle file…</button><h4>Audio language</h4>';
       if (at && at.length > 1) for (let i = 0; i < at.length; i++) m += `<button type="button" class="it${at[i].enabled ? " on" : ""}" data-a="aud" data-i="${i}">${esc(at[i].label || at[i].language || "Track " + (i + 1))}</button>`;
       else m += "<p>Only one audio track is available in this browser or file. Other languages? Use a device player.</p>";
+      m += "<h4>Aspect ratio</h4>"; FITS.forEach((f, i) => m += `<button type="button" class="it${i === fitI ? " on" : ""}" data-a="fit" data-i="${i}">${f[1]}</button>`);
       m += "<h4>Speed</h4>"; [.5, .75, 1, 1.25, 1.5, 2].forEach(x => m += `<button type="button" class="it${v.playbackRate === x ? " on" : ""}" data-a="spd" data-i="${x}">${x === 1 ? "Normal" : x + "×"}</button>`);
       menu.innerHTML = m;
     }
     menu.addEventListener("click", e => {
       const b = e.target.closest("button"); if (!b) return; const a = b.dataset.a, i = +b.dataset.i;
-      if (a === "sub") setSub(i); else if (a === "aud") setAudio(i); else if (a === "spd") { v.playbackRate = i; renderMenu() } else if (a === "addsub") q(".cvp-sf").click();
+      if (a === "sub") setSub(i); else if (a === "aud") setAudio(i); else if (a === "spd") { v.playbackRate = i; renderMenu() } else if (a === "fit") setFit(i); else if (a === "addsub") q(".cvp-sf").click();
     });
     q(".cvp-sf").onchange = async e => { const f = e.target.files[0]; if (f) { await addSub(f, f.name); setSub(v.textTracks.length - 1) } e.target.value = "" };
 
@@ -174,6 +197,7 @@ export function openPlayer(s, h) {
       const c = e.target.closest("[data-c]"); if (!c) return;
       ({
         close, dev: toDevice, pp: toggle, rw: () => skipBy(-10), ff: () => skipBy(10), fs, mu: () => { v.muted = !v.muted },
+        fit: () => setFit(fitI + 1),
         cc: () => { e.stopPropagation(); menu.hidden = !menu.hidden; if (!menu.hidden) renderMenu() },
         pip: () => { if (document.pictureInPictureElement) document.exitPictureInPicture().catch(() => { }); else if (v.requestPictureInPicture) v.requestPictureInPicture().catch(() => toast("Picture in picture not available")); else toast("Picture in picture not supported") },
       })[c.dataset.c]?.();
@@ -213,8 +237,17 @@ export function openPlayer(s, h) {
     bar.addEventListener("pointerup", () => { drag = false; bar.classList.remove("d") });
 
     /* tap / click gestures */
-    let lt = 0;
-    q(".cvp-layer").addEventListener("pointerup", e => {
+    let lt = 0, pinched = false; const ptrs = new Map(); let d0 = 0, z0 = 1;
+    const layer = q(".cvp-layer"), dist = () => { const [a, b] = [...ptrs.values()]; return Math.hypot(a.x - b.x, a.y - b.y) };
+    layer.addEventListener("pointerdown", e => { ptrs.set(e.pointerId, { x: e.clientX, y: e.clientY }); if (ptrs.size === 2) { d0 = dist(); z0 = zoom; pinched = true; lt = 0 } });
+    layer.addEventListener("pointermove", e => {
+      if (!ptrs.has(e.pointerId)) return; ptrs.set(e.pointerId, { x: e.clientX, y: e.clientY });
+      if (ptrs.size === 2 && d0) { zoom = Math.max(1, Math.min(4, z0 * dist() / d0)); v.style.transform = zoom !== 1 ? `scale(${zoom})` : ""; label("Zoom " + Math.round(zoom * 100) + "%") }
+    });
+    layer.addEventListener("pointercancel", e => { ptrs.delete(e.pointerId); if (!ptrs.size) pinched = false });
+    layer.addEventListener("pointerup", e => {
+      ptrs.delete(e.pointerId);
+      if (pinched) { if (!ptrs.size) setTimeout(() => { pinched = false }, 60); return }
       if (!menu.hidden) { menu.hidden = true; return }
       const r = e.currentTarget.getBoundingClientRect(), x = (e.clientX - r.left) / r.width, n = Date.now(), dbl = n - lt < 300;
       if (e.pointerType === "touch") {
@@ -237,7 +270,7 @@ export function openPlayer(s, h) {
       else if (k === "j") skipBy(-10); else if (k === "l") skipBy(10);
       else if (k === "arrowup") { v.volume = Math.min(1, v.volume + .1); toast("Volume " + Math.round(v.volume * 100) + "%") }
       else if (k === "arrowdown") { v.volume = Math.max(0, v.volume - .1); toast("Volume " + Math.round(v.volume * 100) + "%") }
-      else if (k === "m") v.muted = !v.muted; else if (k === "f") fs();
+      else if (k === "m") v.muted = !v.muted; else if (k === "f") fs(); else if (k === "a") setFit(fitI + 1);
       else if (k === "c") { const n = v.textTracks.length; if (n) { const c = [...v.textTracks].findIndex(t => t.mode === "showing"); setSub(c + 1 >= n ? -1 : c + 1) } }
       else hnd = false;
       if (hnd) e.preventDefault();
