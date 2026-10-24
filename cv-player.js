@@ -79,8 +79,7 @@ export function openPlayer(s, h) {
   function webtor() {
     const magnet = s.magnet, nativeW = QW[s.q] || 1280;
     const B = (c, a, i, x = "") => `<button type="button" class="cvp-ib ${x}" data-c="${c}" aria-label="${a}">${ic(i)}</button>`;
-    box.innerHTML = `<div class="cvp cvp-wt"><div class="cvp-wtop">${B("close", "Close player", "back")}${B("dev", "Open in device player", "phone")}` +
-      `${B("fs", "Fullscreen", "fs")}${B("tune", "Picture and more", "fit")}</div>` +
+    box.innerHTML = `<div class="cvp cvp-wt"><div class="cvp-wtop">${B("fs", "Fullscreen", "fs")}${B("tune", "Picture and more", "fit")}</div>` +
       `<div class="cvp-hot"></div><div class="cvp-wtp"></div><div class="cvp-menu" hidden></div><div class="cvp-lab"></div><div class="cvp-toast" role="status"></div></div>`;
     const q = x => box.querySelector(x), root = q(".cvp"), host = q(".cvp-wtp"), menu = q(".cvp-menu");
     let fitI = Math.max(0, FITS.findIndex(f => f[0] === store.get("cv_pl_fit"))), shapeI = Math.max(0, SHAPES.findIndex(f => f[0] === store.get("cv_wt_shape"))), idleT;
@@ -98,22 +97,25 @@ export function openPlayer(s, h) {
       let m = '<h4>Picture</h4><div class="cvp-g">'; FITS.forEach((f, i) => m += `<button type="button" class="it${i === fitI ? " on" : ""}" data-a="fit" data-i="${i}">${f[1]}</button>`);
       m += '</div><h4>Movie shape</h4><div class="cvp-g g3">'; SHAPES.forEach((f, i) => m += `<button type="button" class="it${i === shapeI ? " on" : ""}" data-a="shape" data-i="${i}">${f[0] === "2.39" ? "2.39:1" : f[0]}</button>`);
       m += '</div><p>Zooms the whole frame using the movie shape. If bars look wrong, change the shape.</p>';
-      m += `<div class="cvp-g"><button type="button" class="it" data-a="copy">Copy magnet</button><a class="it" target="_blank" rel="noopener noreferrer" href="https://webtor.io/#?magnet=${encodeURIComponent(magnet)}">webtor.io</a></div>`;
+      m += `<div class="cvp-g"><button type="button" class="it" data-a="close">Close player</button><button type="button" class="it" data-a="copy">Copy magnet</button></div>`;
       menu.innerHTML = m;
     }
     menu.addEventListener("click", async e => {
       const b = e.target.closest("[data-a]"); if (!b) return; const a = b.dataset.a, i = +b.dataset.i;
       if (a === "fit") setFit(i);
       else if (a === "shape") { shapeI = i; store.set("cv_wt_shape", SHAPES[i][0]); apply(); renderMenu(); label(SHAPES[i][2]) }
+      else if (a === "close") close();
       else if (a === "copy") { menu.hidden = true; say((await copyText(magnet)) ? "Magnet copied" : "Couldn’t copy") }
     });
     const fs = () => {
       const d = document;
       if (isFs()) { try { (d.exitFullscreen || d.webkitExitFullscreen).call(d) } catch { } try { screen.orientation.unlock() } catch { } }
-      else if (root.requestFullscreen) root.requestFullscreen().then(() => { try { screen.orientation.lock("landscape") } catch { } }).catch(() => toast("Fullscreen isn’t available here"));
+      else if (root.requestFullscreen) root.requestFullscreen().then(() => { try { Promise.resolve(screen.orientation.lock("landscape")).catch(() => { }) } catch { } }).catch(() => toast("Fullscreen isn’t available here"));
       else toast("Fullscreen isn’t supported on this browser");
     };
-    function wake() { root.classList.remove("idle"); clearTimeout(idleT); idleT = setTimeout(() => { if (isFs() && menu.hidden) root.classList.add("idle") }, 3200) }
+    function wake() { root.classList.remove("idle"); clearTimeout(idleT); idleT = setTimeout(() => { if (menu.hidden) root.classList.add("idle"); else wake() }, 3500) }
+    const onBlur = () => { const a = document.activeElement; if (a && a.tagName === "IFRAME" && host.contains(a)) { wake(); setTimeout(() => { try { a.blur() } catch { } }, 80) } };
+    window.addEventListener("blur", onBlur);
     const onFs = () => { root.classList.toggle("is-fs", !!isFs()); apply(); wake() };
     document.addEventListener("fullscreenchange", onFs);
     const ro = window.ResizeObserver ? new ResizeObserver(apply) : null; if (ro) ro.observe(host);
@@ -151,7 +153,7 @@ export function openPlayer(s, h) {
     }
     function fail(msg) { host.innerHTML = `<div class="cvp-msg"><p>${esc(msg)}</p><button type="button" class="cvp-pill on" data-c="retry">Try again</button></div>` }
     ov._onclose = () => {
-      document.removeEventListener("fullscreenchange", onFs); if (ro) ro.disconnect(); mo.disconnect(); clearTimeout(idleT);
+      document.removeEventListener("fullscreenchange", onFs); window.removeEventListener("blur", onBlur); if (ro) ro.disconnect(); mo.disconnect(); clearTimeout(idleT);
       try { if (isFs()) (document.exitFullscreen || document.webkitExitFullscreen).call(document); screen.orientation.unlock() } catch { }
       host.innerHTML = ""; box.innerHTML = "";
     };
@@ -251,7 +253,7 @@ export function openPlayer(s, h) {
     const fs = () => {
       const d = document;
       if (isFs()) { try { (d.exitFullscreen || d.webkitExitFullscreen).call(d) } catch { } try { screen.orientation.unlock() } catch { } }
-      else if (root.requestFullscreen) root.requestFullscreen().then(() => { try { screen.orientation.lock("landscape") } catch { } }).catch(() => { });
+      else if (root.requestFullscreen) root.requestFullscreen().then(() => { try { Promise.resolve(screen.orientation.lock("landscape")).catch(() => { }) } catch { } }).catch(() => { });
       else if (v.webkitEnterFullscreen) v.webkitEnterFullscreen();
     };
     q(".cvp-vr").oninput = e => { v.volume = +e.target.value; v.muted = false };
