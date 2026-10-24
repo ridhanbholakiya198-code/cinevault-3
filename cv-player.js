@@ -79,8 +79,8 @@ export function openPlayer(s, h) {
   function webtor() {
     const magnet = s.magnet, nativeW = QW[s.q] || 1280;
     const B = (c, a, i, x = "") => `<button type="button" class="cvp-ib ${x}" data-c="${c}" aria-label="${a}">${ic(i)}</button>`;
-    box.innerHTML = `<div class="cvp cvp-wt"><div class="cvp-wtop">${B("close", "Close player", "back")}<span class="cvp-ttl">${esc(title)}</span>` +
-      `${B("tune", "Picture and more", "fit")}${B("fs", "Fullscreen", "fs")}${B("dev", "Open in device player", "phone")}</div>` +
+    box.innerHTML = `<div class="cvp cvp-wt"><div class="cvp-wtop">${B("close", "Close player", "back")}${B("dev", "Open in device player", "phone")}` +
+      `${B("fs", "Fullscreen", "fs")}${B("tune", "Picture and more", "fit")}</div>` +
       `<div class="cvp-hot"></div><div class="cvp-wtp"></div><div class="cvp-menu" hidden></div><div class="cvp-lab"></div><div class="cvp-toast" role="status"></div></div>`;
     const q = x => box.querySelector(x), root = q(".cvp"), host = q(".cvp-wtp"), menu = q(".cvp-menu");
     let fitI = Math.max(0, FITS.findIndex(f => f[0] === store.get("cv_pl_fit"))), shapeI = Math.max(0, SHAPES.findIndex(f => f[0] === store.get("cv_wt_shape"))), idleT;

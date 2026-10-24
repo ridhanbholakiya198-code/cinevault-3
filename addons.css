@@ -190,3 +190,13 @@
 .cvp-wt.is-fs.idle .cvp-wtop{opacity:0;pointer-events:none}
 .cvp-wt.is-fs .cvp-hot{display:block;position:absolute;top:0;left:0;right:0;height:46px;z-index:5}
 .cvp-wt.is-fs .cvp-menu{top:56px}
+
+/* Webtor v5: floating cluster over Webtor's own share icon, no extra bar */
+.cvp-wt .cvp-wtp{position:absolute;inset:0;z-index:1}
+.cvp-wt .cvp-wtop{position:absolute;top:max(10px,env(safe-area-inset-top));right:max(12px,env(safe-area-inset-right));left:auto;padding:0;gap:6px;background:none!important;border:0!important;z-index:6}
+.cvp-wt .cvp-wtop .cvp-ib{width:40px;height:40px;background:#000a;border-radius:50%;backdrop-filter:blur(6px)}
+.cvp-wt .cvp-wtop .cvp-ib:last-child{margin-right:-2px}
+.cvp-wt .cvp-menu,.cvp-wt.is-fs .cvp-menu{top:calc(max(10px,env(safe-area-inset-top)) + 50px);right:12px}
+.cvp-wt.is-fs .cvp-wtop,.cvp-wt.is-fs.idle .cvp-wtop{position:absolute;background:none;opacity:1;pointer-events:auto}
+.cvp-wt.is-fs .cvp-hot{display:none}
+.cvp-wt .cvp-menu{max-height:calc(100% - 80px);overflow:auto}
