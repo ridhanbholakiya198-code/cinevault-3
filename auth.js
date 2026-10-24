@@ -430,7 +430,7 @@ document.addEventListener("click", e => {
 $("#acc") && ($("#acc").onclick = () => (user || hint()) ? openAccount() : openAuth("signin"));
 
 const AD = initAddons({ esc, say, openOv, closeOv, TOP, hasHint: () => !!hint(), ready: ensureFb, state: () => ({ user, auth, db, fs: fb && fb.fs }) });
-window.CVA = { streams: AD.streams, push, afterSave, back, listNote, open: () => ((user || hint()) ? openAccount() : openAuth("signin")) };
+window.CVA = { streams: AD.streams, addons: AD.open, push, afterSave, back, listNote, open: () => ((user || hint()) ? openAccount() : openAuth("signin")) };
 paintBtn(); listNote();
 
 // Returning users: restore session quietly after first paint

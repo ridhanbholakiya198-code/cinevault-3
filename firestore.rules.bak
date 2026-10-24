@@ -1,0 +1,36 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function owner(uid) { return request.auth != null && request.auth.uid == uid; }
+
+    function okItem(d) {
+      return d.keys().hasOnly(['id','type','title','poster','lang','genres','status','fav','sub','u'])
+        && d.keys().hasAll(['id','type','title','status'])
+        && (d.id is number || d.id is string)
+        && d.type in ['movie','tv']
+        && d.title is string && d.title.size() <= 300
+        && d.status in ['','Watching','Completed','On-Hold','Dropped','Plan to Watch']
+        && (!('poster' in d) || (d.poster is string && d.poster.size() <= 300))
+        && (!('lang' in d) || (d.lang is string && d.lang.size() <= 10))
+        && (!('genres' in d) || (d.genres is list && d.genres.size() <= 30))
+        && (!('fav' in d) || d.fav is bool)
+        && (!('sub' in d) || d.sub is bool)
+        && (!('u' in d) || d.u is number);
+    }
+
+    match /users/{uid} {
+      allow read, delete: if owner(uid);
+      allow create, update: if owner(uid)
+        && request.resource.data.keys().hasOnly(['userId','termsV','privacyV','acceptedAt','createdAt','updatedAt'])
+        && request.resource.data.userId == uid;
+
+      match /list/{key} {
+        allow read, delete: if owner(uid);
+        allow create, update: if owner(uid)
+          && key.matches('^(movie|tv)[0-9]{1,12}$')
+          && okItem(request.resource.data);
+      }
+    }
+  }
+}
