@@ -119,6 +119,7 @@ export function createStreamsUI(el, deps) {
         else if (s.kind === "torrent") l += sheetBtn("app", ICO.phone, "Play in device player", "Opens your torrent / streaming app", 'data-app=""');
         else if (s.kind === "youtube") l += sheetBtn("open", ICO.ext, "Open in YouTube", "YouTube app or website");
       }
+      if (s.kind === "direct" || s.kind === "torrent") l += sheetBtn("download", ICO.dl, "Download", s.kind === "torrent" ? "Opens your torrent app and downloads the file" : "Saves the file with your browser’s downloader");
       l += sheetBtn("copy", ICO.copy, s.kind === "torrent" ? "Copy magnet link" : "Copy stream link", "");
       return head(s.label, sub, false) + `<div class="cvm-l">${l}</div>` + (s.hdr ? `<p class="cvm-tip">This source asks for special request headers, so some players may not start it.</p>` : "");
     }
@@ -163,6 +164,7 @@ export function createStreamsUI(el, deps) {
         if (act === "browser") deps.playBrowser(s);
         else if (act === "app") deps.launch(s, b.dataset.app);
         else if (act === "copy") deps.copy(s);
+        else if (act === "download") deps.download && deps.download(s);
         else if (act === "open") deps.open(s);
       }, 90);
     });

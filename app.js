@@ -164,18 +164,18 @@ async function home(){heroItems().then(h=>{hero=h;startHero();h.forEach(i=>{if(!
  if(!(navigator.connection&&navigator.connection.saveData))document.querySelectorAll("#rows .row").forEach((r,k)=>setTimeout(()=>loadRow(r),1200+k*300))}
 // ---- Browse: infinite scroll grid (filters, See all, search all use this) ----
 let B={path:"",f:0,page:0,busy:0,end:0,q:{},type:""};
-function reset(t,path,type,q,f){B={path,type,q,f,page:0,busy:0,end:0};$("#btitle").textContent=t;$("#bgrid").innerHTML="";$("#bar").hidden=!f;loadMore()}
+function reset(t,path,type,q,f,p0,mix){B={path,type,q,f,page:(p0||1)-1,p0:p0||1,mix:!!mix,busy:0,end:0};$("#btitle").textContent=t;$("#bgrid").innerHTML="";$("#bar").hidden=!f;loadMore()}
 async function loadMore(){if(B.busy||B.end||B.err||B.wait)return;B.busy=1;const b=B;
- try{const d=await api(b.path,{...b.q,page:b.page+1});if(b!==B)return;b.page++;b.fails=0;if(b.path==="/search/multi"&&b.page===1)d.results.slice(0,3).forEach(i=>learn({lang:i.original_language,genres:i.genre_ids,type:kind(i)},.5));
+ try{const d=await api(b.path,{...b.q,page:b.page+1});if(b!==B)return;if(!d.results.length&&b.p0>1&&b.page===b.p0-1){b.page=0;b.p0=1;b.busy=0;return loadMore()}b.page++;if(b.mix)d.results=shuf(d.results);b.fails=0;if(b.path==="/search/multi"&&b.page===1)d.results.slice(0,3).forEach(i=>learn({lang:i.original_language,genres:i.genre_ids,type:kind(i)},.5));
   d.results.filter(i=>i.poster_path&&i.media_type!=="person").forEach(i=>$("#bgrid").append(card(i,b.type)));if(b.page>=Math.min(d.total_pages,30))b.end=1}catch{if(b===B){b.fails=(b.fails||0)+1;if(b.fails<3){b.wait=1;setTimeout(()=>{b.wait=0;if(b===B)loadMore()},1500*b.fails)}else{b.err=1;const f=document.createElement("div");f.className="fail bf";f.innerHTML='<p class="empty">Could not load. Check your connection.</p><button class="btn">Try again</button>';f.querySelector("button").onclick=()=>{f.remove();b.err=0;b.fails=0;loadMore()};$("#bgrid").append(f)}}}
  b.busy=0;if(b===B&&!b.end&&!$("#browse").hidden&&$("#sent").getBoundingClientRect().top<innerHeight+900)loadMore()}
 new IntersectionObserver(e=>e[0].isIntersecting&&loadMore(),{rootMargin:"900px"}).observe($("#sent"));
 async function fillGenres(t){$("#gsel").innerHTML='<option value="">All genres</option>';try{const g=await api(`/genre/${t}/list`);$("#gsel").innerHTML='<option value="">All genres</option>'+g.genres.map(x=>`<option value="${x.id}">${x.name}</option>`).join("")}catch{}}
 function filt(){const sg=$("#seg .on").dataset.t,an=sg==="anime",t=an?$("#asel").value:sg,s=$("#ssel").value,n=new Date().toISOString().slice(0,10);$("#asel").hidden=$("#lsel").hidden=!an;
- const q={sort_by:{pop:"popularity.desc",top:"vote_average.desc",new:t==="tv"?"first_air_date.desc":"primary_release_date.desc",rev:t==="tv"?"popularity.desc":"revenue.desc"}[s],"vote_count.gte":s==="top"?300:s==="new"?20:0};
+ const q={sort_by:{mix:"popularity.desc",pop:"popularity.desc",top:"vote_average.desc",new:t==="tv"?"first_air_date.desc":"primary_release_date.desc",rev:t==="tv"?"popularity.desc":"revenue.desc"}[s],"vote_count.gte":s==="top"?300:s==="new"?20:s==="mix"?30:0};
  if(an){q.with_genres="16"+($("#gsel").value?","+$("#gsel").value:"");if($("#lsel").value)q.with_original_language=$("#lsel").value}else if($("#gsel").value)q.with_genres=$("#gsel").value;if(s==="new")q[t==="tv"?"first_air_date.lte":"primary_release_date.lte"]=n;
  if(window.CVF)CVF.extra(t,q,an);
- reset(an?"Anime & Cartoons":t==="tv"?"Series":"Films","/discover/"+t,t,q,1)}
+ reset(an?"Anime & Cartoons":t==="tv"?"Series":"Films","/discover/"+t,t,q,1,s==="mix"?1+Math.floor(Math.random()*3):1,s==="mix")}
 document.querySelectorAll("#seg button").forEach(b=>b.onclick=async()=>{document.querySelectorAll("#seg button").forEach(x=>x.classList.toggle("on",x===b));await fillGenres(b.dataset.t==="anime"?$("#asel").value:b.dataset.t);filt()});
 $("#asel").onchange=async()=>{await fillGenres($("#asel").value);filt()};$("#lsel").onchange=filt;
 $("#gsel").onchange=$("#ssel").onchange=filt;

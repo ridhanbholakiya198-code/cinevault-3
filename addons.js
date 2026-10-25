@@ -136,6 +136,13 @@ export function initAddons(h) {
     playBrowser: s => { css().then(() => openPlayer(s, { openOv, closeOv, esc, say, device: x => (platform() === "ios" && x.kind !== "torrent" && ui) ? ui.openMenu(x, { view: "device" }) : say(launch(x, "")) })) },
     launch: (s, app) => say(launch(s, app)),
     copy: async s => say((await copyText(linkOf(s))) ? (s.kind === "torrent" ? "Magnet link copied" : "Link copied") : "Couldn’t copy. Long-press the link instead."),
+    download: s => {
+      if (s.kind === "torrent") return say(launch(s, ""));
+      const u = linkOf(s); if (!u) return say("No link to download");
+      const a = document.createElement("a"), nm = String(s.title || s.label || "video").replace(/[\\/:*?"<>|\r\n]+/g, " ").trim().slice(0, 90) || "video";
+      a.href = u; a.download = nm; a.rel = "noopener noreferrer"; a.target = "_blank"; document.body.append(a); a.click(); a.remove();
+      say("Download started. If it plays instead, long-press the link and choose Download.");
+    },
     open: s => { const u = s.kind === "youtube" ? "https://www.youtube.com/watch?v=" + s.id : s.url; window.open(u, "_blank", "noopener,noreferrer") },
   };
 

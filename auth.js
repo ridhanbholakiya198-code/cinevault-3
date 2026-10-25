@@ -320,11 +320,16 @@ function accountHTML(confirmDel) {
 <p class="cva-p">Your account and your synced list will be permanently deleted. To confirm it’s you, ${pwUser ? "enter your password" : "you’ll be asked to sign in with Google again"}.</p><div class="cva-msg" hidden></div>
 ${pwUser ? `<label class="cva-f"><span>Password</span><input name="dpw" type="password" autocomplete="current-password"></label>` : ""}
 <button class="cva-btn cva-danger" data-a="del-go">Delete my account</button><button class="cva-ghost" data-a="acct">Cancel</button>`;
-  return `${TOP}<div class="cva-me"><div class="cva-av">${av}</div><h3 class="cva-h">${esc(name)}</h3>${mail ? `<p class="cva-mail">${esc(mail)}</p>` : ""}
-<p class="cva-sync ${syncBad ? "bad" : ""}"><i></i>${!user ? (fbErr ? "Couldn’t reach sign-in service" : "Connecting…") : syncBad ? "Saved on this device · sync paused" : `Synced · ${count()} saved title${count() === 1 ? "" : "s"}`}</p></div>
+  const L = Object.values(readList()).filter(i => !isEmpty(i)), done = L.filter(i => i.status === "Completed" || (i.lists || []).includes("Completed")).length, favs = L.filter(i => i.fav).length;
+  const st = (n, l) => `<div class="cvx-st"><b>${n}</b><small>${l}</small></div>`;
+  const card = (a, ic, t, sub, c) => `<button class="cvx-card" data-a="${a}" style="--c:${c}"><i>${IC[ic]}</i><span><b>${t}</b><small>${sub}</small></span></button>`;
+  return `${TOP}<div class="cvx-hero"><div class="cvx-ring"><div class="cvx-av">${av}</div></div><h3>${esc(name)}</h3>${mail ? `<p class="cvx-mail">${esc(mail)}</p>` : ""}
+<p class="cvx-sync ${syncBad ? "bad" : ""}"><i></i>${!user ? (fbErr ? "Couldn’t reach sign-in service" : "Connecting…") : syncBad ? "Saved on this device · sync paused" : "Synced across your devices"}</p></div>
 <div class="cva-msg" hidden></div>
-${row("list", "list", "My list", "#e0a030")}${row("export", "dl", "Export my data", "#5ad1ff")}${row("terms", "doc", "Terms of Use", "#b794f6")}${row("privacy", "shield", "Privacy Policy", "#6ee7a0")}${row("addons", "plug", "Extensions / Add-ons", "#7dd3fc")}
-${row("out", "out", "Sign out", "#ffd166")}${row("del", "trash", "Delete account", "#ff7a7a")}`;
+<div class="cvx-stats">${st(L.length, "Saved")}${st(done, "Completed")}${st(favs, "Favourites")}</div>
+<div class="cvx-cards">${card("list", "list", "My list", "Everything you saved", "#e0a030")}${card("addons", "plug", "Add-ons", "Streams & extensions", "#7dd3fc")}${card("export", "dl", "Export", "Download your data", "#6ee7a0")}</div>
+<div class="cvx-foot"><button data-a="terms">Terms</button><i></i><button data-a="privacy">Privacy</button></div>
+<button class="cvx-out" data-a="out">${IC.out}<span>Sign out</span></button><button class="cvx-del" data-a="del">Delete account</button>`;
 }
 
 function openAccount() {
