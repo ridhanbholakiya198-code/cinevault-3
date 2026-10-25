@@ -1,4 +1,4 @@
-/* CINEVAULT FX: circular reveal, row reveal, detail parallax, light mode */
+/* PARDA FX: circular reveal, row reveal, detail parallax, light mode */
 #modal{animation:none!important}
 .rv{opacity:0;transform:translate3d(0,36px,0);will-change:opacity,transform;transition:opacity .85s cubic-bezier(.22,1,.36,1),transform .85s cubic-bezier(.22,1,.36,1)}
 .rv.in{opacity:1;transform:none;will-change:auto}

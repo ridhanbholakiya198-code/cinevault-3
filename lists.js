@@ -1,4 +1,4 @@
-/* CineVault lists: one title can live in several lists; share a whole list (or one list) by link */
+/* Parda lists: one title can live in several lists; share a whole list (or one list) by link */
 const LISTS=["Watching","Completed","On-Hold","Dropped","Plan to Watch"];
 const lsOf=i=>i?(Array.isArray(i.lists)&&i.lists.length?i.lists.filter(x=>LISTS.includes(x)):(i.status?[i.status]:[])):[];
 const inL=(i,n)=>lsOf(i).includes(n);
@@ -13,7 +13,7 @@ function openListShare(){const all=Object.values(store.get()),inl=all.filter(i=>
  $("#lsheet")._o=o;$("#lsheet").hidden=false}
 function shareList(label,items){const name=label==="Everything"?"My list":label,ids=items.slice(0,400).map(i=>(i.type==="tv"?"t":"m")+i.id),u=listLink(name,ids);
  if(items.length>400)toast("Sharing the first 400 titles");
- if(navigator.share)navigator.share({title:name+" on CineVault",url:u}).catch(()=>{});else if(navigator.clipboard)navigator.clipboard.writeText(u).then(()=>toast("Link copied")).catch(()=>toast(u));else toast(u)}
+ if(navigator.share)navigator.share({title:name+" on Parda",url:u}).catch(()=>{});else if(navigator.clipboard)navigator.clipboard.writeText(u).then(()=>toast("Link copied")).catch(()=>toast(u));else toast(u)}
 document.addEventListener("DOMContentLoaded",()=>{$("#lsh").onclick=openListShare;
 $("#lsheet").onclick=e=>{if(e.target.id==="lsheet"){$("#lsheet").hidden=true;return}const b=e.target.closest("button[data-k]");if(!b)return;const [l,it]=$("#lsheet")._o[+b.dataset.k];$("#lsheet").hidden=true;shareList(l,it)}});
 // ---- opening a shared list ----

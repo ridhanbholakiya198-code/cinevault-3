@@ -1,5 +1,5 @@
-// CineVault — user-provided add-ons (Stremio protocol).
-// CineVault ships NO add-on. Each user pastes their own manifest URL (saved to users/{uid}/addons).
+// Parda — user-provided add-ons (Stremio protocol).
+// Parda ships NO add-on. Each user pastes their own manifest URL (saved to users/{uid}/addons).
 // Only HTTPS direct video / HLS, YouTube and external links are used. Torrent / info-hash entries are ignored on purpose.
 // Loaded by auth.js, which passes in its own Firebase + overlay helpers.
 
@@ -71,7 +71,7 @@ export function initAddons(h) {
     css();
     const el = openOv("addons"), box = el.querySelector(".cva-box");
     box.innerHTML = `${TOP}<h3 class="cva-h">Add-ons</h3><p class="cva-s">Bring your own</p>
-<p class="cva-p">CineVault comes with no add-ons. Paste the manifest URL of one you chose yourself. Only add services you trust and are allowed to use.</p>
+<p class="cva-p">Parda comes with no add-ons. Paste the manifest URL of one you chose yourself. Only add services you trust and are allowed to use.</p>
 <form class="cv-ad-f" novalidate hidden><label class="cva-f"><span>Add-on URL</span><input name="url" type="url" inputmode="url" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="https://…/manifest.json"></label><button class="cva-btn" type="submit">Add</button></form>
 <div class="cva-msg" hidden></div><div class="cv-ad-l"></div>`;
     const form = box.querySelector("form"), list = box.querySelector(".cv-ad-l"), btn = form.querySelector("button");

@@ -1,4 +1,4 @@
-/* CineVault franchises, collections & universes.
+/* Parda franchises, collections & universes.
    Nothing here is a hand-made list of members: for ANY film or series the engine finds its relatives on its own
    (TMDB collection + Wikidata series/universe graph + title-stem fallback), then sorts them into
    Core story / All / Groups / Timeline automatically. Only the home-row entry points and two "suggested watch order" packs are fixed data. */

@@ -1,4 +1,4 @@
-// CineVault — in-browser player overlay.
+// Parda — in-browser player overlay.
 //  • direct / HLS links  -> custom HTML5 player (subtitles, audio tracks, speed, resume, gestures)
 //  • torrents / magnets  -> Webtor server player (handles HEVC, AC3/DDP, MKV on the server)
 //  • YouTube             -> privacy-friendly embed

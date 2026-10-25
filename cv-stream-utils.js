@@ -1,4 +1,4 @@
-// CineVault — pure helpers for add-on streams (no DOM needed except where noted).
+// Parda — pure helpers for add-on streams (no DOM needed except where noted).
 // Parsing Stremio stream objects, building device-player links, copy helper.
 
 export const httpUrl = (u, httpsOnly = false) => {
@@ -167,7 +167,7 @@ export const iosLink = (app, url) => app === "infuse"
   : "vlc-x-callback://x-callback-url/stream?url=" + encodeURIComponent(url);
 
 export function m3uText(url, title) {
-  return "#EXTM3U\n#EXTINF:-1," + String(title || "CineVault").replace(/[\r\n,]+/g, " ").slice(0, 120) + "\n" + url + "\n";
+  return "#EXTM3U\n#EXTINF:-1," + String(title || "Parda").replace(/[\r\n,]+/g, " ").slice(0, 120) + "\n" + url + "\n";
 }
 
 // DOM-only helpers below.

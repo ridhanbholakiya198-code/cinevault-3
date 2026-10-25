@@ -1,4 +1,4 @@
-// CineVault — optional login, cloud sync, account menu, legal sheets.
+// Parda — optional login, cloud sync, account menu, legal sheets.
 // Loads as an ES module AFTER app.js. The app works 100% without it (guest mode).
 // Firebase SDK is loaded lazily (only for returning users, or when someone opens sign-in) to keep first load fast.
 import { legalHTML } from "./legal.js";
@@ -54,7 +54,7 @@ function ensureFb() {
     try {
       db = (CFG.firestoreDatabaseId && CFG.firestoreDatabaseId !== "(default)") ? fs.getFirestore(a, CFG.firestoreDatabaseId) : fs.getFirestore(a);
     } catch (err) {
-      console.warn("[CineVault] Firestore init fallback to default:", err);
+      console.warn("[Parda] Firestore init fallback to default:", err);
       db = fs.getFirestore(a);
     }
     fb = { au, fs };
@@ -80,7 +80,7 @@ const hint = () => jget(HINT, null);
 
 function syncFail(e) {
   syncBad = true; known = {};
-  console.warn("[CineVault sync]", e && (e.code || e.message || e));
+  console.warn("[Parda sync]", e && (e.code || e.message || e));
   if (!warned) { warned = true; say(e && e.code === "permission-denied" ? "Cloud sync blocked — Firestore rules need updating" : "Couldn’t sync right now — saved on this device") }
 }
 
@@ -226,7 +226,7 @@ const inApp = () => /FBAN|FBAV|Instagram|Snapchat|Line\/|; wv\)|Twitter|MicroMes
 // ---------- auth sheet ----------
 const LEGALLINE = (pre = "By continuing you confirm you are 18+ and agree to our") => `<p class="cva-legal">${pre} <button data-legal="terms">Terms</button> and <button data-legal="privacy">Privacy Policy</button>.</p>`;
 const GBTN = `<button class="cva-btn cva-gb" data-a="google">${IC.g}<span>Continue with Google</span></button>`;
-const TOP = `<div class="cva-top"><span class="cva-logo">CINEVAULT</span><button class="cva-x" data-a="close" aria-label="Close">${IC.x}</button></div>`;
+const TOP = `<div class="cva-top"><span class="cva-logo">PARDA</span><button class="cva-x" data-a="close" aria-label="Close">${IC.x}</button></div>`;
 const field = (label, name, type, ac, extra = "") => `<label class="cva-f"><span>${label}</span><input name="${name}" type="${type}" autocomplete="${ac}" ${extra}></label>`;
 const pwField = (ac, label = "Password") => `<label class="cva-f"><span>${label}${ac === "current-password" ? '<button type="button" class="cva-lk" data-a="mode:forgot">Forgot?</button>' : ""}</span><div class="cva-pw"><input name="pw" type="password" autocomplete="${ac}" ${ac === "new-password" ? 'minlength="8" placeholder="At least 8 characters"' : ""} required><button type="button" class="cva-eye" data-a="eye" aria-label="Show password">${IC.eye}</button></div></label>`;
 
@@ -277,7 +277,7 @@ function bumpNag() { const n = jget(NAG, {}); localStorage.setItem(NAG, JSON.str
 function done(el, t) { closeOv(el); say(t) }
 
 async function google(el) {
-  if (inApp()) return msg(el, "Google sign-in doesn’t work inside this in-app browser. Open CineVault in Chrome, or use email.");
+  if (inApp()) return msg(el, "Google sign-in doesn’t work inside this in-app browser. Open Parda in Chrome, or use email.");
   msg(el, ""); busy(el, true);
   try {
     const { au } = await ensureFb(), p = new au.GoogleAuthProvider();
@@ -351,7 +351,7 @@ async function acctClick(el, e) {
 function exportData() {
   const u = user || {}, data = { exportedAt: new Date().toISOString(), account: { uid: u.uid, email: u.email, name: u.displayName }, list: Object.values(readList()).filter(i => !isEmpty(i)).map(({ u: _u, ...r }) => r) };
   const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([JSON.stringify(data, null, 2)], { type: "application/json" }));
-  a.download = "cinevault-data-" + new Date().toISOString().slice(0, 10) + ".json"; document.body.append(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+  a.download = "parda-data-" + new Date().toISOString().slice(0, 10) + ".json"; document.body.append(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 4000);
   say("Your data was downloaded");
 }
 async function logout(el) {
@@ -430,7 +430,7 @@ document.addEventListener("click", e => {
 $("#acc") && ($("#acc").onclick = () => (user || hint()) ? openAccount() : openAuth("signin"));
 
 const AD = initAddons({ esc, say, openOv, closeOv, TOP, hasHint: () => !!hint(), ready: ensureFb, state: () => ({ user, auth, db, fs: fb && fb.fs }) });
-window.CVA = { streams: AD.streams, addons: AD.open, push, afterSave, back, listNote, open: () => ((user || hint()) ? openAccount() : openAuth("signin")) };
+window.CVA = { ov: { open: openOv, close: closeOv }, streams: AD.streams, addons: AD.open, push, afterSave, back, listNote, open: () => ((user || hint()) ? openAccount() : openAuth("signin")) };
 paintBtn(); listNote();
 
 // Returning users: restore session quietly after first paint

@@ -1,4 +1,4 @@
-/* CINEVAULT FX — circular reveal, scroll-reveal rows, detail backdrop parallax, perf governor, PWA.
+/* PARDA FX — circular reveal, scroll-reveal rows, detail backdrop parallax, perf governor, PWA.
    Add-on only: does not touch app.js logic. */
 (()=>{"use strict";
 const $=s=>document.querySelector(s),root=document.documentElement,md=$("#modal"),mc=$("#mc"),rows=$("#rows");

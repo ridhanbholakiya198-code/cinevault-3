@@ -174,6 +174,7 @@ async function fillGenres(t){$("#gsel").innerHTML='<option value="">All genres</
 function filt(){const sg=$("#seg .on").dataset.t,an=sg==="anime",t=an?$("#asel").value:sg,s=$("#ssel").value,n=new Date().toISOString().slice(0,10);$("#asel").hidden=$("#lsel").hidden=!an;
  const q={sort_by:{pop:"popularity.desc",top:"vote_average.desc",new:t==="tv"?"first_air_date.desc":"primary_release_date.desc",rev:t==="tv"?"popularity.desc":"revenue.desc"}[s],"vote_count.gte":s==="top"?300:s==="new"?20:0};
  if(an){q.with_genres="16"+($("#gsel").value?","+$("#gsel").value:"");if($("#lsel").value)q.with_original_language=$("#lsel").value}else if($("#gsel").value)q.with_genres=$("#gsel").value;if(s==="new")q[t==="tv"?"first_air_date.lte":"primary_release_date.lte"]=n;
+ if(window.CVF)CVF.extra(t,q,an);
  reset(an?"Anime & Cartoons":t==="tv"?"Series":"Films","/discover/"+t,t,q,1)}
 document.querySelectorAll("#seg button").forEach(b=>b.onclick=async()=>{document.querySelectorAll("#seg button").forEach(x=>x.classList.toggle("on",x===b));await fillGenres(b.dataset.t==="anime"?$("#asel").value:b.dataset.t);filt()});
 $("#asel").onchange=async()=>{await fillGenres($("#asel").value);filt()};$("#lsel").onchange=filt;
@@ -310,7 +311,7 @@ $("#sopts").onclick=e=>{const b=e.target.closest("button");if(!b)return;const s=
  toast(s==="None"?"Removed from all lists":now.includes(s)?"Added to "+s:"Removed from "+s)};
 $("#sheet").onclick=e=>{if(e.target.id==="sheet")closeSheet()};
 $("#hr").onclick=()=>upd2(c=>c.fav=!c.fav);$("#trb").onclick=()=>{if(CUR.v)openTr(CUR.v.key);else toast("No trailer available")};
-$("#sh").onclick=()=>{const v=VIEW,nm=CUR.m?CUR.m.title:$("#tt").textContent;if(!v||!nm)return;if(v.k==="l")return;const k=v.k==="p"?"person":v.k==="f"?"franchise":v.k==="c"?"collection":v.t,u=shareURL(k,v.k==="f"?v.key:v.id),x={title:nm+" on CineVault",url:u};
+$("#sh").onclick=()=>{const v=VIEW,nm=CUR.m?CUR.m.title:$("#tt").textContent;if(!v||!nm)return;if(v.k==="l")return;const k=v.k==="p"?"person":v.k==="f"?"franchise":v.k==="c"?"collection":v.t,u=shareURL(k,v.k==="f"?v.key:v.id),x={title:nm+" on Parda",url:u};
  if(navigator.share)navigator.share(x).catch(()=>{});else if(navigator.clipboard)navigator.clipboard.writeText(u).then(()=>toast("Link copied")).catch(()=>toast(u));else toast(u)};
 $("#simp").onclick=e=>{if(e.target.id==="simp")$("#simp").hidden=true};
 function hideModal(){tok++;NAV=[];VIEW=null;closeTr(1);$("#modal").classList.remove("pp","nosh");$("#simp").hidden=$("#sheet").hidden=$("#lsheet").hidden=true;$("#modal").hidden=true;$("#mc").innerHTML="";document.body.style.overflow="";if(!$("#list").hidden)renderList()}

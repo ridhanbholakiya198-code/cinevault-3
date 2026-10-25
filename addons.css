@@ -1,4 +1,4 @@
-/* CineVault add-ons: manager, streams section, action sheet, player. Loaded on demand by addons.js (guests never download it). */
+/* Parda add-ons: manager, streams section, action sheet, player. Loaded on demand by addons.js (guests never download it). */
 @keyframes cvsRot{to{transform:rotate(360deg)}}
 @keyframes cvsSh{to{background-position:-200% 0}}
 @keyframes cvsPop{from{opacity:0;transform:translateY(6px) scale(.97)}}

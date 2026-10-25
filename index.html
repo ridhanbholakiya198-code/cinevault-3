@@ -1,14 +1,14 @@
 <!doctype html><html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,viewport-fit=cover"><meta name="theme-color" content="#000000"><link rel="manifest" href="/manifest.webmanifest"><link rel="apple-touch-icon" href="/icons/icon-192.png">
-<title>CINEVAULT — Explore films in their own colour</title>
+<title>PARDA — Explore films in their own colour</title>
 <meta name="description" content="Explore films and series in their own colour with TMDB exploration, personal watchlists, and Firebase cloud sync.">
-<meta property="og:title" content="CINEVAULT — Explore films in their own colour">
+<meta property="og:title" content="PARDA — Explore films in their own colour">
 <meta property="og:description" content="Explore films and series in their own colour with TMDB exploration, personal watchlists, and Firebase cloud sync.">
 <link rel="preconnect" href="https://api.themoviedb.org"><link rel="preconnect" href="https://image.tmdb.org"><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Cormorant+Garamond:ital,wght@0,500;1,500&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css"><link rel="stylesheet" href="fx2.css"></head><body>
-<div id="intro"><span>CINEVAULT</span></div><div class="grain"></div>
-<header id="top"><a class="logo" href="#" data-v="home">CINEVAULT</a>
+<link rel="stylesheet" href="style.css"><link rel="stylesheet" href="fx2.css"><link rel="stylesheet" href="cv-filters.css"></head><body>
+<div id="intro"><span>PARDA</span></div><div class="grain"></div>
+<header id="top"><a class="logo" href="#" data-v="home">PARDA</a>
 <nav><a href="#" data-v="home">Home</a><a href="#" data-v="movies">Movies</a><a href="#" data-v="series">Series</a><a href="#" data-v="anime">Anime</a><a href="#" data-v="browse">Browse</a><a href="#" data-v="list">My list</a></nav>
 <input id="q" type="search" placeholder="Search any film or series" autocomplete="off">
 <button id="acc" type="button" aria-label="Sign in"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7"/></svg></button></header>
@@ -31,15 +31,15 @@
 <div class="f-in">
 <div class="f-cta"><span class="f-k">Still deciding?</span><h3>Your next favourite is one tap away.</h3><button class="btn" data-v="browse">Browse the full catalogue</button></div>
 <div class="f-main">
-<div class="f-brand"><a class="f-logo" href="#" data-v="home">CINEVAULT</a><p class="f-tag">Explore films in their own colour.</p><p class="f-desc">Discover films, series and anime, keep track of what you watch, and see where to stream it &mdash; all in one place.</p></div>
+<div class="f-brand"><a class="f-logo" href="#" data-v="home">PARDA</a><p class="f-tag">Explore films in their own colour.</p><p class="f-desc">Discover films, series and anime, keep track of what you watch, and see where to stream it &mdash; all in one place.</p></div>
 <nav class="f-col" aria-label="Explore"><h4>Explore</h4><a href="#" data-v="home">Home</a><a href="#" data-v="movies">Movies</a><a href="#" data-v="series">Series</a><a href="#" data-v="anime">Anime</a><a href="#" data-v="browse">Browse</a></nav>
 <nav class="f-col" aria-label="Your space"><h4>Your space</h4><a href="#" data-v="list">My list</a><a href="#" data-acc>Account</a></nav>
 <nav class="f-col" aria-label="Legal"><h4>Legal</h4><a href="#" data-legal="terms">Terms</a><a href="#" data-legal="privacy">Privacy</a><a href="#" data-legal="cookies">Cookies</a></nav>
 </div>
 <div class="f-data"><p>Film &amp; series data and images by TMDB. This product uses the TMDB API but is not endorsed or certified by TMDB.</p><p>Streaming availability data by JustWatch.</p></div>
-<div class="f-bot"><span>&copy; <i id="yr">2026</i> CineVault. All rights reserved.</span><button class="f-up" id="up" type="button">Back to top<svg viewBox="0 0 24 24"><path d="M12 19V5M6 11l6-6 6 6"/></svg></button></div>
+<div class="f-bot"><span>&copy; <i id="yr">2026</i> Parda. All rights reserved.</span><button class="f-up" id="up" type="button">Back to top<svg viewBox="0 0 24 24"><path d="M12 19V5M6 11l6-6 6 6"/></svg></button></div>
 </div>
-<div class="f-wm" aria-hidden="true">CINEVAULT</div>
+<div class="f-wm" aria-hidden="true">PARDA</div>
 </footer>
 <nav class="bn" aria-label="Main">
 <button data-v="home" class="on" aria-label="Home"><svg viewBox="0 0 24 24"><path d="M3 10.5 12 3l9 7.5V21h-6v-6H9v6H3z"/></svg></button>
@@ -51,5 +51,5 @@
 <button id="hr" aria-label="Favourite"><svg viewBox="0 0 24 24"><path d="M12 20.5s-8-4.8-8-10.4A4.6 4.6 0 0 1 12 7a4.6 4.6 0 0 1 8 3.1c0 5.6-8 10.4-8 10.4z"/></svg></button>
 <button id="sh" aria-label="Share"><svg viewBox="0 0 24 24"><circle cx="18" cy="5" r="2.5"/><circle cx="6" cy="12" r="2.5"/><circle cx="18" cy="19" r="2.5"/><path d="m8.2 10.8 7.6-4.4M8.2 13.2l7.6 4.4"/></svg></button>
 </div><div id="mc"></div></div></div>
-<div id="sheet" class="ov" hidden><div class="sh"><i class="gr"></i><h4>Add to list</h4><p id="shs"></p><div id="sopts"></div></div></div><div id="lsheet" class="ov" hidden><div class="sh"><i class="gr"></i><h4>Share list</h4><p class="shn">Pick what to share. Friends open it straight in CineVault.</p><div id="lopts"></div></div></div><div id="simp" class="ov" hidden></div><div id="toast"></div><div id="trl" hidden><button id="trx" aria-label="Close trailer"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg></button><div id="trp"></div></div>
-<script src="config.js"></script><script src="cv-config.js"></script><script src="lists.js"></script><script src="fr.js"></script><script src="app.js"></script><script type="module" src="auth.js"></script><script src="fx2.js" defer></script></body></html>
+<div id="sheet" class="ov" hidden><div class="sh"><i class="gr"></i><h4>Add to list</h4><p id="shs"></p><div id="sopts"></div></div></div><div id="lsheet" class="ov" hidden><div class="sh"><i class="gr"></i><h4>Share list</h4><p class="shn">Pick what to share. Friends open it straight in Parda.</p><div id="lopts"></div></div></div><div id="simp" class="ov" hidden></div><div id="toast"></div><div id="trl" hidden><button id="trx" aria-label="Close trailer"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg></button><div id="trp"></div></div>
+<script src="config.js"></script><script src="cv-config.js"></script><script src="lists.js"></script><script src="fr.js"></script><script src="app.js"></script><script src="cv-filters.js"></script><script type="module" src="auth.js"></script><script src="fx2.js" defer></script></body></html>

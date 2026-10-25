@@ -1,4 +1,4 @@
-// CineVault — "From your add-ons" section.
+// Parda — "From your add-ons" section.
 // Collapsible, filterable, compact rows. Tap = play in browser. Hold / right-click / ⋮ = action sheet
 // (browser or device player). Works on Android (touch) and desktop (mouse + keyboard).
 import { qualityGroup, platform, ANDROID_APPS, IOS_APPS, langName } from "./cv-stream-utils.js";
