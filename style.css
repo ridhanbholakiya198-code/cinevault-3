@@ -577,3 +577,9 @@ html,body{background:#000}
 .cvt-pane[data-cvpane="watch"] .eh h3{font:400 24px "Bebas Neue";letter-spacing:.1em;text-transform:none;color:var(--fg);margin:12px 0 8px}
 .cvt-pane .stats{grid-template-columns:repeat(2,minmax(0,1fr))}.cvt-pane .stat{min-width:0;flex:none}.cvt-pane .stat strong{font-size:clamp(20px,6vw,26px);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 @media(min-width:900px){.cvt-pane .stats{grid-template-columns:repeat(4,minmax(0,1fr))}}
+
+/* v12: franchise tiles — posters always visible, work for 1-4 images */
+.fcard .fi>.fm{position:absolute;z-index:0;opacity:.55}
+.fcard .fm.n1{grid-template-columns:1fr;grid-template-rows:1fr}
+.fcard .fm.n2{grid-template-columns:1fr 1fr;grid-template-rows:1fr}
+.fcard .fm.n3{grid-template-columns:1fr 1fr}.fcard .fm.n3 img:last-child{grid-column:1/-1}
