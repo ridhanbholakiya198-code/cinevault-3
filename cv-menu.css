@@ -44,7 +44,8 @@
 @media(hover:hover){.cvn-l button:hover b{color:var(--accent)}}
 .cvn-l button:active b,.cvn-l button:focus-visible b{color:var(--accent)}.cvn-l button:focus-visible{outline:0}
 .cvn-f{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;font:400 13px "DM Sans",sans-serif;color:var(--mute);opacity:0;animation:cvn-fade .5s 1s forwards}
-.cvn-f a,.cvn-f span{color:var(--fg);text-decoration:none}.cvn-f nav{display:grid;gap:4px;flex:none;text-align:left}
+.cvn-f a,.cvn-f span{color:var(--fg);text-decoration:none}
+.cvn-n{font:italic 500 18px/1.2 "Cormorant Garamond",Georgia,serif;color:var(--accent);margin:0 0 6px}.cvn-f nav{display:grid;gap:4px;flex:none;text-align:left}
 .cvn-f nav a{color:var(--mute);text-transform:uppercase;letter-spacing:.08em;font-size:12px}.cvn-f nav a:hover{color:var(--fg)}
 @keyframes cvn-fade{to{opacity:1}}
 /* one menu button: the separate profile icon is reached through the menu */

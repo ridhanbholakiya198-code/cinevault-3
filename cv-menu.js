@@ -21,18 +21,31 @@
     ];
   }
 
+  // the film currently on the home hero: its still and "Title, year"
+  function nowShowing() {
+    const on = document.querySelector("#hbgs .hbg.on"), bg = on && on.style.backgroundImage;
+    const t = document.getElementById("htitle"), im = t && t.querySelector("img");
+    const name = t ? (im ? im.alt : t.textContent) : "";
+    // hero meta is "rating . year . runtime . genre" joined by .dot separators: pick the segment that is a year
+    const segs = [""]; ((document.getElementById("hmeta") || { childNodes: [] }).childNodes).forEach(n => { if (n.nodeType === 1 && n.classList.contains("dot")) segs.push(""); else segs[segs.length - 1] += n.textContent });
+    const y = segs.map(s => s.trim()).find(s => /^(?:19|20)\d{2}$/.test(s));
+    return { bg: bg && bg !== "none" ? bg : "", cap: [String(name || "").trim(), y].filter(Boolean).join(", ") };
+  }
+
   function open() {
     if (ov || !window.CVA || !CVA.ov) return;
     const list = items(), mail = (window.CV_SITE || {}).email;
+    const now = nowShowing();
     closing = false;
     ov = CVA.ov.open("menu", "cvn");
     ov._onclose = () => { ov = null; closing = false; btn.classList.remove("on"); btn.setAttribute("aria-expanded", "false") };
     ov.querySelector(".cva-box").innerHTML =
       `<div class="cvn-t"><button type="button" class="cvn-logo" data-m="h" aria-label="Home">PARDA</button><button type="button" class="cvn-x" data-m="x" aria-label="Close menu"><i></i><i></i></button></div>` +
       `<ul class="cvn-l">${list.map((it, i) => `<li style="--i:${i}"><button type="button" data-m="${i}"><b>${esc(it.n)}</b></button></li>`).join("")}</ul>` +
-      `<div class="cvn-f"><div>${mail ? `<a href="mailto:${esc(mail)}">${esc(mail)}</a>` : `<span>&copy; ${new Date().getFullYear()} Parda</span>`}</div><nav><a href="/terms.html">Terms</a><a href="/privacy.html">Privacy</a><a href="/cookies.html">Cookies</a></nav></div>`;
-    // glow sits behind the menu, the curtain and its seam of light sit in front
-    ov.insertAdjacentHTML("afterbegin", '<i class="cc-g"></i>');
+      `<div class="cvn-f"><div>${now.cap ? `<p class="cvn-n">${esc(now.cap)}</p>` : ""}${mail ? `<a href="mailto:${esc(mail)}">${esc(mail)}</a>` : `<span>&copy; ${new Date().getFullYear()} Parda</span>`}</div><nav><a href="/terms.html">Terms</a><a href="/privacy.html">Privacy</a><a href="/cookies.html">Cookies</a></nav></div>`;
+    // the film still and a glow sit behind the menu, the curtain and its seam of light sit in front
+    ov.insertAdjacentHTML("afterbegin", (now.bg ? '<i class="cc-b"></i>' : "") + '<i class="cc-g"></i>');
+    const bd = ov.querySelector(".cc-b"); if (bd) bd.style.backgroundImage = now.bg;
     ov.insertAdjacentHTML("beforeend", '<i class="cc-p cc-l"></i><i class="cc-p cc-r"></i><i class="cc-s"></i>');
     btn.classList.add("on"); btn.setAttribute("aria-expanded", "true");
     try { navigator.vibrate && navigator.vibrate(10) } catch (e) { }
