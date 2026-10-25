@@ -1,35 +1,58 @@
-/* ☰ button */
-#mnu{flex:0 0 auto;width:38px;height:38px;border-radius:50%;border:1px solid #ffffff33;background:#ffffff14;display:grid;place-content:center;gap:5px;padding:0;cursor:pointer;transition:transform .25s,border-color .25s}
-#mnu:hover{transform:scale(1.07);border-color:var(--accent)}
-#mnu i{display:block;width:16px;height:1.6px;background:var(--fg);border-radius:2px;transition:transform .35s cubic-bezier(.7,0,.2,1),width .35s,opacity .2s}
-#mnu i:nth-child(2){width:11px;margin-left:auto}
-#mnu:hover i:nth-child(2){width:16px}
-#mnu.on i:nth-child(1){transform:translateY(6.6px) rotate(45deg)}#mnu.on i:nth-child(2){opacity:0}#mnu.on i:nth-child(3){transform:translateY(-6.6px) rotate(-45deg)}
+/* Menu button: a tiny curtain (rod + two drapes). On hover/tap the drapes part and a line of light shows in the gap. */
+#mnu{position:relative;flex:0 0 auto;width:38px;height:38px;border-radius:50%;border:1px solid #ffffff33;background:#ffffff14;display:grid;place-items:center;padding:0;cursor:pointer;transition:border-color .3s}
+#mnu svg{width:22px;height:22px;overflow:visible}
+#mnu .rod,#mnu .pl path:first-child,#mnu .pr path:first-child{fill:var(--fg)}
+#mnu .fd{fill:none;stroke:#000;stroke-opacity:.28;stroke-width:.9;stroke-linecap:round}
+#mnu .pl,#mnu .pr{transition:transform .55s var(--cc-ease,cubic-bezier(.77,0,.18,1))}
+#mnu .lt{fill:#ffd58a;opacity:0;transition:opacity .35s;filter:drop-shadow(0 0 1.6px var(--accent))}
+@media(hover:hover){
+ #mnu:hover{border-color:var(--accent)}
+ #mnu:hover .pl{transform:translateX(-1.4px)}#mnu:hover .pr{transform:translateX(1.4px)}
+ #mnu:hover .lt{opacity:.6}
+}
+#mnu.on .pl{transform:translateX(-3.6px)}#mnu.on .pr{transform:translateX(3.6px)}
+#mnu.on .lt{opacity:1}
 @media(max-width:700px){#mnu{width:36px;height:36px}}
-/* full-screen menu (cvn-*: its own namespace, the 3-dot sheet uses cvm-*) */
-.cva.cvn{align-items:stretch;justify-content:stretch;background:#060607;opacity:0;animation:cvn-in .22s ease-out forwards}
-.cva.cvn.out{animation:cvn-out .18s ease-in forwards;pointer-events:none}
+
+/* Full-screen menu (cvn-*: its own namespace, the 3-dot sheet uses cvm-*).
+   Opens as a closed curtain with a flicker of light, parts, then the names rise. */
+.cva.cvn{align-items:stretch;justify-content:stretch;background:#060607;opacity:0;animation:cvn-in .14s ease-out forwards;overflow:hidden}
+.cva.cvn.out{animation:cvn-out .2s ease-in .4s both;pointer-events:none}
+.cva.cvn.out.fast{animation-delay:.22s}
 @keyframes cvn-in{to{opacity:1}}
 @keyframes cvn-out{from{opacity:1}to{opacity:0}}
-.cvn .cva-box{max-width:none;width:100%;height:100%;max-height:none;border:0;border-radius:0;box-shadow:none;animation:none;background:#060607;padding:calc(env(safe-area-inset-top,0px) + 18px) 7vw calc(env(safe-area-inset-bottom,0px) + 28px);display:flex;flex-direction:column;overflow:auto}
+.cvn .cc-l{animation:cc-open-l .88s .34s var(--cc-ease) both}
+.cvn .cc-r{animation:cc-open-r .88s .34s var(--cc-ease) both}
+.cvn .cc-s{animation:cc-on .38s .08s both,cc-off .4s .5s forwards}
+.cvn .cc-g{animation:cc-bloom 1.5s .4s ease-out forwards}
+.cvn.out .cc-p{animation:cc-close .5s cubic-bezier(.65,0,.35,1) both}
+.cvn.out.fast .cc-p{animation-duration:.34s}
+.cvn.out .cc-s,.cvn.out .cc-g{animation:none;opacity:0}
+
+.cvn .cva-box{position:relative;z-index:1;max-width:none;width:100%;height:100%;max-height:none;border:0;border-radius:0;box-shadow:none;animation:none;background:transparent;padding:calc(env(safe-area-inset-top,0px) + 18px) 7vw calc(env(safe-area-inset-bottom,0px) + 28px);display:flex;flex-direction:column;overflow:auto}
 .cvn-t{position:relative;display:flex;align-items:center;justify-content:center;min-height:38px}
-.cvn-logo{font:400 26px "Bebas Neue",sans-serif;letter-spacing:.22em;color:var(--fg);padding-left:.22em}
+.cvn-logo{background:none;border:0;padding:0 0 0 .22em;cursor:pointer;font:400 26px "Bebas Neue",sans-serif;letter-spacing:.22em;color:var(--fg)}
 .cvn-x{position:absolute;right:-3vw;top:0;width:38px;height:38px;border-radius:50%;border:0;background:#f2ede4;cursor:pointer}
 .cvn-x i{position:absolute;left:11px;top:18px;width:16px;height:1.8px;background:#000;border-radius:2px;transform:rotate(45deg)}.cvn-x i+i{transform:rotate(-45deg)}
-.cvn-l{list-style:none;margin:auto 0;padding:0;display:grid;gap:clamp(14px,3.6vh,34px)}
-.cvn-l li{overflow:hidden;padding:4px 0}
-.cvn-l button{display:flex;align-items:flex-start;gap:14px;text-align:left;background:none;border:0;color:var(--fg);padding:0;cursor:pointer;-webkit-tap-highlight-color:transparent;transform:translateY(105%);animation:cvn-up .45s cubic-bezier(.2,.8,.2,1) forwards;animation-delay:calc(.05s + var(--i)*.04s)}
+.cvn-l{list-style:none;margin:auto 0;padding:0;display:grid;gap:clamp(6px,2vh,24px)}
+.cvn-l li{overflow:hidden;padding:2px 0}
+.cvn-l button{display:block;text-align:left;background:none;border:0;color:var(--fg);padding:0;cursor:pointer;-webkit-tap-highlight-color:transparent;transform:translateY(108%);animation:cvn-up .75s cubic-bezier(.2,.8,.2,1) forwards;animation-delay:calc(.62s + var(--i)*.055s)}
 .cvn.out .cvn-l button{animation:none;transform:none}
 @keyframes cvn-up{to{transform:none}}
-.cvn-l em{font:400 12px "DM Sans",sans-serif;font-style:normal;color:var(--mute);margin-top:.9em;min-width:1.6em}
-.cvn-l b{font:500 clamp(46px,13vw,92px)/1.02 "Cormorant Garamond",Georgia,serif;letter-spacing:-.01em}
+.cvn-l b{display:block;font:500 clamp(40px,min(11.5vw,8.4vh),84px)/1.04 "Cormorant Garamond",Georgia,serif;letter-spacing:-.01em;transition:color .25s}
 /* colour only: nothing moves or changes width on hover/tap */
 @media(hover:hover){.cvn-l button:hover b{color:var(--accent)}}
 .cvn-l button:active b,.cvn-l button:focus-visible b{color:var(--accent)}.cvn-l button:focus-visible{outline:0}
-.cvn-f{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;font:400 13px "DM Sans",sans-serif;color:var(--mute);opacity:0;animation:cvn-fade .3s .2s forwards}
+.cvn-f{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;font:400 13px "DM Sans",sans-serif;color:var(--mute);opacity:0;animation:cvn-fade .5s 1s forwards}
 .cvn-f a,.cvn-f span{color:var(--fg);text-decoration:none}.cvn-f nav{display:grid;gap:4px;flex:none;text-align:left}
 .cvn-f nav a{color:var(--mute);text-transform:uppercase;letter-spacing:.08em;font-size:12px}.cvn-f nav a:hover{color:var(--fg)}
 @keyframes cvn-fade{to{opacity:1}}
 /* one menu button: the separate profile icon is reached through the menu */
 #acc{display:none!important}
-@media(prefers-reduced-motion:reduce){.cva.cvn,.cvn-l button,.cvn-f{animation-duration:.01s;animation-delay:0s}}
+
+/* reduced motion: no curtain, just a quick fade */
+@media(prefers-reduced-motion:reduce){
+ .cvn .cc-p,.cvn .cc-s,.cvn .cc-g{display:none}
+ .cvn-l button{animation-duration:.01s;animation-delay:0s}.cvn-f{animation-duration:.01s;animation-delay:0s}
+ .cva.cvn.out{animation:cvn-out .15s forwards}
+}

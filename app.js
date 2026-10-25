@@ -326,7 +326,7 @@ function renderList(){const all=Object.values(store.get()),T=[...STATUS,"Favouri
 window.cvStoreChanged=()=>{if(!$("#list").hidden)renderList();if(!$("#modal").hidden&&CUR.m)syncTb()};
 $("#rst").onclick=()=>{localStorage.removeItem(TK);alert("Personalisation reset")};
 $("#modal").addEventListener("scroll",()=>{const r=$(".tr"),h=r?r.offsetHeight:150,p=Math.min(1,Math.max(0,($("#modal").scrollTop-h*.36)/(h*.3))),tb=$(".tb");tb.style.setProperty("--p",p.toFixed(3));tb.classList.toggle("s",p>.5)},{passive:true});
-const it=$("#intro");if(it){if(sessionStorage.getItem("cv_i"))it.remove();else{sessionStorage.setItem("cv_i","1");setTimeout(()=>it.remove(),1300)}}
+const it=$("#intro");if(it){if(sessionStorage.getItem("cv_i"))it.remove();else{sessionStorage.setItem("cv_i","1");setTimeout(()=>it.remove(),2400)}}
 $("#yr").textContent=new Date().getFullYear();$("#up").onclick=()=>scrollTo({top:0,behavior:"smooth"});document.querySelectorAll("[data-acc]").forEach(a=>a.onclick=e=>{e.preventDefault();$("#acc").click()});
 if(M)$("#q").placeholder="Search";
 home();openFromHash();addEventListener("hashchange",openFromHash);
