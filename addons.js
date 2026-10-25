@@ -64,6 +64,7 @@ export function initAddons(h) {
 
   // Wait for Firebase + the signed-in user. Resolves {user, db, fs} (user may be null).
   async function session() {
+    if (!hasHint() && !state().user) return { user: null, db: null, fs: null }; // guests never wait for Firebase
     await ready();
     const s = state();
     try { await s.auth.authStateReady() } catch { }
@@ -71,14 +72,7 @@ export function initAddons(h) {
   }
 
   /* ---------- styles (addons.css, loaded once, only for signed-in users) ---------- */
-  let cssP = null;
-  function css() {
-    if (cssP) return cssP;
-    return cssP = new Promise(res => {
-      const l = document.createElement("link"); l.rel = "stylesheet"; l.href = new URL("./addons.css", import.meta.url).href;
-      l.onload = l.onerror = () => res(); document.head.append(l);
-    });
-  }
+  const css = () => Promise.resolve(); // addons.css is a normal <link> in index.html now (no lazy wait → popup opens instantly)
   // Guests: add-ons live in this browser only (localStorage). On/Off is per device for everyone, so no database rules change is needed.
   const LS_A = "cv_addons_guest", LS_OFF = "cv_addons_off";
   const lsGet = (k) => { try { const v = JSON.parse(localStorage.getItem(k) || "[]"); return Array.isArray(v) ? v : [] } catch { return [] } };
@@ -96,7 +90,7 @@ export function initAddons(h) {
     const el = openOv("addons"), box = el.querySelector(".cva-box");
     box.innerHTML = `${TOP}<h3 class="cva-h">Add-ons</h3><p class="cva-s">Bring your own</p>
 <p class="cva-p">Parda comes with no add-ons. Paste the link of one you chose yourself (a Stremio add-on, or a CNCVerse Bridge link for CloudStream extensions). Only add services you trust and are allowed to use.</p>
-<form class="cv-ad-f" novalidate hidden><label class="cva-f"><span>Add-on URL</span><input name="url" type="url" inputmode="url" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Stremio add-on or CloudStream repo link"></label><button class="cva-btn" type="submit">Add</button></form>
+<form class="cv-ad-f" novalidate><label class="cva-f"><span>Add-on URL</span><input name="url" type="url" inputmode="url" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Stremio add-on or CloudStream repo link"></label><button class="cva-btn" type="submit">Add</button></form>
 <div class="cva-msg" hidden></div><div class="cv-ad-l"></div>`;
     const form = box.querySelector("form"), list = box.querySelector(".cv-ad-l"), btn = form.querySelector("button");
     const msg = (t, ok) => { const m = box.querySelector(".cva-msg"); m.className = "cva-msg " + (ok ? "good" : "bad"); m.textContent = t; m.hidden = !t };
@@ -148,11 +142,16 @@ export function initAddons(h) {
       } catch (err) { fail(err) } finally { btn.disabled = false; btn.textContent = "Add" }
     });
 
-    session().then(({ user }) => {
-      if (!document.body.contains(el)) return;
-      form.hidden = false; if (!user) msg("No login needed. Add-ons are saved on this device only. Log in to keep them on all your devices.", 1);
-      render().catch(fail);
-    }).catch(() => msg("Couldn’t reach the sign-in service."));
+    // Open instantly: form is ready now, guests see their list right away, signed-in users get it as soon as it arrives.
+    if (!hasHint()) { msg("No login needed. Add-ons are saved on this device only. Log in to keep them on all your devices.", 1); render().catch(fail) }
+    else {
+      list.innerHTML = `<p class="cv-ad-h">Your add-ons</p><div class="cv-ad-i cv-ad-sk"></div>`;
+      session().then(({ user }) => {
+        if (!document.body.contains(el)) return;
+        if (!user) msg("No login needed. Add-ons are saved on this device only. Log in to keep them on all your devices.", 1);
+        return render();
+      }).catch(() => { msg("Couldn’t reach the sign-in service. Showing add-ons saved on this device."); const items = readLocal(); list.innerHTML = items.length ? "" : `<p class="cva-p">No add-ons yet.</p>` });
+    }
   }
 
   /* ---------- streams for the details page / episode panel ---------- */
@@ -216,7 +215,7 @@ export function initAddons(h) {
       let all = [], pending = list.length; const failed = [];
       ui.loading(`Searching ${list.length} add-on${list.length > 1 ? "s" : ""}…`);
       await Promise.all(list.map(async a => {
-        try { all = sortStreams(dedupe(all.concat(await fetchAddon(a, type, id)))) }
+        try { const got = await fetchAddon(a, type, id); all = sortStreams(dedupe(all.concat(got))) } // read `all` AFTER the await, or parallel add-ons overwrite each other
         catch { failed.push(a.name || "An add-on") }
         pending--; if (tok === el._tok && pending) ui.progress(all, `Still searching ${pending} add-on${pending > 1 ? "s" : ""}…`);
       }));

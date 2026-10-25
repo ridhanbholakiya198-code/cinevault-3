@@ -1,0 +1,53 @@
+/* Parda: final polish layer (loaded last). Smoothness, true-black AMOLED, touch feel, safe areas, desktop finish. */
+:root{--bg:#000;color-scheme:dark;--spring:cubic-bezier(.2,.8,.2,1)}
+html{background:#000;-webkit-text-size-adjust:100%;text-size-adjust:100%;overscroll-behavior-y:none;scrollbar-width:thin;scrollbar-color:#2b2b2b #000}
+body{background:#000;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;text-rendering:optimizeLegibility;overflow-x:clip}
+::selection{background:color-mix(in srgb,var(--accent) 38%,#000);color:#fff}
+::-webkit-scrollbar{width:10px;height:10px}::-webkit-scrollbar-track{background:#000}::-webkit-scrollbar-thumb{background:#262626;border-radius:10px;border:2px solid #000}::-webkit-scrollbar-thumb:hover{background:#3a3a3a}
+
+/* Pure black: no film grain over the screen (it kept every pixel lit and made scrolling heavy) */
+.grain{display:none!important}
+
+/* Touch: no 300ms delay, no grey tap flash, native-feeling press */
+a,button,[role=button],[data-f],[data-col],[data-g],[data-p],.card,.fcard,input,select,label,summary{-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+.card img,.fcard img,.hbg{-webkit-touch-callout:none;-webkit-user-drag:none;user-select:none;-webkit-user-select:none}
+:where(.card,.fcard,.btn,.cva-btn,.all,.cvs-r,.cvs-chips button,.cvf-btn,#mnu,.bn a){transition:transform .2s var(--spring),background-color .2s,border-color .2s,opacity .2s}
+@media(hover:none){
+  :where(.card,.fcard,.btn,.cva-btn,.all,.cvs-r,.cvs-chips button,.cvf-btn,#mnu,.bn a):active{transform:scale(.965)}
+  /* blur on moving content is the most expensive thing a phone GPU does; solid blacks look better on AMOLED anyway */
+  *,*::before,*::after{-webkit-backdrop-filter:none!important;backdrop-filter:none!important}
+  header.s{background:#000!important}
+}
+:focus-visible{outline:2px solid var(--accent);outline-offset:3px;border-radius:6px}
+input:focus-visible,select:focus-visible{outline-offset:1px}
+input,select,textarea{font-size:max(16px,1em)} /* iOS never zooms into fields */
+
+/* Splash: quick (was 2.7s on every visit) */
+#intro{animation:iOut .45s .7s forwards!important}
+#intro span{animation:iIn .8s ease-out both!important}
+
+/* Popups and sheets: open at once, move on the GPU only */
+.cva{animation:cvf .14s ease-out!important;background:#000000d9}
+.cva-box{animation:up .26s var(--spring)!important;background:#050506!important;will-change:transform}
+@media(min-width:700px){.cva-box{box-shadow:0 30px 90px #000}}
+.cv-ad-i{background:#0a0a0b;border-color:#ffffff12}
+.cv-ad-sk{height:56px;background:linear-gradient(90deg,#0a0a0b 25%,#161618 50%,#0a0a0b 75%);background-size:200% 100%;animation:cvsSh 1.1s linear infinite;border:0}
+
+/* Long pages: only paint rows near the screen */
+.row{content-visibility:auto;contain-intrinsic-size:auto 360px}
+.row:first-of-type,.row:nth-of-type(-n+2){content-visibility:visible}
+img{image-rendering:auto}
+.card img,.fcard img{background:#0a0a0b}
+
+/* Phones: bottom scrim so content never shows between the floating tabs; notch + landscape safe areas */
+@media(max-width:899px){
+  body::after{content:"";position:fixed;left:0;right:0;bottom:0;height:calc(92px + env(safe-area-inset-bottom));background:linear-gradient(#0000,#000 82%);pointer-events:none;z-index:29}
+  body:has(#modal:not([hidden]))::after,body:has(.cva)::after{display:none}
+}
+header{padding-left:max(5vw,env(safe-area-inset-left))!important;padding-right:max(5vw,env(safe-area-inset-right))!important}
+.row,.rt,.bar,.tabs,#tabs{padding-left:max(5vw,env(safe-area-inset-left));padding-right:max(5vw,env(safe-area-inset-right))}
+
+/* Large desktops: keep rows from stretching into a wall */
+@media(min-width:1700px){.row,.rt,.bar,.tabs,#tabs{padding-left:max(5vw,calc((100vw - 1560px)/2));padding-right:max(5vw,calc((100vw - 1560px)/2))}}
+
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;scroll-behavior:auto!important}}
