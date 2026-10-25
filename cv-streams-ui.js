@@ -119,8 +119,8 @@ export function createStreamsUI(el, deps) {
         else if (s.kind === "torrent") l += sheetBtn("app", ICO.phone, "Play in device player", "Opens your torrent / streaming app", 'data-app=""');
         else if (s.kind === "youtube") l += sheetBtn("open", ICO.ext, "Open in YouTube", "YouTube app or website");
       }
-      if (s.kind === "direct") l += sheetBtn("download", ICO.dl, "Download", "Saves the file in your browser, no app needed");
-      else if (s.kind === "torrent") l += sheetBtn("webdl", ICO.dl, "Download in browser", "Through Webtor, no app needed") + sheetBtn("download", ICO.dl, "Download with torrent app", "Opens your torrent app");
+      if (s.kind === "direct") l += sheetBtn("download", ICO.dl, "Download", s.secure ? "Starts right away in your browser" : "http link: your browser may block it");
+      else if (s.kind === "torrent") l += sheetBtn("download", ICO.dl, "Download", "Opens your torrent app (best for big files)");
       l += sheetBtn("copy", ICO.copy, s.kind === "torrent" ? "Copy magnet link" : "Copy stream link", "");
       return head(s.label, sub, false) + `<div class="cvm-l">${l}</div>` + (s.hdr ? `<p class="cvm-tip">This source asks for special request headers, so some players may not start it.</p>` : "");
     }
@@ -166,7 +166,6 @@ export function createStreamsUI(el, deps) {
         else if (act === "app") deps.launch(s, b.dataset.app);
         else if (act === "copy") deps.copy(s);
         else if (act === "download") deps.download && deps.download(s);
-        else if (act === "webdl") deps.webdl && deps.webdl(s);
         else if (act === "open") deps.open(s);
       }, 90);
     });

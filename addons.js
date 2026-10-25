@@ -136,22 +136,14 @@ export function initAddons(h) {
     playBrowser: s => { css().then(() => openPlayer(s, { openOv, closeOv, esc, say, device: x => (platform() === "ios" && x.kind !== "torrent" && ui) ? ui.openMenu(x, { view: "device" }) : say(launch(x, "")) })) },
     launch: (s, app) => say(launch(s, app)),
     copy: async s => say((await copyText(linkOf(s))) ? (s.kind === "torrent" ? "Magnet link copied" : "Link copied") : "Couldn’t copy. Long-press the link instead."),
-    download: async s => {
+    download: s => { // direct links: hand straight to the browser's own download manager (any size, shows in notifications). Torrents: your torrent app.
       if (s.kind === "torrent") return say(launch(s, ""));
       const u = linkOf(s); if (!u) return say("No link to download");
       const nm = String(s.title || s.label || "video").replace(/[\\/:*?"<>|\r\n]+/g, " ").trim().slice(0, 90) || "video";
-      const ext = (() => { try { const m = new URL(u).pathname.match(/\.(mp4|mkv|webm|avi|mov|m4v|ts|m3u8|mp3|flac)$/i); return m ? "." + m[1].toLowerCase() : "" } catch { return "" } })();
-      const save = (href, rev, e2) => { const e = ext || e2 || ".mp4", a = document.createElement("a"); a.href = href; a.download = /\.\w{2,4}$/.test(nm) ? nm : nm + e; a.rel = "noopener noreferrer"; document.body.append(a); a.click(); a.remove(); if (rev) setTimeout(() => URL.revokeObjectURL(href), 6e4) };
-      try { // 1) real in-browser download with progress (works when the server allows it, files up to ~700 MB)
-        const r = await fetch(u, { mode: "cors", credentials: "omit" }); if (!r.ok || !r.body) throw 0;
-        const len = +r.headers.get("content-length") || 0; if (len > 7e8) { try { r.body.cancel() } catch { } throw 0 }
-        const rd = r.body.getReader(), parts = []; let got = 0, last = -1;
-        for (;;) { const { done, value } = await rd.read(); if (done) break; parts.push(value); got += value.length; const p = len ? Math.floor(got / len * 100) : Math.floor(got / 1048576); if (p !== last && (len ? p % 5 === 0 : p % 25 === 0)) { last = p; say(len ? `Downloading… ${p}%` : `Downloading… ${p} MB`) } if (got > 7e8) throw 0 }
-        const ct = r.headers.get("content-type") || ""; save(URL.createObjectURL(new Blob(parts, { type: ct })), 1, /matroska/.test(ct) ? ".mkv" : /webm/.test(ct) ? ".webm" : /quicktime/.test(ct) ? ".mov" : ".mp4"); say("Download complete, check your Downloads"); return;
-      } catch { /* blocked by CORS or too big: fall through */ }
-      save(u); say("Download started in your browser. If it plays instead, long-press the link and choose Download.");
+      const m = (() => { try { return new URL(u).pathname.match(/\.(mp4|mkv|webm|avi|mov|m4v|ts|mp3|flac)$/i) } catch { return null } })();
+      const a = document.createElement("a"); a.href = u; a.download = /\.\w{2,4}$/.test(nm) ? nm : nm + (m ? "." + m[1].toLowerCase() : ".mp4"); a.rel = "noopener noreferrer"; document.body.append(a); a.click(); a.remove();
+      say(s.secure === false ? "Download started. If nothing happens, your browser blocked the http link." : "Download started, check your notifications");
     },
-    webdl: s => { if (!s.magnet) return say("No magnet link"); window.open("https://webtor.io/#?magnet=" + encodeURIComponent(s.magnet), "_blank", "noopener,noreferrer"); say("Webtor opened: pick the file and tap Download") },
     open: s => { const u = s.kind === "youtube" ? "https://www.youtube.com/watch?v=" + s.id : s.url; window.open(u, "_blank", "noopener,noreferrer") },
   };
 
