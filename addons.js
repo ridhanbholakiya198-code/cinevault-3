@@ -13,8 +13,18 @@ export function initAddons(h) {
   /* ---------- helpers ---------- */
   const httpsUrl = u => httpUrl(u, true);
 
+  // CloudStream repo links / shortcodes (.cs3 plugins are Android code: they cannot run in a browser).
+  function csRepo(input) {
+    const t = String(input || "").trim();
+    if (/^cloudstreamrepo:\/\//i.test(t)) return t.replace(/^cloudstreamrepo:\/\//i, "");
+    if (/cncverse/i.test(t)) return null; // CNCVerse Bridge = a normal Stremio add-on that runs CloudStream extensions
+    if (/^https?:\/\/.+\/(repo|plugins)[\w-]*\.json$/i.test(t) || /\.cs3(\?|$)/i.test(t)) return t;
+    return null;
+  }
   function normalizeManifestUrl(input) {
-    const raw = String(input || "").trim().replace(/^stremio:\/\//i, "https://");
+    let raw = String(input || "").trim().replace(/^stremio:\/\//i, "https://");
+    if (/^https:\/\/[^?#]+$/i.test(raw) && !/\/manifest\.json$/i.test(raw)) raw = raw.replace(/\/+$/, "") + "/manifest.json"; // user pasted only the addon base
+    
     let url; try { url = new URL(raw) } catch { throw new Error("That is not a valid URL.") }
     if (url.protocol !== "https:") throw new Error("Only https:// add-on URLs are supported.");
     if (!url.pathname.endsWith("/manifest.json")) throw new Error("The URL must end with /manifest.json");
@@ -28,7 +38,12 @@ export function initAddons(h) {
   async function getJson(url, ms = 8000) {
     const c = new AbortController(), t = setTimeout(() => c.abort(), ms);
     try {
-      const r = await fetch(url, { signal: c.signal });
+      let r;
+      try { r = await fetch(url, { signal: c.signal }) }
+      catch (e) { // CORS / network block → retry once through our own /api/proxy (add-on JSON only)
+        if (!(e instanceof TypeError) || /^\/api\/proxy/.test(url)) throw e;
+        r = await fetch("/api/proxy?u=" + encodeURIComponent(url), { signal: c.signal });
+      }
       if (!r.ok) throw new Error("The add-on answered with HTTP " + r.status + ".");
       return await r.json();
     } finally { clearTimeout(t) }
@@ -62,6 +77,13 @@ export function initAddons(h) {
       l.onload = l.onerror = () => res(); document.head.append(l);
     });
   }
+  // Guests: add-ons live in this browser only (localStorage). On/Off is per device for everyone, so no database rules change is needed.
+  const LS_A = "cv_addons_guest", LS_OFF = "cv_addons_off";
+  const lsGet = (k) => { try { const v = JSON.parse(localStorage.getItem(k) || "[]"); return Array.isArray(v) ? v : [] } catch { return [] } };
+  const lsSet = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)) } catch { } };
+  const readLocal = () => lsGet(LS_A).filter(a => a && typeof a.id === "string" && httpsUrl(a.baseUrl));
+  const isOff = (id) => lsGet(LS_OFF).includes(id);
+  const setOff = (id, off) => { const o = lsGet(LS_OFF).filter(x => x !== id); if (off) o.push(id); lsSet(LS_OFF, o) };
   let addonCache = null; const streamCache = new Map();
   const forget = () => { addonCache = null; streamCache.clear() };
 
@@ -71,54 +93,74 @@ export function initAddons(h) {
     css();
     const el = openOv("addons"), box = el.querySelector(".cva-box");
     box.innerHTML = `${TOP}<h3 class="cva-h">Add-ons</h3><p class="cva-s">Bring your own</p>
-<p class="cva-p">Parda comes with no add-ons. Paste the manifest URL of one you chose yourself. Only add services you trust and are allowed to use.</p>
-<form class="cv-ad-f" novalidate hidden><label class="cva-f"><span>Add-on URL</span><input name="url" type="url" inputmode="url" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="https://…/manifest.json"></label><button class="cva-btn" type="submit">Add</button></form>
+<p class="cva-p">Parda comes with no add-ons. Paste the link of one you chose yourself (a Stremio add-on, or a CNCVerse Bridge link for CloudStream extensions). Only add services you trust and are allowed to use.</p>
+<form class="cv-ad-f" novalidate hidden><label class="cva-f"><span>Add-on URL</span><input name="url" type="url" inputmode="url" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Stremio add-on or CloudStream repo link"></label><button class="cva-btn" type="submit">Add</button></form>
 <div class="cva-msg" hidden></div><div class="cv-ad-l"></div>`;
     const form = box.querySelector("form"), list = box.querySelector(".cv-ad-l"), btn = form.querySelector("button");
     const msg = (t, ok) => { const m = box.querySelector(".cva-msg"); m.className = "cva-msg " + (ok ? "good" : "bad"); m.textContent = t; m.hidden = !t };
     const fail = e => msg(e && e.code === "permission-denied" ? "Couldn’t save: the database rules don’t allow add-ons yet (publish the updated firestore.rules)." : (e && e.message) || "Something went wrong.");
 
     async function render() {
-      const { user, db, fs } = await session(); if (!user) return;
-      const snap = await fs.getDocs(fs.collection(db, "users", user.uid, "addons"));
-      list.innerHTML = snap.empty ? `<p class="cva-p">No add-ons yet.</p>` : `<p class="cv-ad-h">Your add-ons</p>` + snap.docs.map(d => {
-        const a = d.data(); let host = ""; try { host = new URL(a.manifestUrl).host } catch { }
-        return `<div class="cv-ad-i"><div style="min-width:0"><b>${esc(a.name || "Add-on")}</b><small>${esc(host)}</small></div><button type="button" data-rm="${esc(d.id)}">Remove</button></div>`; // host only: the URL may contain private settings
+      const { user, db, fs } = await session();
+      let items;
+      if (user) { const snap = await fs.getDocs(fs.collection(db, "users", user.uid, "addons")); items = snap.docs.map(d => ({ id: d.id, ...d.data() })) }
+      else items = readLocal();
+      list.innerHTML = !items.length ? `<p class="cva-p">No add-ons yet.</p>` : `<p class="cv-ad-h">Your add-ons</p>` + items.map(a => {
+        let host = ""; try { host = new URL(a.manifestUrl).host } catch { }
+        const off = isOff(a.id);
+        return `<div class="cv-ad-i${off ? " cv-ad-off" : ""}"><div style="min-width:0"><b>${esc(a.name || "Add-on")}</b><small>${esc(host)}${off ? " · Off" : ""}</small></div><button type="button" class="cv-ad-t" role="switch" aria-checked="${!off}" aria-label="Turn ${esc(a.name || "add-on")} on or off" data-tg="${esc(a.id)}"><i></i></button><button type="button" data-rm="${esc(a.id)}">Remove</button></div>`; // host only: the URL may contain private settings
       }).join("");
     }
 
     el.addEventListener("click", async e => {
       if (e.target.closest('[data-a="close"]')) return closeOv(el);
+      const tg = e.target.closest("[data-tg]");
+      if (tg) { setOff(tg.dataset.tg, tg.getAttribute("aria-checked") === "true"); forget(); return render().catch(fail) }
       const rm = e.target.closest("[data-rm]"); if (!rm) return;
       rm.disabled = true;
-      try { const { user, db, fs } = await session(); await fs.deleteDoc(fs.doc(db, "users", user.uid, "addons", rm.dataset.rm)); forget(); await render() } catch (err) { rm.disabled = false; fail(err) }
+      try {
+        const { user, db, fs } = await session();
+        if (user) await fs.deleteDoc(fs.doc(db, "users", user.uid, "addons", rm.dataset.rm));
+        else lsSet(LS_A, lsGet(LS_A).filter(a => a.id !== rm.dataset.rm));
+        setOff(rm.dataset.rm, false); forget(); await render();
+      } catch (err) { rm.disabled = false; fail(err) }
     });
 
     form.addEventListener("submit", async e => {
       e.preventDefault(); msg(""); btn.disabled = true; btn.textContent = "Checking…";
       try {
-        const { user, db, fs } = await session(); if (!user) throw new Error("Sign in first to save add-ons.");
+        const { user, db, fs } = await session();
+        const cs = csRepo(form.url.value);
+        if (cs) { // CloudStream: can't run here → hand over to the CloudStream app, and point to the Stremio route
+          const deep = /^https?:/i.test(cs) ? "cloudstreamrepo://" + cs.replace(/^https?:\/\//i, "") : "cloudstreamrepo://" + cs;
+          box.querySelector(".cva-msg").innerHTML = "";
+          msg("This is a raw CloudStream repo, which only the CloudStream app can run. To use CloudStream extensions here, add CNCVerse Bridge (it is a Stremio add-on) and paste its manifest link instead.");
+          const a = document.createElement("a"); a.className = "cva-btn"; a.href = deep; a.textContent = "Open in CloudStream app"; a.style.cssText = "display:block;text-align:center;margin-top:8px";
+          box.querySelector(".cva-msg").after(a); setTimeout(() => a.remove(), 60000);
+          return;
+        }
         const url = normalizeManifestUrl(form.url.value), m = await manifestOf(url), id = await addonId(url);
-        await fs.setDoc(fs.doc(db, "users", user.uid, "addons", id), { name: m.name.slice(0, 200), manifestUrl: url, baseUrl: baseOf(url), createdAt: fs.serverTimestamp() });
-        forget(); form.url.value = ""; msg("Added “" + m.name + "”", 1); await render();
+        if (user) await fs.setDoc(fs.doc(db, "users", user.uid, "addons", id), { name: m.name.slice(0, 200), manifestUrl: url, baseUrl: baseOf(url), createdAt: fs.serverTimestamp() });
+        else { const l = lsGet(LS_A).filter(a => a.id !== id); l.push({ id, name: m.name.slice(0, 200), manifestUrl: url, baseUrl: baseOf(url) }); lsSet(LS_A, l.slice(-20)) }
+        setOff(id, false); forget(); form.url.value = ""; msg("Added “" + m.name + "”", 1); await render();
       } catch (err) { fail(err) } finally { btn.disabled = false; btn.textContent = "Add" }
     });
 
     session().then(({ user }) => {
       if (!document.body.contains(el)) return;
-      if (!user) { msg("Sign in to save add-ons to your account."); return }
-      form.hidden = false; render().catch(fail);
+      form.hidden = false; if (!user) msg("No login needed. Add-ons are saved on this device only. Log in to keep them on all your devices.", 1);
+      render().catch(fail);
     }).catch(() => msg("Couldn’t reach the sign-in service."));
   }
 
   /* ---------- streams for the details page / episode panel ---------- */
   async function myAddons() {
-    const { user, db, fs } = await session(); if (!user) return null;
-    if (addonCache && addonCache.uid === user.uid && Date.now() - addonCache.t < 60000) return addonCache.list;
+    const { user, db, fs } = await session(); if (!user) return readLocal().filter(a => !isOff(a.id));
+    if (addonCache && addonCache.uid === user.uid && Date.now() - addonCache.t < 60000) return addonCache.list.filter(a => !isOff(a.id));
     const snap = await fs.getDocs(fs.collection(db, "users", user.uid, "addons"));
     const list = snap.docs.map(d => ({ id: d.id, ...d.data() }));
     addonCache = { uid: user.uid, t: Date.now(), list };
-    return list;
+    return list.filter(a => !isOff(a.id));
   }
 
   async function fetchAddon(a, type, id) {
@@ -157,8 +199,8 @@ export function initAddons(h) {
     const isEp = +o.season >= 0 && +o.episode >= 1;
     if (type === "series" && o.season != null && !isEp) return;
     const known = !!(state().auth || hasHint());
-    if (!known) { // guests: official providers only, plus a quiet pointer
-      if (type === "movie") { await css(); if (tok !== el._tok) return; ui = createStreamsUI(el, { esc, openOv, closeOv, say, ...actions }); ui.note("Log in to configure custom media add-ons", "Log in", () => window.CVA && CVA.open && CVA.open()) }
+    if (!known && !readLocal().length) { // guests without add-ons: quiet pointer, no login required
+      if (type === "movie") { await css(); if (tok !== el._tok) return; ui = createStreamsUI(el, { esc, openOv, closeOv, say, ...actions }); ui.note("Add your own add-ons (no login needed)", "Add-ons", () => window.CVA && CVA.addons && CVA.addons()) }
       return;
     }
     try {
@@ -166,7 +208,7 @@ export function initAddons(h) {
       if (list === null) return;
       await css(); if (tok !== el._tok) return;
       ui = createStreamsUI(el, { esc, openOv, closeOv, say, ...actions, retry: () => { forget(); streams(el, o) } });
-      if (!list.length) return ui.note("No add-ons yet. Add one to see streams here.", "Add-ons", () => window.CVA && CVA.addons && CVA.addons());
+      if (!list.length) return ui.note("No active add-ons. Add one or turn one on to see streams here.", "Add-ons", () => window.CVA && CVA.addons && CVA.addons());
       if (type === "series" && !isEp) return ui.note("Pick an episode below to load streams from your add-ons.");
       const id = type === "series" ? `${o.imdbId}:${+o.season}:${+o.episode}` : o.imdbId;
       let all = [], pending = list.length; const failed = [];

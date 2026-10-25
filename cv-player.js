@@ -210,6 +210,8 @@ export function openPlayer(s, h) {
       loadHls().then(Hls => {
         if (!Hls || !Hls.isSupported()) return fail("This browser can’t play HLS streams.");
         hls = new Hls(); hls.on(Hls.Events.ERROR, (_e, d) => { if (d && d.fatal) fail("Stream error: " + (d.details || "unknown")) });
+        [Hls.Events.MANIFEST_PARSED, Hls.Events.AUDIO_TRACKS_UPDATED, Hls.Events.LEVEL_SWITCHED].forEach(ev => hls.on(ev, () => { if (!menu.hidden) renderMenu() }));
+        hls.on(Hls.Events.MANIFEST_PARSED, () => { const n = (hls.audioTracks || []).length; if (n > 1) toast(n + " audio languages available") });
         hls.loadSource(s.url); hls.attachMedia(v); v.play().catch(() => { });
       }).catch(() => fail("Couldn’t load the video player library."));
     } else { v.src = s.url; v.play().catch(() => { }) }
@@ -226,20 +228,52 @@ export function openPlayer(s, h) {
     }
     const setSub = i => { [...v.textTracks].forEach((t, j) => t.mode = j === i ? "showing" : "disabled"); renderMenu(); toast(i < 0 ? "Subtitles off" : "Subtitles: " + v.textTracks[i].label) };
     const setAudio = i => { const a = v.audioTracks; for (let j = 0; j < a.length; j++) a[j].enabled = j === i; renderMenu(); toast("Audio: " + (a[i].label || a[i].language || "Track " + (i + 1))) };
+    /* settings sheet: Audio · Subtitles · Quality · Speed · Picture (Netflix-style tabs) */
+    let tab = store.get("cv_pl_tab") || "audio", csz = +store.get("cv_cs") || 1, cbg = store.get("cv_cb") || "box";
+    const CSZ = [["Small", .8], ["Medium", 1], ["Large", 1.35], ["Huge", 1.8]], CBG = [["box", "Box"], ["outline", "Outline"], ["plain", "Plain"]];
+    const TABS = [["audio", "Audio"], ["subs", "Subtitles"], ["qual", "Quality"], ["speed", "Speed"], ["pic", "Picture"]];
+    function applySubStyle() {
+      root.style.setProperty("--cs", Math.round(csz * 100) + "%");
+      root.style.setProperty("--cbg", cbg === "box" ? "rgba(0,0,0,.78)" : "transparent");
+      root.style.setProperty("--csh", cbg === "outline" ? "0 0 3px #000,0 0 3px #000,1px 1px 3px #000" : "none");
+    }
+    applySubStyle();
+    const lvlName = l => (l.height ? l.height + "p" : Math.round((l.bitrate || 0) / 1000) + " kbps");
+    const btn = (on, a, i, t, extra = "") => `<button type="button" class="it${on ? " on" : ""}" data-a="${a}" data-i="${i}"${extra}>${esc(t)}</button>`;
     function renderMenu() {
-      const tt = [...v.textTracks].filter(t => t.kind === "subtitles" || t.kind === "captions"), at = v.audioTracks;
-      let m = '<h4>Subtitles</h4><button type="button" class="it' + (tt.some(t => t.mode === "showing") ? "" : " on") + '" data-a="sub" data-i="-1">Off</button>';
-      tt.forEach((t, i) => m += `<button type="button" class="it${t.mode === "showing" ? " on" : ""}" data-a="sub" data-i="${i}">${esc(t.label || t.language || "Track " + (i + 1))}</button>`);
-      m += '<button type="button" class="it" data-a="addsub">Add subtitle file…</button><h4>Audio language</h4>';
-      if (at && at.length > 1) for (let i = 0; i < at.length; i++) m += `<button type="button" class="it${at[i].enabled ? " on" : ""}" data-a="aud" data-i="${i}">${esc(at[i].label || at[i].language || "Track " + (i + 1))}</button>`;
-      else m += "<p>Only one audio track is available in this browser or file. Other languages? Use a device player.</p>";
-      m += "<h4>Aspect ratio</h4>"; FITS.forEach((f, i) => m += `<button type="button" class="it${i === fitI ? " on" : ""}" data-a="fit" data-i="${i}">${f[1]}</button>`);
-      m += "<h4>Speed</h4>"; [.5, .75, 1, 1.25, 1.5, 2].forEach(x => m += `<button type="button" class="it${v.playbackRate === x ? " on" : ""}" data-a="spd" data-i="${x}">${x === 1 ? "Normal" : x + "×"}</button>`);
+      const tt = [...v.textTracks].filter(t => t.kind === "subtitles" || t.kind === "captions"), at = v.audioTracks, ha = hls && hls.audioTracks || [], hl = hls && hls.levels || [];
+      let m = '<div class="cvp-tabs">' + TABS.map(([k, n]) => `<button type="button" class="${k === tab ? "on" : ""}" data-a="tab" data-k="${k}">${n}</button>`).join("") + "</div>";
+      if (tab === "audio") {
+        if (ha.length > 1) ha.forEach((t, i) => m += btn(hls.audioTrack === i, "haud", i, t.name || t.lang || "Track " + (i + 1)));
+        else if (at && at.length > 1) for (let i = 0; i < at.length; i++) m += btn(at[i].enabled, "aud", i, at[i].label || at[i].language || "Track " + (i + 1));
+        else m += `<p>This file has one audio track the browser can use. If it carries more languages (for example Hindi + English in one MKV), browsers can’t switch them. Open it in a device player such as VLC to choose.</p>` + btn(false, "dev", 0, "Open in device player");
+      } else if (tab === "subs") {
+        m += btn(!tt.some(t => t.mode === "showing"), "sub", -1, "Off");
+        tt.forEach((t, i) => m += btn(t.mode === "showing", "sub", i, t.label || t.language || "Track " + (i + 1)));
+        m += btn(false, "addsub", 0, "Add subtitle file…");
+        m += "<h4>Size</h4>" + CSZ.map(([n, x]) => btn(csz === x, "csz", x, n)).join("") + "<h4>Style</h4>" + CBG.map(([k, n]) => btn(cbg === k, "cbg", k, n)).join("");
+      } else if (tab === "qual") {
+        if (hl.length > 1) { m += btn(hls.autoLevelEnabled, "lvl", -1, "Auto"); [...hl.keys()].sort((x, y) => (hl[y].height || 0) - (hl[x].height || 0) || hl[y].bitrate - hl[x].bitrate).forEach(i => m += btn(!hls.autoLevelEnabled && hls.currentLevel === i, "lvl", i, lvlName(hl[i]))) }
+        else m += `<p>Quality is fixed for this stream${v.videoHeight ? " (" + v.videoWidth + "×" + v.videoHeight + ")" : ""}. Streams with several qualities let you switch here.</p>`;
+      } else if (tab === "speed") {
+        [.5, .75, 1, 1.25, 1.5, 2].forEach(x => m += btn(v.playbackRate === x, "spd", x, x === 1 ? "Normal" : x + "×"));
+      } else {
+        FITS.forEach((f, i) => m += btn(i === fitI, "fit", i, f[1]));
+        m += "<p>Pinch the video to zoom. Picking a mode resets the zoom.</p>";
+      }
       menu.innerHTML = m;
     }
     menu.addEventListener("click", e => {
       const b = e.target.closest("button"); if (!b) return; const a = b.dataset.a, i = +b.dataset.i;
-      if (a === "sub") setSub(i); else if (a === "aud") setAudio(i); else if (a === "spd") { v.playbackRate = i; renderMenu() } else if (a === "fit") setFit(i); else if (a === "addsub") q(".cvp-sf").click();
+      if (a === "tab") { tab = b.dataset.k; store.set("cv_pl_tab", tab); return renderMenu() }
+      if (a === "sub") setSub(i); else if (a === "aud") setAudio(i);
+      else if (a === "haud") { hls.audioTrack = i; renderMenu(); toast("Audio: " + (hls.audioTracks[i].name || hls.audioTracks[i].lang || "Track " + (i + 1))) }
+      else if (a === "lvl") { hls.currentLevel = i; renderMenu(); toast(i < 0 ? "Quality: Auto" : "Quality: " + lvlName(hls.levels[i])) }
+      else if (a === "spd") { v.playbackRate = i; renderMenu() } else if (a === "fit") { setFit(i); renderMenu() }
+      else if (a === "csz") { csz = i; store.set("cv_cs", i); applySubStyle(); renderMenu() }
+      else if (a === "cbg") { cbg = b.dataset.i; store.set("cv_cb", cbg); applySubStyle(); renderMenu() }
+      else if (a === "dev") toDevice();
+      else if (a === "addsub") q(".cvp-sf").click();
     });
     q(".cvp-sf").onchange = async e => { const f = e.target.files[0]; if (f) { await addSub(f, f.name); setSub(v.textTracks.length - 1) } e.target.value = "" };
 
@@ -262,7 +296,7 @@ export function openPlayer(s, h) {
       ({
         close, dev: toDevice, pp: toggle, rw: () => skipBy(-10), ff: () => skipBy(10), fs, mu: () => { v.muted = !v.muted },
         fit: () => setFit(fitI + 1),
-        cc: () => { e.stopPropagation(); menu.hidden = !menu.hidden; if (!menu.hidden) renderMenu() },
+        cc: () => { e.stopPropagation(); menu.hidden = !menu.hidden; if (!menu.hidden) renderMenu() }, // settings sheet
         pip: () => { if (document.pictureInPictureElement) document.exitPictureInPicture().catch(() => { }); else if (v.requestPictureInPicture) v.requestPictureInPicture().catch(() => toast("Picture in picture not available")); else toast("Picture in picture not supported") },
       })[c.dataset.c]?.();
     });
@@ -280,7 +314,7 @@ export function openPlayer(s, h) {
     v.addEventListener("pause", () => { $pp.innerHTML = ic("play"); wake() });
     v.addEventListener("loadedmetadata", () => {
       const r = parseFloat(store.get(key)); if (r && r < v.duration - 30) { v.currentTime = r; toast("Resumed at " + fmt(r)) }
-      if (v.audioTracks && v.audioTracks.length > 1) toast(v.audioTracks.length + " audio tracks available");
+      if (v.audioTracks && v.audioTracks.length > 1) toast(v.audioTracks.length + " audio languages available");
     });
     v.addEventListener("playing", () => { started = true; load.className = "cvp-load" });
     v.addEventListener("waiting", () => { if (started && !failing) { load.className = "cvp-load on"; q(".cvp-ls").textContent = "Buffering…" } });
