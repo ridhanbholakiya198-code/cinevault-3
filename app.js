@@ -63,7 +63,29 @@ async function heroFallback(){const tl=topOf(taste().l),mine=tl&&tl[0]!=="en"&&t
  const ok=i=>i.backdrop_path&&i.poster_path,sh=r=>r.filter(ok).slice(0,10).sort(()=>Math.random()-.5);
  let h=[...sh(b.results).slice(0,2),...sh(a.results)].filter((x,i,r)=>r.findIndex(y=>y.id===x.id)===i).slice(0,6);
  if(h.length>=3)h.forEach(i=>{i.media_type="movie";i.cin=1});else h=(await api("/trending/all/week")).results.filter(ok).slice(0,6);return h}
-async function heroItems(){const h=await heroPicks();return h.length>=3?h:heroFallback()}
+// ---- Hero v2: a fresh mix every visit (prestige TV, new releases, world cinema, a surprise genre) + up to 2 slots shaped by what you opened / searched ----
+const shuf=a=>a.map(x=>[Math.random(),x]).sort((p,q)=>p[0]-q[0]).map(x=>x[1]),rnd=n=>1+Math.floor(Math.random()*n),NOHERO=[10763,10767,10764,10766];
+async function heroDiscover(){const x=taste(),tl=topOf(x.l),tg=topOf(x.g),tt=topOf(x.t),NG=NOHERO.join(",");
+ const T=(p,q,tag,ty)=>api(p,q).then(r=>r.results.map(i=>({...i,media_type:i.media_type||ty,_tag:tag}))).catch(()=>[]);
+ const regs=shuf(["ko","ja","hi","ta","te","ml","es","fr","de","tr","it","pt","zh"]).slice(0,2),gen=shuf([10765,80,9648,18,878,10768,10759])[0];
+ const disc=[T("/trending/all/week",{page:rnd(2)},"trend"),
+  T("/discover/tv",{sort_by:"popularity.desc","vote_average.gte":7.8,"vote_count.gte":700,without_genres:NG+",16",page:rnd(3)},"prestige","tv"),
+  T("/discover/tv",{sort_by:"popularity.desc","first_air_date.gte":day(420),"vote_average.gte":7,"vote_count.gte":120,without_genres:NG,page:rnd(2)},"newtv","tv"),
+  T("/discover/movie",{sort_by:"popularity.desc","primary_release_date.gte":day(300),"primary_release_date.lte":day(0),"vote_average.gte":6.8,"vote_count.gte":150,page:rnd(2)},"newmov","movie"),
+  T("/discover/tv",{with_genres:gen,sort_by:"popularity.desc","vote_average.gte":7.5,"vote_count.gte":300,without_genres:NG,page:rnd(2)},"genre","tv"),
+  ...regs.flatMap(l=>[T("/discover/movie",{with_original_language:l,sort_by:"popularity.desc","vote_average.gte":6.8,"vote_count.gte":80,"primary_release_date.gte":day(900),page:1},"world","movie"),
+   T("/discover/tv",{with_original_language:l,sort_by:"popularity.desc","vote_average.gte":7,"vote_count.gte":40,without_genres:NG,page:1},"world","tv")])];
+ const mine=[];if(tl&&tl[1]>=3){const ty=tt?tt[0]:"movie";mine.push(T("/discover/"+ty,{with_original_language:tl[0],...(tg&&tg[1]>=3?{with_genres:tg[0]}:{}),sort_by:"popularity.desc","vote_average.gte":6.8,"vote_count.gte":60,page:rnd(2)},"me",ty))}
+ if(x.v[0])mine.push(T(`/${x.v[0].type}/${x.v[0].id}/recommendations`,{},"me",x.v[0].type));
+ const [D,M2]=await Promise.all([Promise.all(disc),Promise.all(mine)]);
+ const seen=new Set(),ok=i=>i.backdrop_path&&i.poster_path&&i.overview&&(i.vote_average||0)>=6.5&&!(i.genre_ids||[]).some(g=>NOHERO.includes(g))&&i.media_type!=="person"&&!seen.has(i.media_type+i.id)&&seen.add(i.media_type+i.id);
+ const me=shuf(M2.flat().filter(ok)).slice(0,2),pool=shuf(D.flat().filter(ok)),cnt={},ty={},out=[...me];
+ for(const i of pool){if(out.length>=7)break;if((cnt[i._tag]||0)>=2||(ty[i.media_type]||0)>=4)continue;cnt[i._tag]=(cnt[i._tag]||0)+1;ty[i.media_type]=(ty[i.media_type]||0)+1;out.push(i)}
+ const full=await Promise.all(out.map(async i=>{try{const t=i.media_type==="tv"?"tv":"movie",d=await api(`/${t}/${i.id}`,{append_to_response:"images",include_image_language:"en,null"});if(!d.backdrop_path||!d.poster_path)return null;
+  const bs=((d.images||{}).backdrops||[]).filter(b=>!b.iso_639_1&&b.width>=1920).sort((p,q)=>q.vote_average-p.vote_average),ps=((d.images||{}).posters||[]).filter(p=>!p.iso_639_1&&p.height>=1200).sort((p,q)=>q.vote_average-p.vote_average);
+  lgc[t+d.id]=pick((d.images||{}).logos);return{...d,media_type:t,bd:(bs[0]||{}).file_path||d.backdrop_path,bw:(bs[0]||{}).width||0,pt:ps[0]?ps[0].file_path:"",runtime:d.runtime||(d.episode_run_time||[])[0]||0,_tag:i._tag}}catch{return null}}));
+ const r=full.filter(Boolean),m=r.filter(i=>i._tag==="me"),o=r.filter(i=>i._tag!=="me");return[...m.slice(0,2),...o].slice(0,6)}
+async function heroItems(){try{const h=await heroDiscover();if(h.length>=3)return h}catch{}const c=await heroPicks();return c.length>=3?c:heroFallback()}
 function setHero(n){hi=n;const i=hero[n],id=++hq,src=hsrc(i),im=new Image();
  const show=()=>{if(id!==hq)return;const A=[$("#hbgA"),$("#hbgB")],cu=A[hl],nw=A[1-hl];hl=1-hl;
   nw.className="hbg";void nw.offsetWidth;nw.style.backgroundImage=`url(${src})`;nw.style.backgroundPosition=(i.fx||"50%")+" 50%";
