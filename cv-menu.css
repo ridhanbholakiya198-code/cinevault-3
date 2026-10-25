@@ -6,30 +6,30 @@
 #mnu:hover i:nth-child(2){width:16px}
 #mnu.on i:nth-child(1){transform:translateY(6.6px) rotate(45deg)}#mnu.on i:nth-child(2){opacity:0}#mnu.on i:nth-child(3){transform:translateY(-6.6px) rotate(-45deg)}
 @media(max-width:700px){#mnu{width:36px;height:36px}}
-/* full-screen menu */
-.cva.cvm{align-items:stretch;justify-content:stretch;background:#050506;animation:none;clip-path:circle(0 at var(--ox,95%) var(--oy,30px));animation:cvm-in .7s cubic-bezier(.76,0,.18,1) forwards}
-.cva.cvm.out{animation:cvm-out .32s cubic-bezier(.6,0,.4,1) forwards}
-@keyframes cvm-in{to{clip-path:circle(150% at var(--ox,95%) var(--oy,30px))}}
-@keyframes cvm-out{from{clip-path:circle(150% at var(--ox,95%) var(--oy,30px))}to{clip-path:circle(0 at var(--ox,95%) var(--oy,30px))}}
-.cvm .cva-box{max-width:none;width:100%;height:100%;max-height:none;border:0;border-radius:0;background:#060607;padding:calc(env(safe-area-inset-top,0px) + 18px) 7vw calc(env(safe-area-inset-bottom,0px) + 28px);display:flex;flex-direction:column;overflow:auto}
-.cvm-t{position:relative;display:flex;align-items:center;justify-content:center;min-height:38px}
-.cvm-logo{font:400 26px "Bebas Neue",sans-serif;letter-spacing:.22em;color:var(--fg);padding-left:.22em}
-.cvm-x{position:absolute;right:-3vw;top:0;width:38px;height:38px;border-radius:50%;border:0;background:#f2ede4;cursor:pointer;transition:transform .5s cubic-bezier(.7,0,.2,1)}
-.cvm-x:hover{transform:rotate(90deg)}
-.cvm-x i{position:absolute;left:11px;top:18px;width:16px;height:1.8px;background:#000;border-radius:2px;transform:rotate(45deg)}.cvm-x i+i{transform:rotate(-45deg)}
-.cvm-l{list-style:none;margin:auto 0;padding:0;display:grid;gap:clamp(14px,3.6vh,34px)}
-.cvm-l li{overflow:hidden;padding:4px 0}
-.cvm-l button{display:flex;align-items:flex-start;gap:14px;text-align:left;background:none;border:0;color:var(--fg);padding:0;cursor:pointer;transform:translateY(110%);animation:cvm-up .8s cubic-bezier(.2,.8,.2,1) forwards;animation-delay:calc(.3s + var(--i)*.07s);transition:opacity .3s,color .3s}
-.cvm.out .cvm-l button{animation:none;transform:none}
-@keyframes cvm-up{to{transform:none}}
-.cvm-l em{font:400 12px "DM Sans",sans-serif;font-style:normal;color:var(--mute);margin-top:.9em}
-.cvm-l b{font:500 clamp(46px,13vw,92px)/1.02 "Cormorant Garamond",Georgia,serif;letter-spacing:-.01em}
-.cvm-l:hover button{opacity:.3}.cvm-l button:hover,.cvm-l button:focus-visible{opacity:1;color:var(--accent);outline:0}
-.cvm-l button:hover b{font-style:italic}
-.cvm-f{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;font:400 13px "DM Sans",sans-serif;color:var(--mute);opacity:0;animation:cvm-fade .6s .9s forwards}
-.cvm-f a,.cvm-f span{color:var(--fg);text-decoration:none}.cvm-f nav{display:grid;gap:4px;flex:none;text-align:left}
-.cvm-f nav a{color:var(--mute);text-transform:uppercase;letter-spacing:.08em;font-size:12px}.cvm-f nav a:hover{color:var(--fg)}
-@keyframes cvm-fade{to{opacity:1}}
+/* full-screen menu (cvn-*: its own namespace, the 3-dot sheet uses cvm-*) */
+.cva.cvn{align-items:stretch;justify-content:stretch;background:#060607;opacity:0;animation:cvn-in .22s ease-out forwards}
+.cva.cvn.out{animation:cvn-out .18s ease-in forwards;pointer-events:none}
+@keyframes cvn-in{to{opacity:1}}
+@keyframes cvn-out{from{opacity:1}to{opacity:0}}
+.cvn .cva-box{max-width:none;width:100%;height:100%;max-height:none;border:0;border-radius:0;box-shadow:none;animation:none;background:#060607;padding:calc(env(safe-area-inset-top,0px) + 18px) 7vw calc(env(safe-area-inset-bottom,0px) + 28px);display:flex;flex-direction:column;overflow:auto}
+.cvn-t{position:relative;display:flex;align-items:center;justify-content:center;min-height:38px}
+.cvn-logo{font:400 26px "Bebas Neue",sans-serif;letter-spacing:.22em;color:var(--fg);padding-left:.22em}
+.cvn-x{position:absolute;right:-3vw;top:0;width:38px;height:38px;border-radius:50%;border:0;background:#f2ede4;cursor:pointer}
+.cvn-x i{position:absolute;left:11px;top:18px;width:16px;height:1.8px;background:#000;border-radius:2px;transform:rotate(45deg)}.cvn-x i+i{transform:rotate(-45deg)}
+.cvn-l{list-style:none;margin:auto 0;padding:0;display:grid;gap:clamp(14px,3.6vh,34px)}
+.cvn-l li{overflow:hidden;padding:4px 0}
+.cvn-l button{display:flex;align-items:flex-start;gap:14px;text-align:left;background:none;border:0;color:var(--fg);padding:0;cursor:pointer;-webkit-tap-highlight-color:transparent;transform:translateY(105%);animation:cvn-up .45s cubic-bezier(.2,.8,.2,1) forwards;animation-delay:calc(.05s + var(--i)*.04s)}
+.cvn.out .cvn-l button{animation:none;transform:none}
+@keyframes cvn-up{to{transform:none}}
+.cvn-l em{font:400 12px "DM Sans",sans-serif;font-style:normal;color:var(--mute);margin-top:.9em;min-width:1.6em}
+.cvn-l b{font:500 clamp(46px,13vw,92px)/1.02 "Cormorant Garamond",Georgia,serif;letter-spacing:-.01em}
+/* colour only: nothing moves or changes width on hover/tap */
+@media(hover:hover){.cvn-l button:hover b{color:var(--accent)}}
+.cvn-l button:active b,.cvn-l button:focus-visible b{color:var(--accent)}.cvn-l button:focus-visible{outline:0}
+.cvn-f{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;font:400 13px "DM Sans",sans-serif;color:var(--mute);opacity:0;animation:cvn-fade .3s .2s forwards}
+.cvn-f a,.cvn-f span{color:var(--fg);text-decoration:none}.cvn-f nav{display:grid;gap:4px;flex:none;text-align:left}
+.cvn-f nav a{color:var(--mute);text-transform:uppercase;letter-spacing:.08em;font-size:12px}.cvn-f nav a:hover{color:var(--fg)}
+@keyframes cvn-fade{to{opacity:1}}
 /* one menu button: the separate profile icon is reached through the menu */
 #acc{display:none!important}
-@media(prefers-reduced-motion:reduce){.cva.cvm,.cvm-l button,.cvm-f{animation-duration:.01s;animation-delay:0s}}
+@media(prefers-reduced-motion:reduce){.cva.cvn,.cvn-l button,.cvn-f{animation-duration:.01s;animation-delay:0s}}
