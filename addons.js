@@ -43,6 +43,8 @@ export function initAddons(h) {
       catch (e) { // CORS / network block → retry once through our own /api/proxy (add-on JSON only)
         if (!(e instanceof TypeError) || /^\/api\/proxy/.test(url)) throw e;
         r = await fetch("/api/proxy?u=" + encodeURIComponent(url), { signal: c.signal });
+        if (!r.ok) { let up = ""; try { up = ((await r.json()).error || "").replace("upstream ", "") } catch { }
+          throw new Error(up && up !== "no response" ? "The add-on’s own server answered with an error (HTTP " + up + "). It may be busy, down or blocking our relay. Try again later or use another instance of it." : "Couldn’t reach the add-on. It may be offline, or it blocks outside servers.") }
       }
       if (!r.ok) throw new Error("The add-on answered with HTTP " + r.status + ".");
       return await r.json();

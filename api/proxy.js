@@ -25,7 +25,7 @@ module.exports = async (req, res) => {
       if (r.status >= 300 && r.status < 400 && r.headers.get("location")) { u = new URL(r.headers.get("location"), u); continue; }
       break;
     }
-    if (!r || !r.ok) return fail(502, "Add-on answered HTTP " + (r && r.status));
+    if (!r || !r.ok) { res.setHeader("X-Upstream-Status", String(r ? r.status : 0)); return fail(502, "upstream " + (r ? r.status : "no response")) }
     const buf = Buffer.from(await r.arrayBuffer());
     if (buf.length > 2e6) return fail(413, "Response too large");
     JSON.parse(buf.toString("utf8")); // must be JSON
