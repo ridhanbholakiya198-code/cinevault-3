@@ -11,6 +11,8 @@
   linear-gradient(#0000 55%,#000b),
   linear-gradient(var(--ed),color-mix(in srgb,var(--accent) 22%,transparent),#0000 12%),
   repeating-linear-gradient(90deg,#030303 0,#0f0f11 17px,#060607 33px,#020202 51px,#030303 64px)}
+.cc-p::after{content:"";position:absolute;inset:0;opacity:.12;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 .55 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
+.lite .cc-p::after{display:none}
 .cc-l{left:0;--ed:270deg}
 .cc-r{right:0;--ed:90deg}
 
@@ -28,6 +30,7 @@
 @keyframes cc-close{from{transform:translate3d(var(--f,-101%),0,0)}to{transform:translate3d(0,0,0)}}
 /* projector strike: a couple of quick flickers, then steady */
 @keyframes cc-on{0%{opacity:0}8%{opacity:.95}15%{opacity:.12}24%{opacity:1}33%{opacity:.4}44%,100%{opacity:.92}}
+@keyframes cc-breathe{50%{opacity:.7}}
 @keyframes cc-off{from{opacity:.92}to{opacity:0}}
 @keyframes cc-bloom{0%{opacity:0}30%{opacity:.5}100%{opacity:0}}
 
@@ -36,34 +39,40 @@
 #intro{position:fixed;inset:0;z-index:200;display:block;background:none!important;pointer-events:none;
  animation:cc-gone 0s 6s forwards!important} /* failsafe if the script never removes it */
 @keyframes cc-gone{to{visibility:hidden}}
-#intro .cc-s{animation:cc-on .9s .22s both}
+#intro .cc-s{animation:cc-on .9s .22s both,cc-breathe 2.6s 1.2s ease-in-out infinite}
 #intro.go .cc-s{animation:cc-on .9s .22s both,cc-off .45s .12s forwards}
 #intro.go .cc-l{animation:cc-open-l 1.05s .12s var(--cc-ease) forwards}
 #intro.go .cc-r{animation:cc-open-r 1.05s .12s var(--cc-ease) forwards}
 #intro.go .cc-g{animation:cc-bloom 1.2s .15s ease-out forwards}
 /* the title is cut in half by the seam, so it splits with the curtain.
    Each copy is as wide as the screen; the right one is shifted back so both line up. */
-.cc-w{position:absolute;top:50%;left:0;width:calc(100%/.505);margin:0;text-align:center;opacity:0;
- font:400 clamp(54px,20vw,150px)/1 "Bebas Neue",sans-serif;letter-spacing:.3em;padding-left:.3em;color:#f2ede4;
- transform:translateY(-50%);animation:cc-title .9s .5s cubic-bezier(.22,1,.36,1) forwards}
-#intro.go .cc-w{animation:cc-title .9s .5s cubic-bezier(.22,1,.36,1) forwards,cc-title-out .5s .3s ease-in forwards}
+.cc-w{position:absolute;top:50%;left:0;width:calc(100%/.505);margin:0;text-align:center;transform:translateY(-50%)}
 .cc-r .cc-w{left:-98.0198%}
-@keyframes cc-title{from{opacity:0;transform:translateY(-50%) scale(1.07)}to{opacity:1;transform:translateY(-50%) scale(1)}}
+.cc-n{display:block;font:400 clamp(54px,20vw,150px)/1 "Bebas Neue",sans-serif;letter-spacing:.3em;padding-left:.3em;color:#f2ede4}
+.cc-n u{display:inline-block;text-decoration:none;opacity:0;transform:translateY(.3em);
+ animation:cc-ch .8s calc(.4s + var(--k)*.08s) cubic-bezier(.2,.8,.2,1) forwards}
+@keyframes cc-ch{to{opacity:1;transform:none}}
+/* the site's own line, in the colour of the film once it arrives */
+.cc-t{display:block;margin-top:clamp(8px,2.6vw,16px);font:italic 500 clamp(15px,4.6vw,26px)/1.2 "Cormorant Garamond",Georgia,serif;letter-spacing:.05em;color:var(--accent);opacity:0;animation:cc-fi .9s 1.1s ease-out forwards}
+@keyframes cc-fi{to{opacity:1}}
+#intro.go .cc-w{animation:cc-title-out .5s .3s ease-in forwards}
 @keyframes cc-title-out{to{opacity:0}}
 
-/* ---------- menu backdrop: the film that is on screen, dimmed, behind the names ---------- */
-.cc-b{position:absolute;inset:-4%;z-index:0;pointer-events:none;background:center/cover no-repeat;opacity:0;will-change:transform,opacity;
- animation:cc-b-in 1.4s .5s ease-out forwards,cc-b-push 14s .5s ease-out forwards}
+/* ---------- menu backdrop: the film still behind the names (a hero layer + two that crossfade on touch) ---------- */
+.cc-b{position:absolute;inset:-4%;z-index:0;pointer-events:none;background:center/cover no-repeat;opacity:0;transition:opacity .45s ease;will-change:transform,opacity;
+ animation:cc-b-push 14s .5s ease-out forwards}
+.cc-b.in{opacity:.9}
+.cc-b.first{transition:opacity 1.4s .5s ease-out}
 .cc-b::after{content:"";position:absolute;inset:0;
- background:linear-gradient(90deg,#060607f0 6%,#060607a6 62%,#06060766),linear-gradient(0deg,#060607 3%,#0000 48%),linear-gradient(#060607cc,#0000 22%)}
-@keyframes cc-b-in{to{opacity:.62}}
+ background:linear-gradient(90deg,#060607d9 0,#06060778 55%,#06060720 100%),linear-gradient(0deg,#060607 2%,#0000 42%),linear-gradient(#060607b0,#0000 20%)}
 @keyframes cc-b-push{from{transform:scale(1.14)}to{transform:scale(1.02)}}
-.lite .cc-b{animation:cc-b-in 1s .5s forwards}
+.lite .cc-b{animation:none;transform:scale(1.04)}
 
 @media(prefers-reduced-motion:reduce){
  #intro .cc-p,#intro .cc-s,#intro .cc-g{display:none}
  #intro{background:#000!important;animation:cc-fade .4s .9s forwards!important}
  #intro::after{content:"PARDA";position:absolute;inset:0;display:grid;place-items:center;font:400 clamp(54px,20vw,150px) "Bebas Neue",sans-serif;letter-spacing:.3em;text-indent:.3em;color:#f2ede4}
  @keyframes cc-fade{to{opacity:0;visibility:hidden}}
- .cc-b{animation:cc-b-in .3s forwards}
+ .cc-b{animation:none;transform:none;transition-duration:.2s}
+ .cc-n u,.cc-t{animation:none;opacity:1;transform:none}
 }
