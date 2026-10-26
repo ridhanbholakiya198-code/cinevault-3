@@ -364,7 +364,7 @@ let tab="Watching";
 function renderList(){const all=Object.values(store.get()),T=[...STATUS,"Favourites"],f=(n,i)=>n==="Favourites"?i.fav:inL(i,n);
  $("#tabs").innerHTML="";T.forEach(n=>{const c=all.filter(i=>f(n,i)).length,b=document.createElement("button");b.className=n===tab?"on":"";b.innerHTML=`${n}<small>${c||""}</small>`;b.onclick=()=>{tab=n;renderList()};$("#tabs").append(b)});
  const items=all.filter(i=>f(tab,i));$("#lgrid").innerHTML=items.length?"":`<div class="void">${FOLDER}<p>${tab} is empty</p><span>Open any title and tap the bookmark to save it here.</span></div>`;
- items.forEach(i=>$("#lgrid").append(card({id:i.id,title:i.title,poster_path:i.poster,vote_average:0},i.type)));window.CVA&&CVA.listNote()}
+ items.forEach(i=>$("#lgrid").append(card({id:i.id,title:i.title,poster_path:i.poster,vote_average:0},i.type)));window.CVA&&CVA.listNote();try{window.CVCard&&CVCard.listHook(all)}catch(e){}}
 window.cvStoreChanged=()=>{if(!$("#list").hidden)renderList();if(!$("#modal").hidden&&CUR.m)syncTb()};
 $("#rst").onclick=()=>{localStorage.removeItem(TK);alert("Personalisation reset")};
 $("#modal").addEventListener("scroll",()=>{const r=$(".tr"),h=r?r.offsetHeight:150,p=Math.min(1,Math.max(0,($("#modal").scrollTop-h*.36)/(h*.3))),tb=$(".tb");tb.style.setProperty("--p",p.toFixed(3));tb.classList.toggle("s",p>.5)},{passive:true});

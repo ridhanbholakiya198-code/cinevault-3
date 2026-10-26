@@ -31,6 +31,7 @@
     for (const c1 of all) { if (out.every(o => Math.hypot(o.r - c1.r, o.g - c1.g, o.b - c1.b) > 48)) out.push(c1); if (out.length === 6) break }
     return out.sort((a, b) => (a.r * 299 + a.g * 587 + a.b * 114) - (b.r * 299 + b.g * 587 + b.b * 114));
   }
+  window.CVPal = { palette, hex };
   const jam = new Map();
   async function songs(d, t, composer) {
     const title = d.title || d.name || ""; if (!title) return [];
@@ -68,6 +69,7 @@
         const imgs = list.filter(Boolean), cols = imgs.length ? palette(imgs) : [], box = document.getElementById("mpal"); if (!box) return; if (!cols.length) return kill();
         const hs = cols.map(c => hex(c.r, c.g, c.b)); root.style.setProperty("--mg", hs[Math.floor(hs.length / 2)]);
         box.style.minHeight = ""; box.innerHTML = `<div class="mpal">${hs.map(h => `<button type="button" aria-label="Copy ${h}" data-h="${h}" style="background:${h}"><b>Copied</b></button>`).join("")}</div><div class="mhex">${hs.map(h => `<span>${h}</span>`).join("")}</div>`;
+        box.insertAdjacentHTML("beforeend", `<button type="button" class="mcardbtn">Create colour card</button>`); box.querySelector(".mcardbtn").onclick = () => CVCard.film({ title: d.title || d.name || "", year: (d.release_date || d.first_air_date || "").slice(0, 4), type: t, stills: bds.slice(0, 1).map(b => b.file_path), pal: hs });
         box.onclick = e => { const b = e.target.closest("[data-h]"); if (!b) return; const done = () => { b.classList.add("ok"); setTimeout(() => b.classList.remove("ok"), 1100) }; try { navigator.clipboard.writeText(b.dataset.h).then(done, done) } catch (x) { done() } };
       } catch (e) { kill() } });
     }
