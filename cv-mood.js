@@ -17,17 +17,17 @@
   document.head.appendChild(css);
 
   const hex = (r, g, b) => "#" + [r, g, b].map(v => v.toString(16).padStart(2, "0")).join("").toUpperCase();
-  function palette(img) {
+  function palette(imgs) {
     const c = document.createElement("canvas"), W = 64, H = 36; c.width = W; c.height = H;
-    const x = c.getContext("2d", { willReadFrequently: true }); x.drawImage(img, 0, 0, W, H);
-    const px = x.getImageData(0, 0, W, H).data, bins = new Map();
+    const x = c.getContext("2d", { willReadFrequently: true }), bins = new Map();
+    for (const img of imgs) { x.clearRect(0, 0, W, H); x.drawImage(img, 0, 0, W, H); const px = x.getImageData(0, 0, W, H).data;
     for (let i = 0; i < px.length; i += 4) {
       const r = px[i], g = px[i + 1], b = px[i + 2], l = (r * 299 + g * 587 + b * 114) / 1000;
       if (l < 20 || l > 242) continue;
       const k = (r >> 5) << 6 | (g >> 5) << 3 | (b >> 5), mx = Math.max(r, g, b), mn = Math.min(r, g, b), sat = mx ? (mx - mn) / mx : 0;
       const e = bins.get(k) || { n: 0, r: 0, g: 0, b: 0, s: 0 }; e.n++; e.r += r; e.g += g; e.b += b; e.s += sat; bins.set(k, e);
-    }
-    const all = [...bins.values()].map(e => ({ r: Math.round(e.r / e.n), g: Math.round(e.g / e.n), b: Math.round(e.b / e.n), w: e.n * (0.6 + e.s / e.n) })).sort((a, b) => b.w - a.w), out = [];
+    } }
+    const all = [...bins.values()].map(e => ({ r: Math.round(e.r / e.n), g: Math.round(e.g / e.n), b: Math.round(e.b / e.n), w: e.n * (e.s / e.n < 0.14 ? 0.25 : 0.4 + 2.2 * e.s / e.n) })).sort((a, b) => b.w - a.w), out = [];
     for (const c1 of all) { if (out.every(o => Math.hypot(o.r - c1.r, o.g - c1.g, o.b - c1.b) > 48)) out.push(c1); if (out.length === 6) break }
     return out.sort((a, b) => (a.r * 299 + a.g * 587 + a.b * 114) - (b.r * 299 + b.g * 587 + b.b * 114));
   }
@@ -62,15 +62,14 @@
       const b = e.target.closest("button[data-i]"); if (!b) return; const lb = document.createElement("div"); lb.className = "mlb"; lb.innerHTML = `<img alt="" src="${IMG}w1280${bds[+b.dataset.i].file_path}">`; lb.onclick = () => lb.remove(); document.body.append(lb);
     });
     if (bds.length) {
-      const im = new Image(); im.crossOrigin = "anonymous";
-      im.onload = () => { try {
-        const cols = palette(im), box = document.getElementById("mpal"); if (!box || !cols.length) return box && (box.previousElementSibling.remove(), box.remove());
+      const kill = () => { const box = document.getElementById("mpal"); if (box) { box.previousElementSibling.remove(); box.remove() } };
+      const load = b => new Promise(res => { const im = new Image(); im.crossOrigin = "anonymous"; im.onload = () => res(im); im.onerror = () => res(null); im.src = IMG + "w300" + b.file_path });
+      Promise.all(bds.map(load)).then(list => { try {
+        const imgs = list.filter(Boolean), cols = imgs.length ? palette(imgs) : [], box = document.getElementById("mpal"); if (!box) return; if (!cols.length) return kill();
         const hs = cols.map(c => hex(c.r, c.g, c.b)); root.style.setProperty("--mg", hs[Math.floor(hs.length / 2)]);
         box.style.minHeight = ""; box.innerHTML = `<div class="mpal">${hs.map(h => `<button type="button" aria-label="Copy ${h}" data-h="${h}" style="background:${h}"><b>Copied</b></button>`).join("")}</div><div class="mhex">${hs.map(h => `<span>${h}</span>`).join("")}</div>`;
         box.onclick = e => { const b = e.target.closest("[data-h]"); if (!b) return; const done = () => { b.classList.add("ok"); setTimeout(() => b.classList.remove("ok"), 1100) }; try { navigator.clipboard.writeText(b.dataset.h).then(done, done) } catch (x) { done() } };
-      } catch (e) { const box = document.getElementById("mpal"); if (box) { box.previousElementSibling.remove(); box.remove() } } };
-      im.onerror = () => { const box = document.getElementById("mpal"); if (box) { box.previousElementSibling.remove(); box.remove() } };
-      im.src = IMG + "w300" + bds[0].file_path;
+      } catch (e) { kill() } });
     }
     const ss = await songs(d, t, comp), sn = document.getElementById("msnd");
     if (sn && ss.length) sn.innerHTML = `<h3>Sound</h3><div class="msnd">${ss.map(s => `<div class="msong">${s.art ? `<img alt="" loading="lazy" src="${esc(s.art)}">` : `<img alt="" style="visibility:hidden">`}<div><small>${s.label}</small><strong>${esc(s.name)}</strong><span>${esc(s.artist)}</span></div><nav><a target="_blank" rel="noopener noreferrer" href="${yt(s)}">YouTube</a><a target="_blank" rel="noopener noreferrer" href="${sp(s)}">Spotify</a></nav></div>`).join("")}</div><p class="mcred">Track info via iTunes${comp ? " · Music by " + esc(comp) : ""}</p>`;
