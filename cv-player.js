@@ -316,7 +316,17 @@ export function openPlayer(s, h) {
       const r = parseFloat(store.get(key)); if (r && r < v.duration - 30) { v.currentTime = r; toast("Resumed at " + fmt(r)) }
       if (v.audioTracks && v.audioTracks.length > 1) toast(v.audioTracks.length + " audio languages available");
     });
-    v.addEventListener("playing", () => { started = true; load.className = "cvp-load" });
+    v.addEventListener("playing", () => {
+      started = true; load.className = "cvp-load";
+      // heavy files: picture plays but the browser has no decoder for the sound track -> tell the user and hand over to a device player
+      if (!v._noaChk && "webkitAudioDecodedByteCount" in v) { v._noaChk = 1; setTimeout(() => {
+        if (!v.paused && !v.muted && v.volume > 0 && v.currentTime > 2 && v.webkitAudioDecodedByteCount === 0) {
+          const b = document.createElement("div"); b.className = "cvp-msg"; b.style.cssText = "position:absolute;left:12px;right:12px;bottom:96px;top:auto;z-index:6;background:#000d;border:1px solid #ffffff22;border-radius:16px;padding:14px 16px;text-align:center;pointer-events:auto";
+          b.innerHTML = `<p style="margin:0 0 10px">No sound: this file’s audio (AC3 / DTS / E-AC3) can’t be decoded by the browser.</p><button type="button" class="cvp-pill on" data-c="dev">Open in VLC / MX Player</button> <button type="button" class="cvp-pill" data-x="1">Dismiss</button>`;
+          b.addEventListener("click", e => { if (e.target.closest("[data-x]")) b.remove() }); root.append(b);
+        }
+      }, 3500) }
+    });
     v.addEventListener("waiting", () => { if (started && !failing) { load.className = "cvp-load on"; q(".cvp-ls").textContent = "Buffering…" } });
     v.addEventListener("canplay", () => { if (!failing) load.className = "cvp-load" });
     v.addEventListener("error", () => {

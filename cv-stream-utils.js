@@ -105,6 +105,8 @@ export function classify(s, addon, key) {
   const m = parseMeta(s, addon), bh = s.behaviorHints || {};
   const base = { key, addon, ...m, hdr: !!bh.proxyHeaders };
   const isMagnet = typeof s.url === "string" && /^magnet:/i.test(s.url);
+  if (typeof s.url === "string" && !isMagnet && typeof s.infoHash === "string" && /^[a-f0-9]{40}$/i.test(s.infoHash))
+    return { ...base, kind: "torrent", infoHash: s.infoHash, magnet: buildMagnet(s.infoHash, s.sources, m.label), directUrl: httpUrl(s.url) || "" }; // Webtor is the default player for anything that is a torrent
   if (typeof s.url === "string" && !isMagnet) {
     const u = httpUrl(s.url);
     if (u) return { ...base, kind: "direct", url: u, secure: u.startsWith("https:"), webHint: !!bh.notWebReady };
