@@ -58,13 +58,14 @@
 #intro.go .cc-w{animation:cc-title-out .5s .3s ease-in forwards}
 @keyframes cc-title-out{to{opacity:0}}
 
-/* ---------- menu backdrop: the film still behind the names (a hero layer + two that crossfade on touch) ---------- */
+/* ---------- menu backdrop: the film still behind the names (a hero layer + two that crossfade on touch).
+   The left half stays dark so the names read cleanly; the right half shows the film. ---------- */
 .cc-b{position:absolute;inset:-4%;z-index:0;pointer-events:none;background:center/cover no-repeat;opacity:0;transition:opacity .45s ease;will-change:transform,opacity;
  animation:cc-b-push 14s .5s ease-out forwards}
 .cc-b.in{opacity:.9}
 .cc-b.first{transition:opacity 1.4s .5s ease-out}
 .cc-b::after{content:"";position:absolute;inset:0;
- background:linear-gradient(90deg,#060607d9 0,#06060778 55%,#06060720 100%),linear-gradient(0deg,#060607 2%,#0000 42%),linear-gradient(#060607b0,#0000 20%)}
+ background:linear-gradient(90deg,#060607f5 0,#060607b8 45%,#06060740 80%,#06060714 100%),linear-gradient(0deg,#060607 2%,#0000 42%),linear-gradient(#060607b0,#0000 20%)}
 @keyframes cc-b-push{from{transform:scale(1.14)}to{transform:scale(1.02)}}
 .lite .cc-b{animation:none;transform:scale(1.04)}
 
