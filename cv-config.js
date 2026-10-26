@@ -12,8 +12,8 @@ window.CV_FIREBASE = {
 
 // Shown inside Terms / Privacy. Put a real contact email below before sharing the site publicly.
 window.CV_SITE = {
-  owner: "",              // your name or business name, e.g. "Ridhan"  (shown as the operator in Terms/Privacy)
-  email: "",              // REQUIRED for production: legal contact + grievance address, e.g. "yourname@gmail.com"
+  owner: "Ridhan Bholakiya",              // your name or business name, e.g. "Ridhan"  (shown as the operator in Terms/Privacy)
+  email: "rbholakiya@gmail.com",              // REQUIRED for production: legal contact + grievance address, e.g. "yourname@gmail.com"
   effective: "17 October 2026",
   version: "1.0",
   jurisdiction: "India"
