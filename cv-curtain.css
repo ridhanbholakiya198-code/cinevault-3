@@ -37,7 +37,7 @@
 /* ---------- first-load intro (once per visit) ----------
    The curtain stays shut until the first film is ready (cv-curtain.js adds .go), so the reveal is never an empty page. */
 #intro{position:fixed;inset:0;z-index:200;display:block;background:none!important;pointer-events:none;
- animation:cc-gone 0s 6s forwards!important} /* failsafe if the script never removes it */
+ animation:cc-gone 0s 8s forwards!important} /* failsafe if the script never removes it */
 @keyframes cc-gone{to{visibility:hidden}}
 #intro .cc-s{animation:cc-on .9s .22s both,cc-breathe 2.6s 1.2s ease-in-out infinite}
 #intro.go .cc-s{animation:cc-on .9s .22s both,cc-off .45s .12s forwards}

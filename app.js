@@ -182,11 +182,12 @@ function heroLogo(i){logoOf(i).then(l=>{if(l&&hero[hi]===i)$("#htitle").innerHTM
 const HC="cv_hero3",slim=i=>({id:i.id,media_type:kind(i),title:i.title,name:i.name,tagline:i.tagline,overview:i.overview,vote_average:i.vote_average,release_date:i.release_date,first_air_date:i.first_air_date,runtime:i.runtime,genres:(i.genres||[]).slice(0,2).map(g=>({name:g.name})),poster_path:i.poster_path,backdrop_path:i.backdrop_path,bd:i.bd,bw:i.bw,pt:i.pt,pref:i.pref,fx:i.fx,logo:lgc[kind(i)+i.id]});
 function heroCacheGet(){try{const c=JSON.parse(localStorage.getItem(HC)||"null");if(c&&Date.now()-c.t<6048e5&&Array.isArray(c.h)&&c.h.length>=3&&c.h.every(x=>x&&x.id&&(x.bd||x.backdrop_path)))return c.h}catch{}return null}
 function heroCachePut(h){try{if(h&&h.length>=4)localStorage.setItem(HC,JSON.stringify({t:Date.now(),h:h.slice(0,6).map(slim)}))}catch{}}
+const safeHero=()=>{try{startHero()}catch(e){console.error(e);showErr("hero: "+(e&&e.message))}},safeGrow=()=>{try{growHero()}catch(e){console.error(e)}};
 async function home(){let on=0;
  // first slide appears as soon as ONE title is ready; the rest join the carousel as they arrive
- const feed=i=>{if(hero.length>=6||hero.some(x=>x.id===i.id&&kind(x)===kind(i)))return;hero.push(i);if(!((kind(i)+i.id) in lgc))heroLogo(i);if(on)growHero();else{on=1;startHero()}};
+ const feed=i=>{if(hero.length>=6||hero.some(x=>x.id===i.id&&kind(x)===kind(i)))return;hero.push(i);if(!((kind(i)+i.id) in lgc))heroLogo(i);if(on)safeGrow();else{on=1;safeHero()}};
  const warm=heroCacheGet();
- if(warm){warm.forEach(i=>{if(i.logo!=null)lgc[kind(i)+i.id]=i.logo});hero=warm.slice();on=1;startHero();
+ if(warm){warm.forEach(i=>{if(i.logo!=null)lgc[kind(i)+i.id]=i.logo});hero=warm.slice();on=1;safeHero();
   setTimeout(()=>heroItems().then(heroCachePut).catch(()=>{}),SLOW()?30000:7000)} // a fresh mix is prepared quietly for the next visit
  else heroItems(feed).then(h=>{h.forEach(feed);if(!on)throw Error("No titles loaded");heroCachePut(hero)}).catch(e=>{if(!on)setup(e)});
  RW=buildRows();RW.forEach((r,i)=>{const s=document.createElement("section");s.className="row";s.dataset.i=i;
@@ -358,10 +359,10 @@ function renderList(){const all=Object.values(store.get()),T=[...STATUS,"Favouri
 window.cvStoreChanged=()=>{if(!$("#list").hidden)renderList();if(!$("#modal").hidden&&CUR.m)syncTb()};
 $("#rst").onclick=()=>{localStorage.removeItem(TK);alert("Personalisation reset")};
 $("#modal").addEventListener("scroll",()=>{const r=$(".tr"),h=r?r.offsetHeight:150,p=Math.min(1,Math.max(0,($("#modal").scrollTop-h*.36)/(h*.3))),tb=$(".tb");tb.style.setProperty("--p",p.toFixed(3));tb.classList.toggle("s",p>.5)},{passive:true});
-const it=$("#intro");if(it){if(sessionStorage.getItem("cv_i"))it.remove();else{sessionStorage.setItem("cv_i","1");setTimeout(()=>it.remove(),6500)}}
+const it=$("#intro");if(it){if(sessionStorage.getItem("cv_i"))it.remove();else{sessionStorage.setItem("cv_i","1");setTimeout(()=>it.remove(),9000)}}
 $("#yr").textContent=new Date().getFullYear();$("#up").onclick=()=>scrollTo({top:0,behavior:"smooth"});document.querySelectorAll("[data-acc]").forEach(a=>a.onclick=e=>{e.preventDefault();$("#acc").click()});
 if(M)$("#q").placeholder="Search";
-home();openFromHash();addEventListener("hashchange",openFromHash);
+home();if($("#modal").hidden)document.body.style.overflow="";openFromHash();addEventListener("hashchange",openFromHash);
 
 /* ---- section tabs on the detail page ---- */
 function cvtShow(k,focus){const nav=document.getElementById("cvt");if(!nav)return;nav.querySelectorAll("[data-cvt]").forEach(b=>{const on=b.dataset.cvt===k;b.classList.toggle("on",on);b.setAttribute("aria-selected",on)});document.querySelectorAll(".cvt-pane").forEach(p=>p.hidden=p.dataset.cvpane!==k);const b=nav.querySelector(".on");if(b&&nav.scrollTo)nav.scrollTo({left:b.offsetLeft-20,behavior:"smooth"});const pn=document.querySelector(`.cvt-pane[data-cvpane="${k}"]`);if(pn){pn.classList.remove("in");void pn.offsetWidth;pn.classList.add("in")}}
