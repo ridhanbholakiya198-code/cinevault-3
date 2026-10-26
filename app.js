@@ -42,7 +42,7 @@ let hero=[],hi=0,ht,tx=0,ty=0,py=0,hl=0,hq=0;
 const BRFP=[230,191,144,234,202,163,236,206,170,239,209,176,241,210,176,244,215,183,245,216,184,246,216,182,246,214,176,245,213,173,243,209,162,242,208,162,240,207,162,239,205,161,236,200,150,234,191,137,227,176,121,230,185,133,232,193,144,233,194,147,232,188,134,238,205,161,239,206,161,239,203,151,235,191,128,236,193,131,233,186,121,237,197,139,236,196,139,233,187,128,227,170,105,228,171,109,148,84,37,182,111,52,216,141,67,215,136,54,220,143,61,226,159,82,228,163,87,229,162,83,224,149,61,225,153,69,221,143,52,226,154,69,227,154,70,215,129,36,210,118,23,214,131,47,155,78,12,159,75,7,193,98,9,195,97,5,194,101,9,198,100,7,202,102,7,201,104,10,198,97,5,189,96,8,181,90,8,182,90,7,171,80,6,170,79,5,157,72,6,152,67,5,143,64,8,139,63,8,111,49,10,94,45,13,90,40,10,111,49,9,143,64,7,132,62,17,139,61,12,118,52,13,128,54,9,134,59,12,134,57,9,133,54,5,123,50,7,128,53,7,108,43,7,103,43,8,99,42,9,111,47,8,110,47,7,123,54,11,144,69,16,119,65,24,133,67,17,119,63,23,158,99,61,148,93,59,134,85,55,160,98,58,123,58,18,117,52,12,110,48,11,115,50,10,123,54,9,126,57,12,133,62,13,135,63,14,131,60,14,122,57,14,123,56,11,87,44,18,73,44,26,31,19,13,34,21,14,27,16,12,73,35,13,122,57,17,126,58,12,130,60,13,127,58,14,116,52,12,113,47,8,110,45,7,106,43,7,107,45,9,103,43,8,70,31,10,32,19,12,30,19,13,58,35,23,44,22,11,90,37,9,93,38,9,130,60,13,123,56,13,112,48,10,105,44,9,105,44,9,106,44,8,101,42,8,101,42,7,103,44,8,92,38,8,76,33,8,63,28,8,60,29,11,70,31,9,82,34,9,90,37,9];
 const HERO=[["Blade Runner 2049",2017,{ref:BRFP,fx:"56%"}],["Dune",2021],["Stalker",1979],["2001: A Space Odyssey",1968],["Fallen Angels",1995]];
 const upd=()=>$("#hbgs").style.transform=`translate3d(${tx}px,${py+ty}px,0)`,day=n=>new Date(Date.now()-n*864e5).toISOString().slice(0,10);
-const hm=m=>m?`${Math.floor(m/60)}h ${m%60}m`:"",hbd=i=>i.bd||i.backdrop_path,hsrc=i=>M&&i.pt&&!i.pref?IMG+"w780"+i.pt:IMG+(M&&i.bw&&i.bw<=2560?"original":"w1280")+hbd(i);
+const hm=m=>m?`${Math.floor(m/60)}h ${m%60}m`:"",hbd=i=>i.bd||i.backdrop_path,hsrc=i=>M&&i.pt&&!i.pref?IMG+"w780"+i.pt:IMG+(M&&i.bw&&i.bw<=2560&&!SLOW()?"original":"w1280")+hbd(i);
 function fpOf(im){const c=document.createElement("canvas");c.width=16;c.height=9;const x=c.getContext("2d");x.drawImage(im,0,0,16,9);return x.getImageData(0,0,16,9).data}
 function bestMatch(list,fp){return Promise.all(list.map(b=>new Promise(res=>{const im=new Image();im.crossOrigin="anonymous";
   im.onload=()=>{try{const d=fpOf(im);let e=0,j=0;for(let k=0;k<d.length;k++){if(k%4===3)continue;e+=(d[k]-fp[j++])**2}res([e,b])}catch{res([Infinity,b])}};im.onerror=()=>res([Infinity,b]);im.src=IMG+"w300"+b.file_path}))).then(r=>{r.sort((a,b)=>a[0]-b[0]);return r[0]&&r[0][0]<Infinity?r[0][1]:null})}
@@ -64,9 +64,13 @@ async function heroFallback(){const tl=topOf(taste().l),mine=tl&&tl[0]!=="en"&&t
  let h=[...sh(b.results).slice(0,2),...sh(a.results)].filter((x,i,r)=>r.findIndex(y=>y.id===x.id)===i).slice(0,6);
  if(h.length>=3)h.forEach(i=>{i.media_type="movie";i.cin=1});else h=(await api("/trending/all/week")).results.filter(ok).slice(0,6);return h}
 // ---- Hero v2: a fresh mix every visit (prestige TV, new releases, world cinema, a surprise genre) + up to 2 slots shaped by what you opened / searched ----
+function SLOW(){const c=navigator.connection;return!!c&&(!!c.saveData||/^(slow-2g|2g|3g)$/.test(c.effectiveType||""))}
+const lim=(p,ms,fb)=>Promise.race([p,new Promise(r=>setTimeout(()=>r(fb),ms))]);
+// resolves as soon as `need` of the promises are in and `ms` more has passed (or all are in): never waits for the slowest
+const soft=(ps,need,ms)=>new Promise(res=>{const out=[];let n=0,t=0,d=0;const fin=()=>{if(d)return;d=1;clearTimeout(t);res(out)};if(!ps.length)return fin();ps.forEach(p=>p.then(r=>{out.push(r);if(++n===ps.length)fin();else if(n>=need&&!t)t=setTimeout(fin,ms)}))});
 const shuf=a=>a.map(x=>[Math.random(),x]).sort((p,q)=>p[0]-q[0]).map(x=>x[1]),rnd=n=>1+Math.floor(Math.random()*n),NOHERO=[10763,10767,10764,10766];
-async function heroDiscover(){const x=taste(),tl=topOf(x.l),tg=topOf(x.g),tt=topOf(x.t),NG=NOHERO.join(",");
- const T=(p,q,tag,ty)=>api(p,q).then(r=>r.results.map(i=>({...i,media_type:i.media_type||ty,_tag:tag}))).catch(()=>[]);
+async function heroDiscover(emit){const x=taste(),tl=topOf(x.l),tg=topOf(x.g),tt=topOf(x.t),NG=NOHERO.join(",");
+ const T=(p,q,tag,ty)=>lim(api(p,q).then(r=>r.results.map(i=>({...i,media_type:i.media_type||ty,_tag:tag}))).catch(()=>[]),5500,[]);
  const regs=shuf(["ko","ja","hi","ta","te","ml","es","fr","de","tr","it","pt","zh"]).slice(0,2),gen=shuf([10765,80,9648,18,878,10768,10759])[0];
  const disc=[T("/trending/all/week",{page:rnd(2)},"trend"),
   T("/discover/tv",{sort_by:"popularity.desc","vote_average.gte":7.8,"vote_count.gte":700,without_genres:NG+",16",page:rnd(3)},"prestige","tv"),
@@ -77,41 +81,60 @@ async function heroDiscover(){const x=taste(),tl=topOf(x.l),tg=topOf(x.g),tt=top
    T("/discover/tv",{with_original_language:l,sort_by:"popularity.desc","vote_average.gte":7,"vote_count.gte":40,without_genres:NG,page:1},"world","tv")])];
  const mine=[];if(tl&&tl[1]>=3){const ty=tt?tt[0]:"movie";mine.push(T("/discover/"+ty,{with_original_language:tl[0],...(tg&&tg[1]>=3?{with_genres:tg[0]}:{}),sort_by:"popularity.desc","vote_average.gte":6.8,"vote_count.gte":60,page:rnd(2)},"me",ty))}
  if(x.v[0])mine.push(T(`/${x.v[0].type}/${x.v[0].id}/recommendations`,{},"me",x.v[0].type));
- const [D,M2]=await Promise.all([Promise.all(disc),Promise.all(mine)]);
+ const [D,M2]=await Promise.all([soft(disc,4,900),Promise.all(mine)]);
  const seen=new Set(),ok=i=>i.backdrop_path&&i.poster_path&&i.overview&&(i.vote_average||0)>=6.5&&!(i.genre_ids||[]).some(g=>NOHERO.includes(g))&&i.media_type!=="person"&&!seen.has(i.media_type+i.id)&&seen.add(i.media_type+i.id);
  const me=shuf(M2.flat().filter(ok)).slice(0,2),pool=shuf(D.flat().filter(ok)),cnt={},ty={},out=[...me];
  for(const i of pool){if(out.length>=7)break;if((cnt[i._tag]||0)>=2||(ty[i.media_type]||0)>=4)continue;cnt[i._tag]=(cnt[i._tag]||0)+1;ty[i.media_type]=(ty[i.media_type]||0)+1;out.push(i)}
- const full=await Promise.all(out.map(async i=>{try{const t=i.media_type==="tv"?"tv":"movie",d=await api(`/${t}/${i.id}`,{append_to_response:"images",include_image_language:"en,null"});if(!d.backdrop_path||!d.poster_path)return null;
+ const full=await Promise.all(out.map(i=>lim((async()=>{try{const t=i.media_type==="tv"?"tv":"movie",d=await api(`/${t}/${i.id}`,{append_to_response:"images",include_image_language:"en,null"});if(!d.backdrop_path||!d.poster_path)return null;
   const bs=((d.images||{}).backdrops||[]).filter(b=>!b.iso_639_1&&b.width>=1920).sort((p,q)=>q.vote_average-p.vote_average),ps=((d.images||{}).posters||[]).filter(p=>!p.iso_639_1&&p.height>=1200).sort((p,q)=>q.vote_average-p.vote_average);
-  lgc[t+d.id]=pick((d.images||{}).logos);return{...d,media_type:t,bd:(bs[0]||{}).file_path||d.backdrop_path,bw:(bs[0]||{}).width||0,pt:ps[0]?ps[0].file_path:"",runtime:d.runtime||(d.episode_run_time||[])[0]||0,_tag:i._tag}}catch{return null}}));
+  lgc[t+d.id]=pick((d.images||{}).logos);return{...d,media_type:t,bd:(bs[0]||{}).file_path||d.backdrop_path,bw:(bs[0]||{}).width||0,pt:ps[0]?ps[0].file_path:"",runtime:d.runtime||(d.episode_run_time||[])[0]||0,_tag:i._tag}}catch{return null}})(),7000,null).then(x=>{if(x&&emit)emit(x);return x})));
  const r=full.filter(Boolean),m=r.filter(i=>i._tag==="me"),o=r.filter(i=>i._tag!=="me");return[...m.slice(0,2),...o].slice(0,6)}
-async function heroItems(){try{const h=await heroDiscover();if(h.length>=3)return h}catch{}const c=await heroPicks();return c.length>=3?c:heroFallback()}
-function setHero(n){hi=n;const i=hero[n],id=++hq,src=hsrc(i),im=new Image();
- const show=()=>{if(id!==hq)return;const A=[$("#hbgA"),$("#hbgB")],cu=A[hl],nw=A[1-hl];hl=1-hl;
-  nw.className="hbg";void nw.offsetWidth;nw.style.backgroundImage=`url(${src})`;nw.style.backgroundPosition=(i.fx||"50%")+" 50%";
-  if(M&&i.pref){const hi2=new Image();hi2.onload=()=>{if(id===hq)nw.style.backgroundImage=`url(${hi2.src})`};hi2.src=IMG+"original"+hbd(i)}nw.classList.add("on");cu.classList.remove("on");cu.classList.add("out");
-  const c=$(".hcont");c.classList.remove("go");void c.offsetWidth;c.classList.add("go");
-  const g=(i.genres||[]).slice(0,M?1:2).map(x=>x.name).join(", "),y=(i.release_date||i.first_air_date||"").slice(0,4);
-  $("#hmeta").innerHTML=[`<b>${STAR}${(i.vote_average||0).toFixed(1)}</b>`,y,hm(i.runtime),esc(g)].filter(Boolean).join('<i class="dot"></i>');
-  const l=lgc[kind(i)+i.id];$("#htitle").innerHTML=l?`<img class="htl" alt="${esc(title(i))}" src="${l}">`:esc(title(i));
-  $("#htag").textContent=i.tagline||"";$("#hov").textContent=i.overview||"";
-  const go=pl=>openDetail(kind(i),i.id).then(()=>{if(pl){const b=$("#pl");b&&b.click()}});$("#hopen").onclick=()=>go(1);$("#hmore").onclick=()=>go(0);
-  document.querySelectorAll(".hdots i").forEach((d,k)=>d.classList.toggle("on",k===n));
-  $("#cn").textContent=String(n+1).padStart(2,"0");$("#ct").textContent="/"+String(hero.length).padStart(2,"0");
-  const nx=hero[(n+1)%hero.length];$("#ni").src=IMG+"w300"+hbd(nx);$("#nt").textContent=title(nx);
-  dominant(i.poster_path).then(c=>{if(id===hq)root.style.setProperty("--accent",c)});
-  [1,-1].forEach(d=>{new Image().src=hsrc(hero[(n+d+hero.length)%hero.length])})};
- im.onload=im.onerror=show;im.src=src}
-const auto=()=>{clearInterval(ht);ht=setInterval(()=>{if(!document.hidden&&!$("#hx").hidden&&$("#modal").hidden)setHero((hi+1)%hero.length)},8000)};
-function startHero(){$("#dots").innerHTML=hero.map((_,k)=>`<i data-k="${k}"></i>`).join("");
- document.querySelectorAll(".hdots i").forEach(d=>d.onclick=()=>step(+d.dataset.k-hi));
- setHero(0);auto();
- let x0=0;const H=$("#hx");H.addEventListener("touchstart",e=>x0=e.touches[0].clientX,{passive:true});
- H.addEventListener("touchend",e=>{const d=e.changedTouches[0].clientX-x0;if(Math.abs(d)>50)step(d<0?1:-1)},{passive:true});
- addEventListener("keydown",e=>{if(e.key!=="ArrowRight"&&e.key!=="ArrowLeft")return;if(!$("#modal").hidden||$("#hx").hidden||/INPUT|SELECT|TEXTAREA/.test((document.activeElement||{}).tagName))return;step(e.key==="ArrowRight"?1:-1)})}
-const step=d=>{setHero((hi+d+hero.length)%hero.length);auto()};
+async function heroItems(emit){try{const h=await heroDiscover(emit);if(h.length>=3)return h}catch{}const c=await heroPicks();return c.length>=3?c:heroFallback()}
+// ---- Hero engine v2 ----
+// Old bug: the slide only changed after its picture finished loading, but `hi` moved on at once and a new request cancelled the last one,
+// so on a slow connection nothing ever showed ("stuck"), and the next swipe/auto-tick landed on a far-away slide ("jumps to last").
+// Now: pictures load once (deduped, decoded off-thread), text/dots follow instantly, a slow picture never blocks the next move.
+let hbusy=0,hdir=1,hvis=1,hpainted=0,hbound=0,pq=0;const HP={},hsleep=ms=>new Promise(r=>setTimeout(r,ms));
+function hload(src){return HP[src]||(HP[src]=new Promise(res=>{const t=(s,retry)=>{const im=new Image();im.decoding="async";
+ im.onload=()=>(im.decode?im.decode().catch(()=>{}):Promise.resolve()).then(()=>res(s));
+ im.onerror=()=>{if(retry&&s.startsWith("/timg/"))t(DIMG+s.slice(6),0);else{delete HP[src];res("")}};im.src=s};t(src,1)}))}
+function paintHero(i,n,id){const c=$(".hcont");c.style.setProperty("--hd",hdir);c.classList.remove("go");void c.offsetWidth;c.classList.add("go");
+ const g=(i.genres||[]).slice(0,M?1:2).map(x=>x.name).join(", "),y=(i.release_date||i.first_air_date||"").slice(0,4);
+ $("#hmeta").innerHTML=[`<b>${STAR}${(i.vote_average||0).toFixed(1)}</b>`,y,hm(i.runtime),esc(g)].filter(Boolean).join('<i class="dot"></i>');
+ const l=lgc[kind(i)+i.id];$("#htitle").innerHTML=l?`<img class="htl" alt="${esc(title(i))}" src="${l}">`:esc(title(i));
+ $("#htag").textContent=i.tagline||"";$("#hov").textContent=i.overview||"";
+ const go=pl=>openDetail(kind(i),i.id).then(()=>{if(pl){const b=$("#pl");b&&b.click()}});$("#hopen").onclick=()=>go(1);$("#hmore").onclick=()=>go(0);
+ document.querySelectorAll(".hdots i").forEach((d,k)=>d.classList.toggle("on",k===n));
+ $("#cn").textContent=String(n+1).padStart(2,"0");$("#ct").textContent="/"+String(hero.length).padStart(2,"0");
+ if(matchMedia("(min-width:900px)").matches){const nx=hero[(n+1)%hero.length];$("#ni").src=IMG+"w300"+hbd(nx);$("#nt").textContent=title(nx)}
+ dominant(i.poster_path).then(c=>{if(id===hq)root.style.setProperty("--accent",c)})}
+function swapBg(i,s,id){const A=[$("#hbgA"),$("#hbgB")],cu=A[hl],nw=A[1-hl];if(cu.classList.contains("on")&&cu.dataset.s===s)return;
+ hl=1-hl;clearTimeout(nw._f);nw.className="hbg";void nw.offsetWidth;nw.style.backgroundImage=`url(${s})`;nw.style.backgroundPosition=(i.fx||"50%")+" 50%";nw.dataset.s=s;
+ if(M&&i.pref)hload(IMG+"original"+hbd(i)).then(h=>{if(h&&id===hq&&nw.classList.contains("on"))nw.style.backgroundImage=`url(${h})`});
+ nw.classList.add("on");cu.classList.remove("on");cu.classList.add("out");
+ // give the decoded picture back once it has faded out (this is what keeps low-RAM phones from killing the tab)
+ cu._f=setTimeout(()=>{if(!cu.classList.contains("on")){cu.style.backgroundImage="none";cu.dataset.s=""}},1700)}
+function setHero(n,dir){const len=hero.length;if(!len)return;n=((n%len)+len)%len;hi=n;hdir=dir||1;
+ const i=hero[n],id=++hq,p=hload(hsrc(i));hbusy=1;const bt=setTimeout(()=>{if(id===hq)hbusy=0},6500);
+ // text and dots follow at once (a cached picture arrives within the grace time, so both appear together)
+ Promise.race([p,hsleep(hpainted?320:900)]).then(()=>{if(id!==hq)return;hpainted=1;paintHero(i,n,id)});
+ p.then(s=>{clearTimeout(bt);if(id!==hq)return;hbusy=0;if(s)swapBg(i,s,id);
+  const L=hero.length;if(L>1){hload(hsrc(hero[(n+1)%L]));setTimeout(()=>{if(id===hq)hload(hsrc(hero[(n-1+L)%L]))},1500)}})}
+// autoplay never advances while a picture is still coming, off-screen, or in a background tab
+const auto=()=>{clearInterval(ht);ht=setInterval(()=>{if(document.hidden||!hvis||hbusy||hero.length<2||$("#hx").hidden||!$("#modal").hidden)return;setHero(hi+1,1)},8000)};
+function growDots(){const d=$("#dots");for(let k=d.children.length;k<hero.length;k++){const e=document.createElement("i");e.dataset.k=k;e.onclick=()=>step(k-hi);d.append(e)}$("#ct").textContent="/"+String(hero.length).padStart(2,"0")}
+function growHero(){growDots();if(matchMedia("(min-width:900px)").matches){const nx=hero[(hi+1)%hero.length];if(nx){$("#ni").src=IMG+"w300"+hbd(nx);$("#nt").textContent=title(nx)}}}
+function startHero(){growDots();setHero(0,1);auto();bindHero()}
+function bindHero(){if(hbound)return;hbound=1;const H=$("#hx");let x0=0,y0=0,t0=0,tr=0;
+ H.addEventListener("touchstart",e=>{const t=e.touches[0];x0=t.clientX;y0=t.clientY;t0=Date.now();tr=e.touches.length===1},{passive:true});
+ // a swipe must be clearly sideways and quick: a slightly slanted page scroll no longer flips the hero
+ H.addEventListener("touchend",e=>{if(!tr)return;tr=0;const t=e.changedTouches[0],dx=t.clientX-x0,dy=t.clientY-y0;if(Math.abs(dx)>46&&Math.abs(dx)>Math.abs(dy)*1.3&&Date.now()-t0<1000)step(dx<0?1:-1,1)},{passive:true});
+ H.addEventListener("touchcancel",()=>{tr=0},{passive:true});
+ addEventListener("keydown",e=>{if(e.key!=="ArrowRight"&&e.key!=="ArrowLeft")return;if(!hvis||!$("#modal").hidden||$("#hx").hidden||/INPUT|SELECT|TEXTAREA/.test((document.activeElement||{}).tagName))return;step(e.key==="ArrowRight"?1:-1,1)});
+ if("IntersectionObserver"in window)new IntersectionObserver(es=>{hvis=es[0].isIntersecting;H.classList.toggle("off",!hvis)},{threshold:.04}).observe(H)}
+const step=(d,clamp)=>{if(hero.length<2||!d||(clamp&&hi+d<0))return;setHero(hi+d,d);auto()};
 $("#hu").onclick=()=>step(-1);$("#hd").onclick=()=>step(1);$("#nxt").onclick=()=>step(1);
-if(!M)$("#hx").addEventListener("mousemove",e=>{tx=(e.clientX/innerWidth-.5)*-30;ty=(e.clientY/innerHeight-.5)*-20;upd()});
+if(!M)$("#hx").addEventListener("mousemove",e=>{tx=(e.clientX/innerWidth-.5)*-30;ty=(e.clientY/innerHeight-.5)*-20;if(!pq)pq=requestAnimationFrame(()=>{pq=0;upd()})},{passive:true});
 let tick;addEventListener("scroll",()=>{if(tick)return;tick=requestAnimationFrame(()=>{tick=0;$("#top").classList.toggle("s",scrollY>30);if(scrollY<innerHeight){py=Math.min(scrollY*.2,60);upd()}})},{passive:true});
 // ---- Rows: lazy-loaded in parallel as you scroll ----
 let RW=[];
@@ -156,12 +179,21 @@ function setup(e){$("#hx").hidden=true;$("#rows").innerHTML=e.message==="key"||e
  if($("#rt"))$("#rt").onclick=()=>location.reload();
  if($("#ksv"))$("#ksv").onclick=()=>{localStorage.setItem("cv_key",$("#kin").value.trim());location.reload()}}
 function heroLogo(i){logoOf(i).then(l=>{if(l&&hero[hi]===i)$("#htitle").innerHTML=`<img class="htl" alt="${esc(title(i))}" src="${l}">`})}
-async function home(){heroItems().then(h=>{hero=h;startHero();h.forEach(i=>{if(!((kind(i)+i.id) in lgc))heroLogo(i)})}).catch(setup);
+const HC="cv_hero3",slim=i=>({id:i.id,media_type:kind(i),title:i.title,name:i.name,tagline:i.tagline,overview:i.overview,vote_average:i.vote_average,release_date:i.release_date,first_air_date:i.first_air_date,runtime:i.runtime,genres:(i.genres||[]).slice(0,2).map(g=>({name:g.name})),poster_path:i.poster_path,backdrop_path:i.backdrop_path,bd:i.bd,bw:i.bw,pt:i.pt,pref:i.pref,fx:i.fx,logo:lgc[kind(i)+i.id]});
+function heroCacheGet(){try{const c=JSON.parse(localStorage.getItem(HC)||"null");if(c&&Date.now()-c.t<6048e5&&Array.isArray(c.h)&&c.h.length>=3&&c.h.every(x=>x&&x.id&&(x.bd||x.backdrop_path)))return c.h}catch{}return null}
+function heroCachePut(h){try{if(h&&h.length>=4)localStorage.setItem(HC,JSON.stringify({t:Date.now(),h:h.slice(0,6).map(slim)}))}catch{}}
+async function home(){let on=0;
+ // first slide appears as soon as ONE title is ready; the rest join the carousel as they arrive
+ const feed=i=>{if(hero.length>=6||hero.some(x=>x.id===i.id&&kind(x)===kind(i)))return;hero.push(i);if(!((kind(i)+i.id) in lgc))heroLogo(i);if(on)growHero();else{on=1;startHero()}};
+ const warm=heroCacheGet();
+ if(warm){warm.forEach(i=>{if(i.logo!=null)lgc[kind(i)+i.id]=i.logo});hero=warm.slice();on=1;startHero();
+  setTimeout(()=>heroItems().then(heroCachePut).catch(()=>{}),SLOW()?30000:7000)} // a fresh mix is prepared quietly for the next visit
+ else heroItems(feed).then(h=>{h.forEach(feed);if(!on)throw Error("No titles loaded");heroCachePut(hero)}).catch(e=>{if(!on)setup(e)});
  RW=buildRows();RW.forEach((r,i)=>{const s=document.createElement("section");s.className="row";s.dataset.i=i;
   s.innerHTML=`<div class="rh"><h2>${r[0]==="In cinemas now"?'<i class="live"></i>':""}${esc(r[0])}</h2><svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></div><div class="strip">${'<div class="card sk"></div>'.repeat(6)}</div><button class="ar l" aria-label="Back"><svg viewBox="0 0 24 24"><path d="m15 5-7 7 7 7"/></svg></button><button class="ar r" aria-label="Next"><svg viewBox="0 0 24 24"><path d="m9 5 7 7-7 7"/></svg></button>`;
   s.querySelector(".rh").onclick=async()=>{if(r[6]){B={path:"",type:"",q:{},f:0,page:1,busy:0,end:1};$("#btitle").textContent=r[0];$("#bar").hidden=true;$("#bgrid").innerHTML="";(await named(r[6])).forEach(i=>$("#bgrid").append(card(i,"")));view("browse");return}reset(r[0],r[1],r[2]||"",r[3]||{},false);view("browse")};s.querySelectorAll(".ar").forEach(b=>b.onclick=()=>{const st=s.querySelector(".strip");st.scrollBy({left:(b.classList.contains("r")?1:-1)*st.clientWidth*.8,behavior:"smooth"})});$("#rows").append(s);io.observe(s)});(()=>{const fr=frRow(),r1=$("#rows").children[1];r1?r1.after(fr):$("#rows").append(fr)})();
 
- if(!(navigator.connection&&navigator.connection.saveData))document.querySelectorAll("#rows .row").forEach((r,k)=>setTimeout(()=>loadRow(r),1200+k*300))}
+ if(!(navigator.connection&&navigator.connection.saveData))document.querySelectorAll("#rows .row").forEach((r,k)=>{if(k<8)setTimeout(()=>loadRow(r),(SLOW()?3000:1500)+k*(SLOW()?900:420))})}
 // ---- Browse: infinite scroll grid (filters, See all, search all use this) ----
 let B={path:"",f:0,page:0,busy:0,end:0,q:{},type:""};
 function reset(t,path,type,q,f,p0,mix){B={path,type,q,f,page:(p0||1)-1,p0:p0||1,mix:!!mix,busy:0,end:0};$("#btitle").textContent=t;$("#bgrid").innerHTML="";$("#bar").hidden=!f;loadMore()}
