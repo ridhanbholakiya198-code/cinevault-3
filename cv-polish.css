@@ -51,7 +51,7 @@ header{padding-left:max(5vw,env(safe-area-inset-left))!important;padding-right:m
 
 /* ===== v29: hero engine + fit fixes ===== */
 /* horizontal swipes belong to the hero (vertical still scrolls the page) */
-#hx{touch-action:pan-y;overscroll-behavior:contain}
+#hx{overflow:clip} /* v34: was touch-action:pan-y + overscroll-behavior:contain on an overflow:hidden box = a scroll container that swallowed vertical swipes. clip = not a scroller at all */
 /* nothing animates while the hero is scrolled out of view */
 #hx.off .hbg{animation-play-state:paused}
 /* text slides in from the side you swiped towards */
