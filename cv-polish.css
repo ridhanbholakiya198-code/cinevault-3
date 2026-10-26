@@ -73,3 +73,6 @@ header{padding-left:max(5vw,env(safe-area-inset-left))!important;padding-right:m
   .bn::before{content:"";position:fixed;left:0;right:0;bottom:0;height:calc(max(12px,env(safe-area-inset-bottom)) + 92px);background:linear-gradient(to top,rgba(6,6,7,.9),rgba(6,6,7,.5) 55%,transparent);pointer-events:none;z-index:-1}
   .hbgs{will-change:auto}
 }
+
+/* v36: the browser must never shift the page on its own while content loads in */
+html,body{overflow-anchor:none}

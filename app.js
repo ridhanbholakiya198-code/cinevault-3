@@ -121,7 +121,7 @@ function setHero(n,dir){const len=hero.length;if(!len)return;n=((n%len)+len)%len
  p.then(s=>{clearTimeout(bt);if(id!==hq)return;hbusy=0;if(s)swapBg(i,s,id);
   const L=hero.length;if(L>1){hload(hsrc(hero[(n+1)%L]));0}})}
 // autoplay never advances while a picture is still coming, off-screen, or in a background tab
-const auto=()=>{clearInterval(ht)}; // no autoplay: the hero only moves when you swipe or tap
+const auto=()=>{clearInterval(ht);ht=setInterval(()=>{if(document.hidden||!hvis||hbusy||hero.length<2||$("#hx").hidden||!$("#modal").hidden)return;setHero(hi+1,1)},8000)};
 function growDots(){const d=$("#dots");for(let k=d.children.length;k<hero.length;k++){const e=document.createElement("i");e.dataset.k=k;e.onclick=()=>step(k-hi);d.append(e)}$("#ct").textContent="/"+String(hero.length).padStart(2,"0")}
 function growHero(){growDots();if(matchMedia("(min-width:900px)").matches){const nx=hero[(hi+1)%hero.length];if(nx){$("#ni").src=IMG+"w300"+hbd(nx);$("#nt").textContent=title(nx)}}}
 function startHero(){growDots();setHero(0,1);auto();bindHero()}
@@ -135,6 +135,12 @@ function bindHero(){if(hbound)return;hbound=1;const H=$("#hx");let x0=0,y0=0,t0=
 const step=(d,clamp)=>{if(hero.length<2||!d||(clamp&&hi+d<0))return;setHero(hi+d,d);auto()};
 $("#hu").onclick=()=>step(-1);$("#hd").onclick=()=>step(1);$("#nxt").onclick=()=>step(1);
 if(!M)$("#hx").addEventListener("mousemove",e=>{tx=(e.clientX/innerWidth-.5)*-30;ty=(e.clientY/innerHeight-.5)*-20;if(!pq)pq=requestAnimationFrame(()=>{pq=0;upd()})},{passive:true});
+// ---- No ghost scrolling: the page only moves when YOU move it (or the app's own scrollTo). Anything else (browser restore, layout anchoring, focus jumps) is put back. ----
+try{history.scrollRestoration="manual"}catch{}
+let lastIn=0,okY=0,okUntil=0;const _st=window.scrollTo.bind(window);
+window.scrollTo=function(){okUntil=performance.now()+1800;return _st.apply(null,arguments)};
+["touchstart","touchmove","touchend","wheel","keydown","pointerdown","pointermove","mousedown"].forEach(e=>addEventListener(e,()=>{lastIn=performance.now()},{capture:true,passive:true}));
+addEventListener("scroll",()=>{const n=performance.now();if(n-lastIn<3500||n<okUntil||!$("#modal").hidden){okY=scrollY;return}if(Math.abs(scrollY-okY)>2)_st({top:okY,behavior:"instant"})},{passive:true});
 let tick;addEventListener("scroll",()=>{if(tick)return;tick=requestAnimationFrame(()=>{tick=0;$("#top").classList.toggle("s",scrollY>30);if(scrollY<innerHeight){py=Math.min(scrollY*.2,60);upd()}})},{passive:true});
 // ---- Rows: lazy-loaded in parallel as you scroll ----
 let RW=[];
