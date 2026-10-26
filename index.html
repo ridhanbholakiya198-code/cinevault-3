@@ -1,4 +1,4 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><script src="cv-debug.js"></script>
+<!doctype html><html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,viewport-fit=cover"><meta name="theme-color" content="#000000"><link rel="manifest" href="/manifest.webmanifest"><link rel="apple-touch-icon" href="/icons/icon-192.png">
 <title>PARDA — Explore films in their own colour</title>
 <meta name="description" content="Explore films and series in their own colour with TMDB exploration, personal watchlists, and Firebase cloud sync.">
@@ -7,21 +7,7 @@
 <link rel="preconnect" href="https://api.themoviedb.org"><link rel="preconnect" href="https://image.tmdb.org"><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Cormorant+Garamond:ital,wght@0,500;1,500&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css"><link rel="stylesheet" href="fx2.css"><link rel="stylesheet" href="cv-filters.css"><link rel="stylesheet" href="cv-menu.css"><link rel="stylesheet" href="addons.css"><link rel="stylesheet" href="cv-polish.css"><link rel="stylesheet" href="cv-curtain.css"></head><body>
-<div id="intro" aria-hidden="true"><i class="cc-g"></i><i class="cc-p cc-l"><b class="cc-w"><span class="cc-n"><u style="--k:0">P</u><u style="--k:1">A</u><u style="--k:2">R</u><u style="--k:3">D</u><u style="--k:4">A</u></span><em class="cc-t">Explore films in their own colour</em></b></i><i class="cc-p cc-r"><b class="cc-w"><span class="cc-n"><u style="--k:0">P</u><u style="--k:1">A</u><u style="--k:2">R</u><u style="--k:3">D</u><u style="--k:4">A</u></span><em class="cc-t">Explore films in their own colour</em></b></i><i class="cc-s"></i></div><script>
-// Parda intro curtain. Inline on purpose: it must start at page start, not after auth.js and its imports have loaded.
-// It waits for the first film (so the reveal is never an empty page) but never longer than MAX. Shown once per visit.
-(function(){var it=document.getElementById("intro");if(!it)return;
-try{if(sessionStorage.getItem("cv_intro")){it.remove();return}sessionStorage.setItem("cv_intro","1")}catch(e){}
-var MIN=1800,MAX=3600,done=false;
-function end(){if(it.isConnected)it.remove()}
-function go(){if(done)return;done=true;it.classList.add("go");
-var r=it.querySelector(".cc-r");if(r)r.addEventListener("animationend",function(e){if(e.animationName==="cc-open-r")end()});setTimeout(end,2800)}
-function ready(){var b=document.querySelector("#hbgs .hbg.on");return!!(b&&b.style.backgroundImage&&b.style.backgroundImage!=="none")}
-(function tick(){if(done)return;var t=performance.now();
-if(t>=MAX)return go();
-if(t>=MIN&&ready())return void setTimeout(go,250);
-setTimeout(tick,80)})()})();
-</script><div class="grain"></div>
+<div id="intro" aria-hidden="true"><i class="cc-g"></i><i class="cc-p cc-l"><b class="cc-w"><span class="cc-n"><u style="--k:0">P</u><u style="--k:1">A</u><u style="--k:2">R</u><u style="--k:3">D</u><u style="--k:4">A</u></span><em class="cc-t">Explore films in their own colour</em></b></i><i class="cc-p cc-r"><b class="cc-w"><span class="cc-n"><u style="--k:0">P</u><u style="--k:1">A</u><u style="--k:2">R</u><u style="--k:3">D</u><u style="--k:4">A</u></span><em class="cc-t">Explore films in their own colour</em></b></i><i class="cc-s"></i></div><div class="grain"></div>
 <header id="top"><a class="logo" href="#" data-v="home">PARDA</a>
 <nav><a href="#" data-v="home">Home</a><a href="#" data-v="movies">Movies</a><a href="#" data-v="series">Series</a><a href="#" data-v="anime">Anime</a><a href="#" data-v="browse">Browse</a><a href="#" data-v="list">My list</a></nav>
 <input id="q" type="search" placeholder="Search any film or series" autocomplete="off">
@@ -66,4 +52,4 @@ setTimeout(tick,80)})()})();
 <button id="sh" aria-label="Share"><svg viewBox="0 0 24 24"><circle cx="18" cy="5" r="2.5"/><circle cx="6" cy="12" r="2.5"/><circle cx="18" cy="19" r="2.5"/><path d="m8.2 10.8 7.6-4.4M8.2 13.2l7.6 4.4"/></svg></button>
 </div><div id="mc"></div></div></div>
 <div id="sheet" class="ov" hidden><div class="sh"><i class="gr"></i><h4>Add to list</h4><p id="shs"></p><div id="sopts"></div></div></div><div id="lsheet" class="ov" hidden><div class="sh"><i class="gr"></i><h4>Share list</h4><p class="shn">Pick what to share. Friends open it straight in Parda.</p><div id="lopts"></div></div></div><div id="simp" class="ov" hidden></div><div id="toast"></div><div id="trl" hidden><button id="trx" aria-label="Close trailer"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg></button><div id="trp"></div></div>
-<script src="config.js"></script><script src="cv-config.js"></script><script src="lists.js"></script><script src="fr.js"></script><script src="app.js"></script><script src="cv-filters.js"></script><script src="cv-menu.js" defer></script><script src="fx2.js" defer></script><script type="module" src="auth.js"></script></body></html>
+<script src="config.js"></script><script src="cv-config.js"></script><script src="lists.js"></script><script src="fr.js"></script><script src="app.js"></script><script src="cv-filters.js"></script><script type="module" src="auth.js"></script><script src="cv-menu.js" defer></script><script src="fx2.js" defer></script><script src="cv-curtain.js" defer></script></body></html>

@@ -20,7 +20,6 @@
       { n: "Browse", k: "browse", a: go("browse") },
       { n: "My list", k: "list", a: go("list") },
       { n: "Add-ons", a: () => window.CVA && CVA.addons && CVA.addons() },
-      { n: "Debug", a: () => window.CVDBG && CVDBG.open() },
       { n: signed ? "Profile" : "Sign in", a: () => acc && acc.click() },
     ];
   }
