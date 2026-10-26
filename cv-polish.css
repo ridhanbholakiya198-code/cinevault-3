@@ -48,3 +48,28 @@ header{padding-left:max(5vw,env(safe-area-inset-left))!important;padding-right:m
 @media(min-width:1700px){.row,.rt,.bar,.tabs,#tabs{padding-left:max(5vw,calc((100vw - 1560px)/2));padding-right:max(5vw,calc((100vw - 1560px)/2))}}
 
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;scroll-behavior:auto!important}}
+
+/* ===== v29: hero engine + fit fixes ===== */
+/* horizontal swipes belong to the hero (vertical still scrolls the page) */
+#hx{overflow:clip} /* v34: was touch-action:pan-y + overscroll-behavior:contain on an overflow:hidden box = a scroll container that swallowed vertical swipes. clip = not a scroller at all */
+/* nothing animates while the hero is scrolled out of view */
+#hx.off .hbg{animation-play-state:paused}
+/* text slides in from the side you swiped towards */
+.hcont.go>*{animation-name:hin;animation-duration:.62s;animation-timing-function:cubic-bezier(.2,.8,.2,1)}
+@keyframes hin{from{opacity:0;transform:translate3d(calc(var(--hd,0)*28px),16px,0)}}
+/* soft-light blending over a moving full-screen picture is very heavy on phone/tablet GPUs: a plain tint looks the same */
+@media(hover:none){.hgr{mix-blend-mode:normal;opacity:.13}}
+/* older Android WebViews (no svh unit) kept a collapsed hero */
+@supports not (height:1svh){#hx{height:92vh}@media(min-width:900px){#hx{height:100vh}}}
+/* small tablets (701-899px): header was squeezing the search box to nothing */
+@media(min-width:701px) and (max-width:899px){header{gap:12px}header nav{gap:12px}header nav a{font-size:13.5px}header nav a[data-v="home"]{display:none}#q{flex:1 1 120px;width:auto;min-width:90px;max-width:280px}}
+
+/* ===== v30: smoothness (fewer layers, no live blur, smaller memory) ===== */
+.row{content-visibility:auto;contain-intrinsic-size:auto 330px}
+.rv{will-change:auto}
+@media(max-width:899px){
+  header.s,.bn{-webkit-backdrop-filter:none!important;backdrop-filter:none!important}
+  header.s{background:rgba(0,0,0,.92)}
+  .bn::before{content:"";position:fixed;left:0;right:0;bottom:0;height:calc(max(12px,env(safe-area-inset-bottom)) + 92px);background:linear-gradient(to top,rgba(6,6,7,.9),rgba(6,6,7,.5) 55%,transparent);pointer-events:none;z-index:-1}
+  .hbgs{will-change:auto}
+}
