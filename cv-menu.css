@@ -40,7 +40,7 @@
 .cvn-l button{display:block;text-align:left;background:none;border:0;color:var(--fg);padding:0;cursor:pointer;-webkit-tap-highlight-color:transparent;transform:translateY(108%);animation:cvn-up .75s cubic-bezier(.2,.8,.2,1) forwards;animation-delay:calc(.62s + var(--i)*.055s)}
 .cvn.out .cvn-l button{animation:none;transform:none}
 @keyframes cvn-up{to{transform:none}}
-.cvn-l b{display:block;font:500 clamp(40px,min(11.5vw,8.4vh),84px)/1.04 "Cormorant Garamond",Georgia,serif;letter-spacing:-.01em;transition:color .25s}
+.cvn-l b{display:block;text-shadow:0 2px 26px #000c,0 0 2px #0006;font:500 clamp(40px,min(11.5vw,8.4vh),84px)/1.04 "Cormorant Garamond",Georgia,serif;letter-spacing:-.01em;transition:color .25s}
 /* colour only: nothing moves or changes width on hover/tap */
 @media(hover:hover){.cvn-l button:hover b{color:var(--accent)}}
 .cvn-l button:active b,.cvn-l button:focus-visible b{color:var(--accent)}.cvn-l button:focus-visible{outline:0}

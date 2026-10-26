@@ -2,7 +2,7 @@
 // so when it opens there is always something to see. Never waits longer than MAX.
 (function () {
   const it = document.getElementById("intro"); if (!it) return;
-  const MIN = 2700, MAX = 4400; // ms since page start: title gets time to be read; slow networks don't wait forever
+  const MIN = 2000, MAX = 4200; // ms since page start: title gets time to be read; slow networks don't wait forever
   let done = false;
   const end = () => { if (it.isConnected) it.remove() };
   function go() {
