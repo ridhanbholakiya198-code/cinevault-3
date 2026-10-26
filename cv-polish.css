@@ -63,3 +63,15 @@ header{padding-left:max(5vw,env(safe-area-inset-left))!important;padding-right:m
 @supports not (height:1svh){#hx{height:92vh}@media(min-width:900px){#hx{height:100vh}}}
 /* small tablets (701-899px): header was squeezing the search box to nothing */
 @media(min-width:701px) and (max-width:899px){header{gap:12px}header nav{gap:12px}header nav a{font-size:13.5px}header nav a[data-v="home"]{display:none}#q{flex:1 1 120px;width:auto;min-width:90px;max-width:280px}}
+
+/* ===== v30: smoothness (fewer layers, no live blur, smaller memory) ===== */
+.row{content-visibility:auto;contain-intrinsic-size:auto 330px}
+.rv{will-change:auto}
+.cc-b{animation:none!important;transform:scale(1.04)!important;will-change:opacity}
+@media(max-width:899px){
+  header.s,.bn{-webkit-backdrop-filter:none!important;backdrop-filter:none!important}
+  header.s{background:rgba(0,0,0,.92)}
+  .bn{background:rgba(8,8,9,.94)}
+  .hbg.out{animation:none}
+  .hbgs{will-change:auto}
+}

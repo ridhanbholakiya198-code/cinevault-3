@@ -42,7 +42,7 @@ let hero=[],hi=0,ht,tx=0,ty=0,py=0,hl=0,hq=0;
 const BRFP=[230,191,144,234,202,163,236,206,170,239,209,176,241,210,176,244,215,183,245,216,184,246,216,182,246,214,176,245,213,173,243,209,162,242,208,162,240,207,162,239,205,161,236,200,150,234,191,137,227,176,121,230,185,133,232,193,144,233,194,147,232,188,134,238,205,161,239,206,161,239,203,151,235,191,128,236,193,131,233,186,121,237,197,139,236,196,139,233,187,128,227,170,105,228,171,109,148,84,37,182,111,52,216,141,67,215,136,54,220,143,61,226,159,82,228,163,87,229,162,83,224,149,61,225,153,69,221,143,52,226,154,69,227,154,70,215,129,36,210,118,23,214,131,47,155,78,12,159,75,7,193,98,9,195,97,5,194,101,9,198,100,7,202,102,7,201,104,10,198,97,5,189,96,8,181,90,8,182,90,7,171,80,6,170,79,5,157,72,6,152,67,5,143,64,8,139,63,8,111,49,10,94,45,13,90,40,10,111,49,9,143,64,7,132,62,17,139,61,12,118,52,13,128,54,9,134,59,12,134,57,9,133,54,5,123,50,7,128,53,7,108,43,7,103,43,8,99,42,9,111,47,8,110,47,7,123,54,11,144,69,16,119,65,24,133,67,17,119,63,23,158,99,61,148,93,59,134,85,55,160,98,58,123,58,18,117,52,12,110,48,11,115,50,10,123,54,9,126,57,12,133,62,13,135,63,14,131,60,14,122,57,14,123,56,11,87,44,18,73,44,26,31,19,13,34,21,14,27,16,12,73,35,13,122,57,17,126,58,12,130,60,13,127,58,14,116,52,12,113,47,8,110,45,7,106,43,7,107,45,9,103,43,8,70,31,10,32,19,12,30,19,13,58,35,23,44,22,11,90,37,9,93,38,9,130,60,13,123,56,13,112,48,10,105,44,9,105,44,9,106,44,8,101,42,8,101,42,7,103,44,8,92,38,8,76,33,8,63,28,8,60,29,11,70,31,9,82,34,9,90,37,9];
 const HERO=[["Blade Runner 2049",2017,{ref:BRFP,fx:"56%"}],["Dune",2021],["Stalker",1979],["2001: A Space Odyssey",1968],["Fallen Angels",1995]];
 const upd=()=>$("#hbgs").style.transform=`translate3d(${tx}px,${py+ty}px,0)`,day=n=>new Date(Date.now()-n*864e5).toISOString().slice(0,10);
-const hm=m=>m?`${Math.floor(m/60)}h ${m%60}m`:"",hbd=i=>i.bd||i.backdrop_path,hsrc=i=>M&&i.pt&&!i.pref?IMG+"w780"+i.pt:IMG+(M&&i.bw&&i.bw<=2560&&!SLOW()?"original":"w1280")+hbd(i);
+const STRONG=(navigator.deviceMemory||4)>=8&&(navigator.hardwareConcurrency||4)>=8&&!/Android/.test(navigator.userAgent||""),hm=m=>m?`${Math.floor(m/60)}h ${m%60}m`:"",hbd=i=>i.bd||i.backdrop_path,hsrc=i=>M&&i.pt&&!i.pref?IMG+"w780"+i.pt:IMG+(STRONG&&M&&i.bw&&i.bw<=2560&&!SLOW()?"original":"w1280")+hbd(i);
 function fpOf(im){const c=document.createElement("canvas");c.width=16;c.height=9;const x=c.getContext("2d");x.drawImage(im,0,0,16,9);return x.getImageData(0,0,16,9).data}
 function bestMatch(list,fp){return Promise.all(list.map(b=>new Promise(res=>{const im=new Image();im.crossOrigin="anonymous";
   im.onload=()=>{try{const d=fpOf(im);let e=0,j=0;for(let k=0;k<d.length;k++){if(k%4===3)continue;e+=(d[k]-fp[j++])**2}res([e,b])}catch{res([Infinity,b])}};im.onerror=()=>res([Infinity,b]);im.src=IMG+"w300"+b.file_path}))).then(r=>{r.sort((a,b)=>a[0]-b[0]);return r[0]&&r[0][0]<Infinity?r[0][1]:null})}
@@ -110,7 +110,7 @@ function paintHero(i,n,id){const c=$(".hcont");c.style.setProperty("--hd",hdir);
  dominant(i.poster_path).then(c=>{if(id===hq)root.style.setProperty("--accent",c)})}
 function swapBg(i,s,id){const A=[$("#hbgA"),$("#hbgB")],cu=A[hl],nw=A[1-hl];if(cu.classList.contains("on")&&cu.dataset.s===s)return;
  hl=1-hl;clearTimeout(nw._f);nw.className="hbg";void nw.offsetWidth;nw.style.backgroundImage=`url(${s})`;nw.style.backgroundPosition=(i.fx||"50%")+" 50%";nw.dataset.s=s;
- if(M&&i.pref)hload(IMG+"original"+hbd(i)).then(h=>{if(h&&id===hq&&nw.classList.contains("on"))nw.style.backgroundImage=`url(${h})`});
+ if(STRONG&&M&&i.pref)hload(IMG+"original"+hbd(i)).then(h=>{if(h&&id===hq&&nw.classList.contains("on"))nw.style.backgroundImage=`url(${h})`});
  nw.classList.add("on");cu.classList.remove("on");cu.classList.add("out");
  // give the decoded picture back once it has faded out (this is what keeps low-RAM phones from killing the tab)
  cu._f=setTimeout(()=>{if(!cu.classList.contains("on")){cu.style.backgroundImage="none";cu.dataset.s=""}},1700)}
@@ -119,7 +119,7 @@ function setHero(n,dir){const len=hero.length;if(!len)return;n=((n%len)+len)%len
  // text and dots follow at once (a cached picture arrives within the grace time, so both appear together)
  Promise.race([p,hsleep(hpainted?320:900)]).then(()=>{if(id!==hq)return;hpainted=1;paintHero(i,n,id)});
  p.then(s=>{clearTimeout(bt);if(id!==hq)return;hbusy=0;if(s)swapBg(i,s,id);
-  const L=hero.length;if(L>1){hload(hsrc(hero[(n+1)%L]));setTimeout(()=>{if(id===hq)hload(hsrc(hero[(n-1+L)%L]))},1500)}})}
+  const L=hero.length;if(L>1){hload(hsrc(hero[(n+1)%L]));0}})}
 // autoplay never advances while a picture is still coming, off-screen, or in a background tab
 const auto=()=>{clearInterval(ht);ht=setInterval(()=>{if(document.hidden||!hvis||hbusy||hero.length<2||$("#hx").hidden||!$("#modal").hidden)return;setHero(hi+1,1)},8000)};
 function growDots(){const d=$("#dots");for(let k=d.children.length;k<hero.length;k++){const e=document.createElement("i");e.dataset.k=k;e.onclick=()=>step(k-hi);d.append(e)}$("#ct").textContent="/"+String(hero.length).padStart(2,"0")}
@@ -161,7 +161,7 @@ function buildRows(){const x=taste(),[first,...rest]=BASE,my=[],v=x.v[0],tl=topO
  return[first,...my,...rest]}
 // Resolve a fixed title list to cards (cached by api()); skips anything TMDB can't find
 async function named(list){const ck="n:"+list.map(x=>x[0]).join("|");
- try{const c=JSON.parse(localStorage.getItem(ck)||"null");if(c&&Date.now()-c.t<6048e5)return c.j}catch{}
+ try{const c=JSON.parse(localStorage.getItem(ck)||"null");if(c&&Date.now()-c.t<216e5)return c.j}catch{}
  const one=async([q,t,y,alt])=>{const tr=async(qq,yy)=>{const d=await api("/search/"+t,{query:qq,...(yy?{first_air_date_year:yy}:{})});return d.results.find(z=>z.poster_path)};
   try{const i=(y&&await tr(q,y))||await tr(q)||(alt&&await tr(alt));return i?{id:i.id,name:i.name||i.title,title:i.title||i.name,poster_path:i.poster_path,vote_average:i.vote_average,media_type:t}:null}catch{return null}};
  const j=(await Promise.all(list.map(one))).filter(Boolean);if(j.length>=list.length-2)try{localStorage.setItem(ck,JSON.stringify({t:Date.now(),j}))}catch{}return j}
@@ -180,15 +180,15 @@ function setup(e){$("#hx").hidden=true;$("#rows").innerHTML=e.message==="key"||e
  if($("#ksv"))$("#ksv").onclick=()=>{localStorage.setItem("cv_key",$("#kin").value.trim());location.reload()}}
 function heroLogo(i){logoOf(i).then(l=>{if(l&&hero[hi]===i)$("#htitle").innerHTML=`<img class="htl" alt="${esc(title(i))}" src="${l}">`})}
 const HC="cv_hero3",slim=i=>({id:i.id,media_type:kind(i),title:i.title,name:i.name,tagline:i.tagline,overview:i.overview,vote_average:i.vote_average,release_date:i.release_date,first_air_date:i.first_air_date,runtime:i.runtime,genres:(i.genres||[]).slice(0,2).map(g=>({name:g.name})),poster_path:i.poster_path,backdrop_path:i.backdrop_path,bd:i.bd,bw:i.bw,pt:i.pt,pref:i.pref,fx:i.fx,logo:lgc[kind(i)+i.id]});
-function heroCacheGet(){try{const c=JSON.parse(localStorage.getItem(HC)||"null");if(c&&Date.now()-c.t<6048e5&&Array.isArray(c.h)&&c.h.length>=3&&c.h.every(x=>x&&x.id&&(x.bd||x.backdrop_path)))return c.h}catch{}return null}
+function heroCacheGet(){try{const c=JSON.parse(localStorage.getItem(HC)||"null");if(c&&Date.now()-c.t<216e5&&Array.isArray(c.h)&&c.h.length>=3&&c.h.every(x=>x&&x.id&&(x.bd||x.backdrop_path)))return c.h}catch{}return null}
 function heroCachePut(h){try{if(h&&h.length>=4)localStorage.setItem(HC,JSON.stringify({t:Date.now(),h:h.slice(0,6).map(slim)}))}catch{}}
 const safeHero=()=>{try{startHero()}catch(e){console.error(e);showErr("hero: "+(e&&e.message))}},safeGrow=()=>{try{growHero()}catch(e){console.error(e)}};
 async function home(){let on=0;
  // first slide appears as soon as ONE title is ready; the rest join the carousel as they arrive
  const feed=i=>{if(hero.length>=6||hero.some(x=>x.id===i.id&&kind(x)===kind(i)))return;hero.push(i);if(!((kind(i)+i.id) in lgc))heroLogo(i);if(on)safeGrow();else{on=1;safeHero()}};
  const warm=heroCacheGet();
- if(warm){warm.forEach(i=>{if(i.logo!=null)lgc[kind(i)+i.id]=i.logo});hero=warm.slice();on=1;safeHero();
-  setTimeout(()=>heroItems().then(heroCachePut).catch(()=>{}),SLOW()?30000:7000)} // a fresh mix is prepared quietly for the next visit
+ if(warm){warm.forEach(i=>{if(i.logo!=null)lgc[kind(i)+i.id]=i.logo});hero=warm.slice().sort(()=>Math.random()-.5);on=1;safeHero();
+  setTimeout(()=>heroItems().then(heroCachePut).catch(()=>{}),SLOW()?30000:2500)} // a fresh mix is prepared quietly for the next visit
  else heroItems(feed).then(h=>{h.forEach(feed);if(!on)throw Error("No titles loaded");heroCachePut(hero)}).catch(e=>{if(!on)setup(e)});
  RW=buildRows();RW.forEach((r,i)=>{const s=document.createElement("section");s.className="row";s.dataset.i=i;
   s.innerHTML=`<div class="rh"><h2>${r[0]==="In cinemas now"?'<i class="live"></i>':""}${esc(r[0])}</h2><svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></div><div class="strip">${'<div class="card sk"></div>'.repeat(6)}</div><button class="ar l" aria-label="Back"><svg viewBox="0 0 24 24"><path d="m15 5-7 7 7 7"/></svg></button><button class="ar r" aria-label="Next"><svg viewBox="0 0 24 24"><path d="m9 5 7 7-7 7"/></svg></button>`;
