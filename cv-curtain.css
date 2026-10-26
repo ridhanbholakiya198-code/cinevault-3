@@ -67,7 +67,7 @@
 .cc-b::after{content:"";position:absolute;inset:0;
  background:linear-gradient(90deg,#060607f5 0,#060607b8 45%,#06060740 80%,#06060714 100%),linear-gradient(0deg,#060607 2%,#0000 42%),linear-gradient(#060607b0,#0000 20%)}
 @keyframes cc-b-push{from{transform:scale(1.14)}to{transform:scale(1.02)}}
-.lite .cc-b{animation:none;transform:scale(1.04)}
+
 
 @media(prefers-reduced-motion:reduce){
  #intro .cc-p,#intro .cc-s,#intro .cc-g{display:none}

@@ -95,14 +95,14 @@
 
   function open() {
     if (ov || !window.CVA || !CVA.ov) return;
-    const list = items(), mail = (window.CV_SITE || {}).email, now = nowShowing();
+    const list = items(), now = nowShowing();
     closing = false; tok = 0; active = null; heroCap = now.cap; heroOK = !!now.bg; acc0 = root.style.getPropertyValue("--accent");
     ov = CVA.ov.open("menu", "cvn");
     ov._onclose = () => { tok++; restoreAccent(); ov = null; closing = false; layers = []; active = null; btn.classList.remove("on"); btn.setAttribute("aria-expanded", "false") };
     ov.querySelector(".cva-box").innerHTML =
       `<div class="cvn-t"><button type="button" class="cvn-logo" data-m="h" aria-label="Home">PARDA</button><button type="button" class="cvn-x" data-m="x" aria-label="Close menu"><i></i><i></i></button></div>` +
       `<ul class="cvn-l">${list.map((it, i) => `<li style="--i:${i}"><button type="button" data-m="${i}"><b>${esc(it.n)}</b></button></li>`).join("")}</ul>` +
-      `<div class="cvn-f"><div><p class="cvn-n" data-t="${esc(now.cap)}">${esc(now.cap)}</p>${mail ? `<a href="mailto:${esc(mail)}">${esc(mail)}</a>` : `<span>&copy; ${new Date().getFullYear()} Parda</span>`}</div><nav><a href="/terms.html">Terms</a><a href="/privacy.html">Privacy</a><a href="/cookies.html">Cookies</a></nav></div>`;
+      `<div class="cvn-f"><div><p class="cvn-n" data-t="${esc(now.cap)}">${esc(now.cap)}</p><span>&copy; ${new Date().getFullYear()} Parda</span></div><nav><a href="/about.html">About</a><a href="/terms.html">Terms</a><a href="/privacy.html">Privacy</a><a href="/cookies.html">Cookies</a></nav></div>`;
     // the film still (three layers) and a glow sit behind the menu; the curtain and its seam of light sit in front
     ov.insertAdjacentHTML("afterbegin", '<i class="cc-b"></i><i class="cc-b"></i><i class="cc-b"></i><i class="cc-g"></i>');
     ov.insertAdjacentHTML("beforeend", '<i class="cc-p cc-l"></i><i class="cc-p cc-r"></i><i class="cc-s"></i>');

@@ -320,7 +320,7 @@ async function openDetail(t,id,bk){$("#simp").hidden=$("#sheet").hidden=true;nav
  <h2${lg?' class="sr"':""}>${esc(title(d))}</h2><p class="tag">${esc(d.tagline||"")}</p>
  <div class="act"><button class="pill" id="bkm">${BM}<span>Add to list</span></button></div><div id="epi" class="epi" hidden></div>
  <p class="ovt">${esc(d.overview||"No overview yet.")}</p><button class="all" id="rm">Read more</button>
- <nav class="cvt" id="cvt" role="tablist" aria-label="Sections">${t==="tv"?'<button type="button" role="tab" data-cvt="eps">Episodes</button>':""}<button type="button" role="tab" data-cvt="watch">Watch</button><button type="button" role="tab" data-cvt="about">Details</button>${cast?'<button type="button" role="tab" data-cvt="cast">Cast</button>':""}<button type="button" role="tab" data-cvt="more">More like this</button></nav>
+ <nav class="cvt" id="cvt" role="tablist" aria-label="Sections">${t==="tv"?'<button type="button" role="tab" data-cvt="eps">Episodes</button>':""}<button type="button" role="tab" data-cvt="watch">Watch</button><button type="button" role="tab" data-cvt="about">Details</button>${cast?'<button type="button" role="tab" data-cvt="cast">Cast</button>':""}<button type="button" role="tab" data-cvt="mood">Mood</button><button type="button" role="tab" data-cvt="more">More like this</button></nav>
  ${t==="tv"?'<section class="cvt-pane" data-cvpane="eps"><div id="epw"></div></section>':""}
  <section class="cvt-pane" data-cvpane="watch"><div id="wp"></div><div id="wa"></div></section>
  <section class="cvt-pane" data-cvpane="about">${crewHTML(d,t)}<div id="frs"></div>
@@ -328,12 +328,13 @@ async function openDetail(t,id,bk){$("#simp").hidden=$("#sheet").hidden=true;nav
  <div class="stats">${stat("Rating",(d.vote_average||0).toFixed(1)+"/10")}${stat("Votes",(d.vote_count||0).toLocaleString())}${t==="movie"?stat("Budget",money(d.budget))+stat("Box office",money(d.revenue)):stat("Seasons",d.number_of_seasons||"—")+stat("Episodes",d.number_of_episodes||"—")}${run?stat("Runtime",run):""}</div>
  </section>
  ${cast?`<section class="cvt-pane" data-cvpane="cast"><div class="strip cast cvt-cast">${cast}</div></section>`:""}
+ <section class="cvt-pane" data-cvpane="mood"><div id="mood"></div></section>
  <section class="cvt-pane" data-cvpane="more"><div class="strip" id="rec"></div></section></div></div></div>`;
  cvtInit(t);CUR.v=v;CUR.bk=bk;CUR.tc=$(".tr").innerHTML;CUR.bind=()=>{const b=$("#pl");if(b)b.onclick=()=>{$(".tr").classList.add("pl");$(".tr").innerHTML=`<iframe src="https://www.youtube-nocookie.com/embed/${v.key}?autoplay=1&rel=0&playsinline=1" referrerpolicy="strict-origin-when-cross-origin" allow="autoplay;fullscreen;picture-in-picture" allowfullscreen></iframe>`}};CUR.bind();
  $("#rm").onclick=e=>{const o=$(".ovt").classList.toggle("open");e.target.textContent=o?"Less":"Read more"};$("#bkm").onclick=openSheet;
  const st=$("#rec");[...d.recommendations.results,...d.similar.results].filter((x,i,r)=>x.poster_path&&r.findIndex(y=>y.id===x.id)===i).slice(0,20).forEach(x=>st.append(card(x,t)));
  if(st.children.length)inf(st,n=>api(`/${t}/${id}/recommendations`,{page:n}),t);else cvtDrop("more");
- prov(d);try{window.CVA&&CVA.streams&&CVA.streams($("#wa"),{imdbId:(d.external_ids||{}).imdb_id||d.imdb_id,type:t})}catch(e){}frStrip(d,t);const tb=$(".tb");tb.classList.remove("s");tb.style.setProperty("--bk",bk?`url(${bk})`:"none");if(lg)$("#tl").src=lg;else $("#tl").removeAttribute("src");$("#tt").textContent=lg?"":title(d);if(t==="tv")episodes(d);syncTb();if(d.poster_path)dominant(d.poster_path).then(c=>root.style.setProperty("--accent",c));
+ prov(d);try{window.CVA&&CVA.streams&&CVA.streams($("#wa"),{imdbId:(d.external_ids||{}).imdb_id||d.imdb_id,type:t})}catch(e){}frStrip(d,t);try{window.CVMood&&CVMood(d,t)}catch(e){}const tb=$(".tb");tb.classList.remove("s");tb.style.setProperty("--bk",bk?`url(${bk})`:"none");if(lg)$("#tl").src=lg;else $("#tl").removeAttribute("src");$("#tt").textContent=lg?"":title(d);if(t==="tv")episodes(d);syncTb();if(d.poster_path)dominant(d.poster_path).then(c=>root.style.setProperty("--accent",c));
  }catch(e){if(my===tok){$("#mc").innerHTML='<div class="fail"><p class="empty">Could not load details.</p><button class="btn" id="rtd">Try again</button></div>';$("#rtd").onclick=()=>openDetail(t,id,1)}}}
 const BM='<svg viewBox="0 0 24 24"><path d="M6 3h12v18l-6-4.5L6 21z"/></svg>',CHK='<svg viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg>',FOLDER='<svg viewBox="0 0 24 24"><path d="M3 18.5V6a2 2 0 0 1 2-2h4l2 2h7a2 2 0 0 1 2 2v2"/><path d="M5 20h13.6a2 2 0 0 0 1.9-1.4l1.5-5.6a1 1 0 0 0-1-1.2H8a2 2 0 0 0-1.9 1.4z"/></svg>';
 const getE=()=>store.get()[CUR.m.type+CUR.m.id]||{};

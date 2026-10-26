@@ -7,5 +7,5 @@
 .tr::before{z-index:1}
 .tc{z-index:2;transform:translate3d(0,calc(var(--ty,0px)*.55),0);opacity:var(--fo,1)}
 .lite .rv,.lite .rv.in{opacity:1;transform:none;transition:none;will-change:auto}
-.lite .grain{display:none}.lite #modal{backdrop-filter:none!important;-webkit-backdrop-filter:none!important}.lite .hbg{animation:none!important}
+.lite .grain{display:none}.lite #modal{backdrop-filter:none!important;-webkit-backdrop-filter:none!important}
 @media(prefers-reduced-motion:reduce){.rv{opacity:1;transform:none;transition:none}}

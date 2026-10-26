@@ -6,10 +6,10 @@ const RM=matchMedia("(prefers-reduced-motion:reduce)").matches;
 const lite=()=>root.classList.contains("lite");
 
 /* 1. Performance governor — watches frame time during the first scroll; weak phones get the light mode (no heavy motion) */
-(()=>{if(sessionStorage.getItem("cv_lite")||/[?&]lite=1/.test(location.search)||((navigator.deviceMemory||8)<=2||((navigator.hardwareConcurrency||8)<=4&&(navigator.deviceMemory||8)<=4))){root.classList.add("lite");return}
+(()=>{if(sessionStorage.getItem("cv_lite")||/[?&]lite=1/.test(location.search)||((navigator.hardwareConcurrency||8)<=3&&(navigator.deviceMemory||8)<=2)){root.classList.add("lite");return}
  addEventListener("scroll",()=>{let n=0,bad=0,last=0,t0=0;
-  const f=t=>{if(!t0)t0=t;if(last){const d=t-last;if(d<200){n++;if(d>28)bad++}}last=t;
-   if(t-t0<2500)requestAnimationFrame(f);else if(n>40&&bad/n>.35){root.classList.add("lite");sessionStorage.setItem("cv_lite","1")}};
+  const f=t=>{if(!t0)t0=t;if(last){const d=t-last;if(d<200){n++;if(d>45)bad++}}last=t;
+   if(t-t0<2500)requestAnimationFrame(f);else if(n>40&&bad/n>.6){root.classList.add("lite");sessionStorage.setItem("cv_lite","1")}};
   requestAnimationFrame(f)},{once:true,passive:true})})();
 
 /* 2. Circular reveal: the detail opens from the exact spot you tapped */
