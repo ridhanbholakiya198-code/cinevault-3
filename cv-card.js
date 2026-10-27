@@ -8,11 +8,14 @@
 .ccx h3{margin:0 0 16px;font:italic 500 clamp(34px,7vw,60px)/1.05 "Cormorant Garamond",Georgia,serif;font-weight:500}
 .ccx .cp{display:flex;height:46px;border-radius:12px;overflow:hidden}.ccx .cp i{flex:1}.ccx p{margin:12px 0 0;font-size:13px;color:#a8a39a}
 .ccx button{position:relative;z-index:1;margin-top:14px;padding:11px 18px;border:1px solid #ffffff2e;border-radius:99px;background:#ffffff0d;color:inherit;font:500 12px "DM Sans";letter-spacing:.14em;text-transform:uppercase;cursor:pointer}
-.cdov{position:fixed;inset:0;z-index:2147483000;background:#000f;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:16px;animation:cvtIn .35s}
-.cdov .cdi{position:relative;max-height:76vh;max-width:min(92vw,calc(76vh*.5625));aspect-ratio:9/16;border-radius:18px;overflow:hidden;box-shadow:0 40px 120px -30px var(--cg,#000);animation:cdIn 1.1s cubic-bezier(.2,.8,.2,1) both}
-.cdov .cdi img{width:100%;height:100%;display:block}.cdov .cdi::after{content:"";position:absolute;inset:0;background:linear-gradient(110deg,#0000 35%,#ffffff30 50%,#0000 65%);transform:translateX(-120%);animation:cdSw 1.6s .5s ease-out forwards}
+.cdov{position:fixed;inset:0;z-index:2147483000;background:#000f;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:14px;animation:cvtIn .35s}
+.cdov .cdi{position:relative;aspect-ratio:var(--r);width:min(94vw,calc(68vh*var(--r)));border-radius:18px;overflow:hidden;box-shadow:0 40px 120px -30px var(--cg,#000);animation:cdIn 1.1s cubic-bezier(.2,.8,.2,1) both;transition:width .45s cubic-bezier(.2,.8,.2,1)}
+.cdov .cdi img{width:100%;height:100%;display:block;transition:opacity .25s}.cdov .cdi::after{content:"";position:absolute;inset:0;background:linear-gradient(110deg,#0000 35%,#ffffff30 50%,#0000 65%);transform:translateX(-120%);animation:cdSw 1.6s .5s ease-out forwards;pointer-events:none}
 @keyframes cdIn{from{opacity:0;transform:scale(.9) translateY(30px);filter:blur(12px)}}@keyframes cdSw{to{transform:translateX(120%)}}
-.cdov nav{display:flex;gap:10px}.cdov nav button{padding:13px 24px;border-radius:99px;border:1px solid #ffffff2e;background:#ffffff10;color:#f2ede4;font:500 14px "DM Sans";cursor:pointer}.cdov nav button.p{background:var(--accent,#e8905a);border-color:transparent;color:#000}`;
+.cdov .cdrow{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
+.cdov .cdrow button{appearance:none;-webkit-appearance:none;box-sizing:border-box;margin:0;width:auto;height:44px;min-width:0;aspect-ratio:auto;flex:none;padding:0 22px;border-radius:99px;border:1px solid #ffffff2e;background:#ffffff10;color:#f2ede4;font:500 14px/1 "DM Sans",sans-serif;cursor:pointer;display:inline-flex;align-items:center;justify-content:center}
+.cdov .cdrow button.on{background:#f2ede4;color:#050506;border-color:transparent}.cdov .cdrow.ch button{height:36px;padding:0 16px;font-size:12px;letter-spacing:.12em;text-transform:uppercase}
+.cdov .cdrow button.go{background:var(--accent,#e8905a);color:#000;border-color:transparent}`;
   document.head.appendChild(css);
 
   const NAMES = [[15, "Crimson"], [40, "Amber"], [65, "Gold"], [95, "Olive"], [160, "Emerald"], [200, "Teal"], [245, "Azure"], [275, "Indigo"], [320, "Violet"], [345, "Rose"]];
@@ -27,52 +30,72 @@
   function wrap(x, text, maxW, maxLines) { const words = text.split(/\s+/), lines = []; let cur = ""; for (const w of words) { const t = cur ? cur + " " + w : w; if (x.measureText(t).width > maxW && cur) { lines.push(cur); cur = w } else cur = t } lines.push(cur); return lines.slice(0, maxLines) }
   async function fonts() { try { await Promise.all(['400 100px "Bebas Neue"', 'italic 500 40px "Cormorant Garamond"', '500 24px "DM Sans"'].map(f => document.fonts.load(f))) } catch (e) {} }
 
-  async function draw(o) { // o: {kicker,title,sub,imgs:[Image],pal:[hex],mosaic:bool}
+  const DIM = { story: [1080, 1920], square: [1080, 1080], wide: [1920, 1080] };
+  async function draw(o, shape) { // o: {kicker,title,sub,imgs:[Image],pal:[hex],mosaic:bool}
     await fonts();
-    const W = 1080, H = 1920, c = document.createElement("canvas"); c.width = W; c.height = H; const x = c.getContext("2d");
+    const [W, H] = DIM[shape], c = document.createElement("canvas"); c.width = W; c.height = H; const x = c.getContext("2d");
     const mid = o.pal[Math.floor(o.pal.length / 2)] || "#e8905a", acc = o.pal.slice().sort((a, b) => hsv(...rgb(b)).s - hsv(...rgb(a)).s)[0] || "#e8905a";
-    x.fillStyle = "#050506"; x.fillRect(0, 0, W, H);
-    let fs = 168; x.font = `400 ${fs}px "Bebas Neue",sans-serif`; x.letterSpacing = "4px"; let lines = wrap(x, o.title.toUpperCase(), W - 144, 3);
-    while ((lines.length > 2 || lines.some(l => x.measureText(l).width > W - 144)) && fs > 96) { fs -= 12; x.font = `400 ${fs}px "Bebas Neue",sans-serif`; lines = wrap(x, o.title.toUpperCase(), W - 144, 3) }
-    x.letterSpacing = "0px"; const top = Math.min(1130, Math.round(1285 - fs * .92 * lines.length));
-    if (o.mosaic) { const ims = o.imgs.slice(0, 6), gx = 18, cw = (W - 108 - gx * 2) / 3, ch = cw * 1.5; ims.forEach((im, i) => { const col = i % 3, row = Math.floor(i / 3), px = 54 + col * (cw + gx), py = 90 + row * (ch + gx); x.save(); x.beginPath(); x.roundRect(px, py, cw, ch, 22); x.clip(); cover(x, im, px, py, cw, ch); x.restore() }) }
-    else if (o.imgs[0]) cover(x, o.imgs[0], 0, 0, W, top + 60);
-    let g = x.createLinearGradient(0, top - 520, 0, top + 80); g.addColorStop(0, "#05050600"); g.addColorStop(1, "#050506"); x.fillStyle = g; x.fillRect(0, top - 520, W, 600);
-    g = x.createRadialGradient(W / 2, top + 250, 40, W / 2, top + 250, 760); g.addColorStop(0, mid + "55"); g.addColorStop(1, "#0000"); x.fillStyle = g; x.fillRect(0, top - 200, W, 1000);
-    x.fillStyle = "#050506"; x.fillRect(0, 0, W, 0); // keep top clean
-    x.textBaseline = "alphabetic"; x.textAlign = "left";
-    x.font = '500 26px "DM Sans",sans-serif'; x.fillStyle = "#b9b4aa"; x.letterSpacing = "9px"; x.fillText(o.kicker.toUpperCase(), 72, top + 70); x.letterSpacing = "0px";
-    x.font = `400 ${fs}px "Bebas Neue",sans-serif`; x.letterSpacing = "4px"; x.fillStyle = "#f6f1e8"; lines.forEach((l, i) => x.fillText(l, 68, top + 70 + fs * .92 * (i + 1) + 6)); x.letterSpacing = "0px";
-    const ty = top + 70 + fs * .92 * lines.length + 6;
-    x.font = 'italic 500 50px "Cormorant Garamond",Georgia,serif'; x.fillStyle = acc; x.fillText(o.sub, 72, ty + 66);
-    const py = 1480, ph = 190, px = 72, pw = W - 144, n = o.pal.length, bw = pw / n;
-    x.save(); x.beginPath(); x.roundRect(px, py, pw, ph, 28); x.clip(); o.pal.forEach((h, i) => { x.fillStyle = h; x.fillRect(px + i * bw, py, bw + 1, ph) }); x.restore();
-    x.font = '500 24px "DM Sans",sans-serif'; x.fillStyle = "#c9c4ba"; x.textAlign = "center"; o.pal.forEach((h, i) => x.fillText(h, px + i * bw + bw / 2, py + ph + 44)); x.textAlign = "left";
-    x.font = '400 46px "Bebas Neue",sans-serif'; x.fillStyle = "#f6f1e8"; x.letterSpacing = "14px"; x.fillText("PARDA", 72, 1832); x.letterSpacing = "0px";
-    x.font = 'italic 500 32px "Cormorant Garamond",Georgia,serif'; x.fillStyle = "#9a958b"; x.textAlign = "right"; x.fillText("Explore films in their own colour.", W - 72, 1830);
-    x.font = '500 20px "DM Sans",sans-serif'; x.fillText(location.host, W - 72, 1868); x.textAlign = "left";
+    const wide = shape === "wide", story = shape === "story", tx = wide ? 1160 : 72, tw = wide ? 700 : W - 144, kO = story ? 70 : 50;
+    x.fillStyle = "#050506"; x.fillRect(0, 0, W, H); x.textBaseline = "alphabetic"; x.textAlign = "left";
+    let fs = story ? 168 : wide ? 150 : 124; const fit = () => { x.font = `400 ${fs}px "Bebas Neue",sans-serif`; x.letterSpacing = "4px"; return wrap(x, o.title.toUpperCase(), tw, wide ? 3 : 2) };
+    let lines = fit(); while ((lines.some(l => x.measureText(l).width > tw) || (story && lines.length > 2)) && fs > 84) { fs -= 10; lines = fit() } x.letterSpacing = "0px";
+    const lh = fs * .92, top = story ? Math.min(1130, Math.round(1285 - lh * lines.length)) : wide ? Math.min(330, Math.round(560 - lh * lines.length)) : Math.min(560, Math.round(690 - lh * lines.length));
+    const artH = story ? top + 60 : 600;
+    // art
+    if (o.mosaic) {
+      const ims = o.imgs.slice(0, 6), gx = story ? 18 : 16;
+      if (story) { const cw = (W - 108 - gx * 2) / 3, ch = cw * 1.5; ims.forEach((im, i) => rr(x, im, 54 + (i % 3) * (cw + gx), 90 + Math.floor(i / 3) * (ch + gx), cw, ch)) }
+      else if (wide) { const cw = 300, ch = 450; ims.forEach((im, i) => rr(x, im, 60 + (i % 3) * (cw + gx), 70 + Math.floor(i / 3) * (ch + gx), cw, ch)) }
+      else { const cw = (W - 72 - gx * 5) / 6, ch = cw * 1.5; ims.forEach((im, i) => rr(x, im, 36 + i * (cw + gx), 90 + (i % 2) * 40, cw, ch)) }
+    } else if (o.imgs[0]) cover(x, o.imgs[0], 0, 0, wide ? 1200 : W, wide ? H : artH);
+    let g;
+    if (wide) { g = x.createLinearGradient(760, 0, 1200, 0); g.addColorStop(0, "#05050600"); g.addColorStop(1, "#050506"); x.fillStyle = g; x.fillRect(760, 0, 460, H) }
+    else { g = x.createLinearGradient(0, artH - 460, 0, artH + 30); g.addColorStop(0, "#05050600"); g.addColorStop(1, "#050506"); x.fillStyle = g; x.fillRect(0, artH - 460, W, 500) }
+    const gx0 = wide ? 1500 : W / 2, gy0 = wide ? 520 : story ? top + 250 : 760; g = x.createRadialGradient(gx0, gy0, 40, gx0, gy0, wide ? 700 : 760); g.addColorStop(0, mid + "55"); g.addColorStop(1, "#0000"); x.fillStyle = g; x.fillRect(wide ? 1000 : 0, wide ? 0 : top - 200, wide ? 920 : W, wide ? H : 1000);
+    // text
+    x.font = '500 26px "DM Sans",sans-serif'; x.fillStyle = "#b9b4aa"; x.letterSpacing = "9px"; x.fillText(o.kicker.toUpperCase(), tx, top + kO); x.letterSpacing = "0px";
+    x.font = `400 ${fs}px "Bebas Neue",sans-serif`; x.letterSpacing = "4px"; x.fillStyle = "#f6f1e8"; lines.forEach((l, i) => x.fillText(l, tx - 4, top + kO + lh * (i + 1) + 6)); x.letterSpacing = "0px";
+    const ty = top + kO + lh * lines.length + 6;
+    x.font = `italic 500 ${story ? 50 : 44}px "Cormorant Garamond",Georgia,serif`; x.fillStyle = acc; x.fillText(o.sub, tx, ty + 60);
+    // palette
+    const py = story ? 1480 : wide ? 700 : 820, ph = story ? 190 : wide ? 160 : 120, pw = tw, n = o.pal.length, bw = pw / n;
+    x.save(); x.beginPath(); x.roundRect(tx, py, pw, ph, 26); x.clip(); o.pal.forEach((h, i) => { x.fillStyle = h; x.fillRect(tx + i * bw, py, bw + 1, ph) }); x.restore();
+    x.font = `500 ${wide ? 20 : 24}px "DM Sans",sans-serif`; x.fillStyle = "#c9c4ba"; x.textAlign = "center"; o.pal.forEach((h, i) => x.fillText(h, tx + i * bw + bw / 2, py + ph + 40)); x.textAlign = "left";
+    // footer
+    const fy = story ? 1832 : wide ? 1022 : 1036;
+    x.font = '400 46px "Bebas Neue",sans-serif'; x.fillStyle = "#f6f1e8"; x.letterSpacing = "14px"; x.fillText("PARDA", tx, fy); x.letterSpacing = "0px";
+    x.font = `italic 500 ${wide ? 28 : 32}px "Cormorant Garamond",Georgia,serif`; x.fillStyle = "#9a958b"; x.textAlign = "right"; x.fillText("Explore films in their own colour.", tx + pw, fy - 2);
+    if (story || wide) { x.font = '500 20px "DM Sans",sans-serif'; x.fillText(location.host, tx + pw, fy + 36) } x.textAlign = "left";
     return new Promise(r => c.toBlob(b => r(b), "image/png"));
   }
+  function rr(x, im, px, py, cw, ch) { x.save(); x.beginPath(); x.roundRect(px, py, cw, ch, 18); x.clip(); cover(x, im, px, py, cw, ch); x.restore() }
   const rgb = h => [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16));
 
-  function show(blob, name, mid) {
-    const url = URL.createObjectURL(blob), ov = document.createElement("div"); ov.className = "cdov"; ov.style.setProperty("--cg", mid || "#000");
-    ov.innerHTML = `<div class="cdi"><img alt="Colour card" src="${url}"></div><nav><button type="button" class="p" data-a="share">Share</button><button type="button" data-a="save">Save</button><button type="button" data-a="x">Close</button></nav>`;
+  function show(make, name, mid) {
+    let shape = matchMedia("(min-width:700px)").matches ? "wide" : "story", url = "", blob = null; const cache = {};
+    const ov = document.createElement("div"); ov.className = "cdov"; ov.style.setProperty("--cg", mid || "#000");
+    const ar = s => DIM[s][0] / DIM[s][1];
+    ov.innerHTML = `<div class="cdi" style="--r:${ar(shape)}"><img alt="Colour card"></div><div class="cdrow ch">${["story", "square", "wide"].map(k => `<button type="button" data-s="${k}" class="${k === shape ? "on" : ""}">${k}</button>`).join("")}</div><div class="cdrow"><button type="button" class="go" data-a="share">Share</button><button type="button" data-a="save">Save</button><button type="button" data-a="x">Close</button></div>`;
+    const img = ov.querySelector("img"), box = ov.querySelector(".cdi");
+    const apply = async () => { img.style.opacity = .25; blob = cache[shape] || (cache[shape] = await make(shape)); URL.revokeObjectURL(url); url = URL.createObjectURL(blob); img.src = url; img.style.opacity = 1 };
     const close = () => { ov.remove(); URL.revokeObjectURL(url) };
-    ov.onclick = async e => { const b = e.target.closest("button"); if (!b) { if (e.target === ov) close(); return }
-      const a = b.dataset.a; if (a === "x") return close();
-      const file = new File([blob], name + ".png", { type: "image/png" });
+    ov.onclick = async e => {
+      const b = e.target.closest("button"); if (!b) { if (e.target === ov) close(); return }
+      if (b.dataset.s) { shape = b.dataset.s; ov.querySelectorAll("[data-s]").forEach(z => z.classList.toggle("on", z === b)); box.style.setProperty("--r", ar(shape)); return apply() }
+      const a = b.dataset.a; if (a === "x") return close(); if (!blob) return;
+      const file = new File([blob], name + "-" + shape + ".png", { type: "image/png" });
       if (a === "share" && navigator.canShare && navigator.canShare({ files: [file] })) { try { await navigator.share({ files: [file], title: "Parda" }) } catch (er) {} return }
-      const l = document.createElement("a"); l.href = url; l.download = name + ".png"; document.body.append(l); l.click(); l.remove() };
-    document.body.append(ov);
+      const l = document.createElement("a"); l.href = url; l.download = file.name; document.body.append(l); l.click(); l.remove();
+    };
+    document.body.append(ov); apply();
   }
   const slug = s => String(s).toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
 
   window.CVCard = {
     async film(o) { // {title,year,type,stills:[path],pal:[hex]}
       const imgs = (await Promise.all(o.stills.map(p => load(IMG + "w1280" + p)))).filter(Boolean);
-      const b = await draw({ kicker: "The colour of", title: o.title, sub: [o.year, o.type === "tv" ? "Series" : "Film"].filter(Boolean).join("  ·  "), imgs, pal: o.pal });
-      show(b, "parda-" + slug(o.title), o.pal[Math.floor(o.pal.length / 2)]);
+      const spec = { kicker: "The colour of", title: o.title, sub: [o.year, o.type === "tv" ? "Series" : "Film"].filter(Boolean).join("  ·  "), imgs, pal: o.pal };
+      show(sh => draw(spec, sh), "parda-" + slug(o.title), o.pal[Math.floor(o.pal.length / 2)]);
     },
     async listHook(all) {
       const list = document.getElementById("list"), tabs = document.getElementById("tabs"); if (!list || !tabs) return;
@@ -84,7 +107,7 @@
       if (!box) { box = document.createElement("div"); box.id = "cinemaColour"; box.className = "ccx"; tabs.before(box) }
       box.dataset.k = key; box.style.setProperty("--cg", hs[Math.floor(hs.length / 2)]);
       box.innerHTML = `<small>YOUR CINEMA COLOUR</small><h3>${name}</h3><div class="cp">${hs.map(h => `<i style="background:${h}"></i>`).join("")}</div><p>Read from the posters of ${ims.length} titles in your list.</p><button type="button">Create card</button>`;
-      box.querySelector("button").onclick = async () => { const big = (await Promise.all(items.map(i => load(IMG + "w342" + i.poster)))).filter(Boolean); const b = await draw({ kicker: "My cinema colour", title: name, sub: "from " + ims.length + " titles I saved", imgs: big, pal: hs, mosaic: true }); show(b, "parda-my-cinema-colour", hs[Math.floor(hs.length / 2)]) };
+      box.querySelector("button").onclick = async () => { const big = (await Promise.all(items.map(i => load(IMG + "w342" + i.poster)))).filter(Boolean); const spec = { kicker: "My cinema colour", title: name, sub: "from " + ims.length + " titles I saved", imgs: big, pal: hs, mosaic: true }; show(sh => draw(spec, sh), "parda-my-cinema-colour", hs[Math.floor(hs.length / 2)]) };
     }
   };
 })();
