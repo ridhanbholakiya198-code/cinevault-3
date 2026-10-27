@@ -76,3 +76,6 @@ header{padding-left:max(5vw,env(safe-area-inset-left))!important;padding-right:m
 
 /* v36: the browser must never shift the page on its own while content loads in */
 html,body{overflow-anchor:none}
+
+/* v46: calm Futura-style section headings (Kubrick/2001 voice). Film titles stay Bebas, emotion lines stay Cormorant. */
+.row h2,.rt{font:500 clamp(17px,2.1vw,27px)/1.25 "Jost","Bebas Neue",sans-serif;letter-spacing:.32em;text-transform:uppercase}
