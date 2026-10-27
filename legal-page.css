@@ -24,3 +24,6 @@ code{background:#ffffff14;border-radius:5px;padding:1px 6px;font-size:.9em}
 .lg-foot{border-top:1px solid var(--line);margin-top:48px;padding-top:20px;color:var(--mute);font-size:13px}
 .lg-foot a{color:var(--mute);margin-right:16px}
 @media print{body{background:#fff;color:#000}.lg-top,.lg-tabs,.toc{display:none}p,li{color:#000}}
+
+.logo{display:inline-flex;align-items:center;gap:.5em}.logo .lm{width:.92em;height:.92em;flex:none;margin-top:-.06em}
+.lg-logo{display:inline-flex;align-items:center;gap:.5em}.lg-logo .lm{width:.92em;height:.92em;flex:none}

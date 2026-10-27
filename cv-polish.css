@@ -79,3 +79,5 @@ html,body{overflow-anchor:none}
 
 /* v46: calm Futura-style section headings (Kubrick/2001 voice). Film titles stay Bebas, emotion lines stay Cormorant. */
 .row h2,.rt{font:500 clamp(17px,2.1vw,27px)/1.25 "Jost","Bebas Neue",sans-serif;letter-spacing:.32em;text-transform:uppercase}
+
+.logo{display:inline-flex;align-items:center;gap:.5em}.logo .lm{width:.92em;height:.92em;flex:none;margin-top:-.06em}

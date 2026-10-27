@@ -1,14 +1,13 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#000000">
 <title>About | PARDA</title><meta name="description" content="Parda is an independent, cinematic way to discover films, series and anime, keep track of what you watch and see where to stream it."><meta name="robots" content="index,follow">
-<meta property="og:title" content="About PARDA"><meta property="og:description" content="Explore films in their own colour."><link rel="icon" href="/icons/icon-192.png">
-<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Cormorant+Garamond:ital,wght@0,500;1,500&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
+<meta property="og:title" content="About PARDA"><meta property="og:description" content="Explore films in their own colour."><link rel="icon" href="/logo/favicon.svg" type="image/svg+xml">
+<link rel="preload" href="/fonts/bebas-neue.woff" as="font" type="font/woff" crossorigin><link rel="preload" href="/fonts/dm-sans.woff" as="font" type="font/woff" crossorigin><link rel="stylesheet" href="/fonts/fonts.css">
 <style>
 :root{--bg:#050506;--fg:#f2ede4;--mute:#a09b90;--line:#ffffff1c;--ac:#e8905a;--pad:clamp(22px,6vw,96px)}
 *{box-sizing:border-box}html{scroll-behavior:smooth;background:#000;-webkit-text-size-adjust:100%}
 body{margin:0;background:var(--bg);color:var(--fg);font:400 clamp(16px,1.1vw + 12px,19px)/1.75 "DM Sans",system-ui,sans-serif;overflow-x:hidden}
-a{color:inherit}
+a{color:inherit}.logo{display:inline-flex;align-items:center;gap:.5em}.logo .lm{width:.92em;height:.92em;flex:none;margin-top:-.06em}
 .top{position:fixed;inset:0 0 auto;z-index:20;display:flex;align-items:center;justify-content:space-between;padding:calc(14px + env(safe-area-inset-top,0px)) max(var(--pad),env(safe-area-inset-right)) 14px max(var(--pad),env(safe-area-inset-left));background:linear-gradient(#000c,#0000)}
 .logo{font:400 26px "Bebas Neue",sans-serif;letter-spacing:.2em;text-decoration:none}
 .back{font-size:14px;color:var(--mute);text-decoration:none;border:1px solid var(--line);border-radius:99px;padding:7px 16px;background:#0008}
@@ -63,7 +62,7 @@ footer a{text-decoration:none}footer a:hover{color:var(--fg)}footer span{margin-
 @media(max-width:560px){.bar{height:6vh}.back{padding:6px 12px}}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-delay:0s!important;transition-duration:.01ms!important}.rv,.kick,.tag,.sub,h1 u{opacity:1;transform:none;filter:none}}
 </style></head><body>
-<header class="top"><a class="logo" href="/">PARDA</a><a class="back" href="/">Back to Parda</a></header>
+<header class="top"><a class="logo" href="/"><svg class="lm" viewBox="0 0 64 64" aria-hidden="true"><defs><linearGradient id="lt" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffd9a0"/><stop offset=".38" stop-color="#e8905a"/><stop offset=".7" stop-color="#b8456f"/><stop offset="1" stop-color="#2f8c9c"/></linearGradient><linearGradient id="dl" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#8d857a"/><stop offset=".22" stop-color="#f6f1e8"/><stop offset=".45" stop-color="#b9b1a5"/><stop offset=".68" stop-color="#f6f1e8"/><stop offset=".88" stop-color="#cfc7ba"/><stop offset="1" stop-color="#f6f1e8"/></linearGradient><linearGradient id="dr" x1="1" y1="0" x2="0" y2="0"><stop offset="0" stop-color="#8d857a"/><stop offset=".22" stop-color="#f6f1e8"/><stop offset=".45" stop-color="#b9b1a5"/><stop offset=".68" stop-color="#f6f1e8"/><stop offset=".88" stop-color="#cfc7ba"/><stop offset="1" stop-color="#f6f1e8"/></linearGradient><clipPath id="cp"><rect x="5" y="9" width="54" height="50" rx="2"/></clipPath></defs><g clip-path="url(#cp)"><rect x="5" y="9" width="54" height="50" fill="url(#lt)"/><path d="M5 9H28C26.6 22 31 40 24.5 59H5Z" fill="url(#dl)"/><path d="M59 9H36C37.4 22 33 40 39.5 59H59Z" fill="url(#dr)"/><path d="M13 9C14.8 24 11.4 42 14 59M21 9C22.6 24 19.2 42 21 59M51 9C49.2 24 52.6 42 50 59M43 9C41.4 24 44.8 42 43 59" stroke="#0007" stroke-width="1.1" fill="none" stroke-linecap="round"/></g><path d="M2 3.5H62V9.2C48 11.4 16 11.4 2 9.2Z" fill="#f6f1e8"/><path d="M2 9.2C16 11.4 48 11.4 62 9.2" stroke="#0004" stroke-width=".8" fill="none"/></svg>PARDA</a><a class="back" href="/">Back to Parda</a></header>
 <div class="hero"><div class="aur"><i></i><i></i><i></i></div><div class="spot"></div><div class="bar t"></div><div class="bar b"></div>
 <div><p class="kick">About</p><h1 aria-label="PARDA"><u style="--k:0">P</u><u style="--k:1">A</u><u style="--k:2">R</u><u style="--k:3">D</u><u style="--k:4">A</u></h1>
 <p class="tag">Explore films in their own colour.</p><p class="sub">A cinematic way to discover films, series and anime, keep track of what you watch, and see where to stream it.</p></div><i class="scroll"></i></div>
