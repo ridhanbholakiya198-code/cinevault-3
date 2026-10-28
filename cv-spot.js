@@ -61,9 +61,9 @@
     sec.style.setProperty("--d", D / 1000 + "s");
     const fr = sec.querySelector(".sp-frame"); let x0 = 0, y0 = 0, moved = false;
     fr.addEventListener("touchstart", e => { x0 = e.touches[0].clientX; y0 = e.touches[0].clientY; moved = false }, { passive: true });
-    fr.addEventListener("touchend", e => { const t = e.changedTouches[0], dx = t.clientX - x0, dy = t.clientY - y0; if (Math.abs(dx) > 45 && Math.abs(dx) > Math.abs(dy) * 1.4) { moved = true; paused = Date.now() + 9000; go(idx + (dx < 0 ? 1 : -1)) } }, { passive: true });
+    fr.addEventListener("touchend", e => { const t = e.changedTouches[0], dx = t.clientX - x0, dy = t.clientY - y0; if (Math.abs(dx) > 45 && Math.abs(dx) > Math.abs(dy) * 1.4) { moved = true; paused = Date.now() + 9000; try { window.CVSound && CVSound.swipe() } catch (e) {} go(idx + (dx < 0 ? 1 : -1)) } }, { passive: true });
     sec.addEventListener("click", e => {
-      const t = e.target.closest("[data-t]"); if (t) { paused = Date.now() + 9000; return go(+t.dataset.t) }
+      const t = e.target.closest("[data-t]"); if (t) { paused = Date.now() + 9000; try { window.CVSound && CVSound.swipe() } catch (e) {} return go(+t.dataset.t) }
       if (moved) { moved = false; return } const it = data[idx]; try { openDetail(kind(it), it.id) } catch (x) {}
     });
     new IntersectionObserver(es => es.forEach(e => { visible = e.isIntersecting; if (e.isIntersecting) sec.classList.add("in") }), { threshold: .35 }).observe(sec);

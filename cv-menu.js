@@ -20,6 +20,7 @@
       { n: "Browse", k: "browse", a: go("browse") },
       { n: "My list", k: "list", a: go("list") },
       { n: "Tonight", a: () => window.CVTonight && CVTonight.open() },
+      { n: "Sound · " + (window.CVSound ? CVSound.label() : "Off"), a: () => window.CVSound && CVSound.cycle() },
       { n: "Add-ons", a: () => window.CVA && CVA.addons && CVA.addons() },
       { n: signed ? "Profile" : "Sign in", a: () => acc && acc.click() },
     ];

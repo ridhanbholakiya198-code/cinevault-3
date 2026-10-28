@@ -72,6 +72,7 @@
   const rgb = h => [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16));
 
   function show(make, name, mid) {
+    try { window.CVSound && CVSound.shutter() } catch (e) {}
     let shape = matchMedia("(min-width:700px)").matches ? "wide" : "story", url = "", blob = null; const cache = {};
     const ov = document.createElement("div"); ov.className = "cdov"; ov.style.setProperty("--cg", mid || "#000");
     const ar = s => DIM[s][0] / DIM[s][1];
