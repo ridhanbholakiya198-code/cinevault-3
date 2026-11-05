@@ -175,9 +175,11 @@ async function named(list){const ck="n:"+list.map(x=>x[0]).join("|");
  const j=(await Promise.all(list.map(one))).filter(Boolean);if(j.length>=list.length-2)try{localStorage.setItem(ck,JSON.stringify({t:Date.now(),j}))}catch{}return j}
 function inf(st,load,ty,box,vert,p0){let p=p0==null?1:p0,busy=0,end=0;const sc=box||st,more=async()=>{if(busy||end)return;busy=1;
  try{const d=await load(++p);if(!d.results.length||p>=Math.min(d.total_pages||1,25))end=1;d.results.filter(i=>i.poster_path&&i.media_type!=="person").forEach(i=>st.append(card(i,ty)))}catch{p--}busy=0};
- sc.addEventListener("scroll",()=>{if(vert?sc.scrollTop+sc.clientHeight>sc.scrollHeight-700:sc.scrollLeft+sc.clientWidth>sc.scrollWidth-700)more()},{passive:true});return more}
+ const h=()=>{if(vert?sc.scrollTop+sc.clientHeight>sc.scrollHeight-700:sc.scrollLeft+sc.clientWidth>sc.scrollWidth-700)more()};if(sc._ih)sc.removeEventListener("scroll",sc._ih);sc._ih=h;sc.addEventListener("scroll",h,{passive:true});return more}
 async function loadRow(sec){if(sec._l||sec.dataset.i==null)return;sec._l=1;io.unobserve(sec);const[,p,ty,q,,mix,nm]=RW[sec.dataset.i],st=sec.querySelector(".strip");
  try{await heroGate;if(nm){const it=await named(nm);if(!it.length)return sec.remove();st.innerHTML="";it.forEach(i=>st.append(card(i,"")));return}
+  const rm=p.match(/^\/(movie|tv)\/(\d+)\/recommendations$/);
+  if(rm){const dd=await api(`/${rm[1]}/${rm[2]}`,{append_to_response:"keywords,recommendations,similar"}),r=await recFor(dd,rm[1],rm[2],recMode());if(!r.list.length)return sec.remove();st.innerHTML="";r.list.slice(0,20).forEach(i=>st.append(card(i,ty)));inf(st,r.pager,ty);return}
   const[d,u]=await Promise.all([api(p,q||{}),mix?api("/movie/upcoming"):0]);let it=d.results.filter(i=>i.poster_path);if(!it.length&&!u)return sec.remove();
   if(p==="/movie/upcoming"){it=it.filter(i=>i.release_date>day(0)).sort((a,b)=>a.release_date<b.release_date?-1:1).map(i=>({...i,soon:1,media_type:"movie"}));if(!it.length)return sec.remove();st.innerHTML="";it.forEach(i=>st.append(card(i,"")));return}
   if(u){const s=u.results.filter(i=>i.poster_path&&i.release_date>day(0)).slice(0,5).map(i=>({...i,soon:1,media_type:"movie"}));it=it.flatMap((x,k)=>k%4===3&&s.length?[x,s.shift()]:[x])}
@@ -305,9 +307,49 @@ function closeTr(pop){const o=$("#trl");if(!o||o.hidden)return;o.hidden=true;$("
 $("#trx").onclick=()=>closeTr();
 $("#mc").addEventListener("click",e=>{const fb=e.target.closest("[data-f],[data-col]");if(fb){fb.dataset.col?openCollection(+fb.dataset.col):openFranchise(fb.dataset.f);return}const g=e.target.closest("[data-g]");if(g&&CUR.t){openGenre(CUR.t,+g.dataset.g);return}const p=e.target.closest("[data-p]");if(p)openPerson(+p.dataset.p,p.dataset.r)});
 
+/* ---- v53: language-aware "More like this" ----
+   Auto  = same language as the film (TMDB picks first, topped up from discover by keywords / genre / era).
+   World = exactly what TMDB suggests. The choice is remembered and also drives the home "Like <title>" row. */
+const RK="cv_reclang",recMode=()=>{try{return localStorage.getItem(RK)==="world"?"world":"auto"}catch{return"auto"}};
+const lname=c=>{try{return new Intl.DisplayNames(["en"],{type:"language"}).of(c)||""}catch{return""}};
+async function recFor(d,t,id,mode){
+ const uq=a=>a.filter((x,i,r)=>x.poster_path&&String(x.id)!==String(id)&&r.findIndex(y=>y.id===x.id)===i);
+ const raw=uq([...((d.recommendations||{}).results||[]),...((d.similar||{}).results||[])]);
+ let pager=n=>api(`/${t}/${id}/recommendations`,{page:n}),list=raw;const ol=d.original_language;
+ if(mode!=="world"&&ol){
+  const same=raw.filter(x=>x.original_language===ol);let pool=same;
+  if(same.length<12){
+   const yr=+((d.release_date||d.first_air_date||"").slice(0,4))||0,g=(d.genres||[]).slice(0,2).map(x=>x.id).join("|"),dk=t==="tv"?"first_air_date":"primary_release_date",kw=((d.keywords||{}).keywords||(d.keywords||{}).results||[]).slice(0,4).map(x=>x.id).join("|"),base={with_original_language:ol,sort_by:"popularity.desc","vote_count.gte":3};
+   const tries=[kw&&{...base,with_keywords:kw},yr&&g&&{...base,with_genres:g,[dk+".gte"]:(yr-12)+"-01-01",[dk+".lte"]:(yr+12)+"-12-31"},g&&{...base,with_genres:g},base].filter(Boolean);
+   for(const q of tries){let ex=[];try{ex=(await api(`/discover/${t}`,q)).results}catch{}
+    pool=uq([...pool,...ex]);pager=n=>api(`/discover/${t}`,{...q,page:n});if(pool.length>=12)break}
+  }
+  list=pool.length>=6?pool:uq([...pool,...raw.filter(x=>x.original_language!==ol)]);
+ }
+ return{list,pager}}
+function recMount(d,t,id,my){
+ const st=$("#rec");if(!st)return;
+ const ol=d.original_language;let seq=0,mode=recMode();
+ const paint=async()=>{const s=++seq;st.classList.add("rld");let r=null;try{r=await recFor(d,t,id,mode)}catch{}
+  if(s!==seq||my!==tok||!st.isConnected)return;st.classList.remove("rld");
+  if(!r||!r.list.length){if(!st.children.length)cvtDrop("more");return}
+  st.innerHTML="";st.scrollLeft=0;r.list.slice(0,20).forEach(x=>st.append(card(x,t)));inf(st,r.pager,t)};
+ if(ol){
+  const tk=document.createElement("div");tk.className="rtk";
+  tk.innerHTML=`<button class="rtk-s" type="button" aria-haspopup="true" aria-expanded="false" aria-label="Recommendation language"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M3.5 12h17M12 3.5c2.6 2.7 2.6 14.3 0 17M12 3.5c-2.6 2.7-2.6 14.3 0 17"/></svg><span></span></button><div class="rtk-p" role="menu" hidden><div class="rtk-h"><small>Recommendations in</small></div><button class="rtk-o" role="menuitemradio" data-m="auto" type="button"><b>Auto</b><em>${esc(lname(ol)||"This film’s language")} · matches this film</em></button><button class="rtk-o" role="menuitemradio" data-m="world" type="button"><b>Worldwide</b><em>Everything TMDB suggests</em></button></div>`;
+  const sb=tk.querySelector(".rtk-s"),pp=tk.querySelector(".rtk-p");
+  const sync=()=>{sb.querySelector("span").textContent=mode==="auto"?"Auto":"World";tk.querySelectorAll(".rtk-o").forEach(b=>{const on=b.dataset.m===mode;b.classList.toggle("on",on);b.setAttribute("aria-checked",on)})};
+  const close=()=>{tk.classList.remove("open");pp.hidden=true;sb.setAttribute("aria-expanded","false")};
+  tk._close=close;sync();
+  sb.onclick=()=>{const o=pp.hidden;if(o){pp.hidden=false;tk.classList.add("open")}else close();sb.setAttribute("aria-expanded",o)};
+  tk.querySelectorAll(".rtk-o").forEach(b=>b.onclick=()=>{const m=b.dataset.m;close();if(m===mode)return;mode=m;try{localStorage.setItem(RK,m)}catch{}sync();paint()});
+  st.parentNode.append(tk);
+  if(!window._rtkG){window._rtkG=1;addEventListener("pointerdown",e=>document.querySelectorAll(".rtk.open").forEach(k=>{if(!k.contains(e.target)&&k._close)k._close()}),true)}
+ }
+ paint()}
 async function openDetail(t,id,bk){$("#simp").hidden=$("#sheet").hidden=true;navIn(bk,{k:"d",t,id});$("#modal").classList.remove("pp","nosh");if($("#modal").hidden){history.pushState({m:1},"");$("#modal").hidden=false;document.body.style.overflow="hidden"}
  const my=++tok;$("#modal").scrollTop=0;$("#mc").innerHTML='<div class="tr"></div><p class="empty">Loading…</p>';
- try{let d;try{d=await api(`/${t}/${id}`,{append_to_response:"videos,credits,recommendations,similar,images,watch/providers,external_ids"+(t==="tv"?",aggregate_credits":""),include_image_language:"en,null"})}catch(e1){if(my!==tok)return;d=await api(`/${t}/${id}`,{append_to_response:"videos,credits,images,external_ids"+(t==="tv"?",aggregate_credits":""),include_image_language:"en,null"})}if(my!==tok)return;
+ try{let d;try{d=await api(`/${t}/${id}`,{append_to_response:"videos,credits,recommendations,similar,keywords,images,watch/providers,external_ids"+(t==="tv"?",aggregate_credits":""),include_image_language:"en,null"})}catch(e1){if(my!==tok)return;d=await api(`/${t}/${id}`,{append_to_response:"videos,credits,images,external_ids"+(t==="tv"?",aggregate_credits":""),include_image_language:"en,null"})}if(my!==tok)return;
  d.videos=d.videos||{results:[]};d.credits=d.credits||{cast:[],crew:[]};d.recommendations=d.recommendations||{results:[]};d.similar=d.similar||{results:[]};
  const vs=d.videos.results.filter(x=>x.site==="YouTube"),v=vs.find(x=>x.type==="Trailer")||vs.find(x=>x.type==="Teaser")||vs[0],nx=d.next_episode_to_air;
  const stt=t==="tv"?(nx?`Ongoing · next ep ${when(nx.air_date)}`:/Ended|Canceled/.test(d.status)?"Ended":"Returning"):(!d.release_date?"Upcoming":d.release_date>day(0)?`Releases ${fd(d.release_date)}`:"Released");
@@ -332,8 +374,7 @@ async function openDetail(t,id,bk){$("#simp").hidden=$("#sheet").hidden=true;nav
  <section class="cvt-pane" data-cvpane="more"><div class="strip" id="rec"></div></section></div></div></div>`;
  cvtInit(t);CUR.v=v;CUR.bk=bk;CUR.tc=$(".tr").innerHTML;CUR.bind=()=>{const b=$("#pl");if(b)b.onclick=()=>{$(".tr").classList.add("pl");$(".tr").innerHTML=`<iframe src="https://www.youtube-nocookie.com/embed/${v.key}?autoplay=1&rel=0&playsinline=1" referrerpolicy="strict-origin-when-cross-origin" allow="autoplay;fullscreen;picture-in-picture" allowfullscreen></iframe>`}};CUR.bind();
  $("#rm").onclick=e=>{const o=$(".ovt").classList.toggle("open");e.target.textContent=o?"Less":"Read more"};$("#bkm").onclick=openSheet;
- const st=$("#rec");[...d.recommendations.results,...d.similar.results].filter((x,i,r)=>x.poster_path&&r.findIndex(y=>y.id===x.id)===i).slice(0,20).forEach(x=>st.append(card(x,t)));
- if(st.children.length)inf(st,n=>api(`/${t}/${id}/recommendations`,{page:n}),t);else cvtDrop("more");
+ recMount(d,t,id,my);
  prov(d);try{window.CVA&&CVA.streams&&CVA.streams($("#wa"),{imdbId:(d.external_ids||{}).imdb_id||d.imdb_id,type:t})}catch(e){}frStrip(d,t);try{window.CVMood&&CVMood(d,t)}catch(e){}try{window.CVSound&&CVSound.open()}catch(e){}const tb=$(".tb");tb.classList.remove("s");tb.style.setProperty("--bk",bk?`url(${bk})`:"none");if(lg)$("#tl").src=lg;else $("#tl").removeAttribute("src");$("#tt").textContent=lg?"":title(d);if(t==="tv")episodes(d);syncTb();if(d.poster_path)dominant(d.poster_path).then(c=>root.style.setProperty("--accent",c));
  }catch(e){if(my===tok){$("#mc").innerHTML='<div class="fail"><p class="empty">Could not load details.</p><button class="btn" id="rtd">Try again</button></div>';$("#rtd").onclick=()=>openDetail(t,id,1)}}}
 const BM='<svg viewBox="0 0 24 24"><path d="M6 3h12v18l-6-4.5L6 21z"/></svg>',CHK='<svg viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg>',FOLDER='<svg viewBox="0 0 24 24"><path d="M3 18.5V6a2 2 0 0 1 2-2h4l2 2h7a2 2 0 0 1 2 2v2"/><path d="M5 20h13.6a2 2 0 0 0 1.9-1.4l1.5-5.6a1 1 0 0 0-1-1.2H8a2 2 0 0 0-1.9 1.4z"/></svg>';

@@ -203,8 +203,16 @@ export function launch(s, app) {
     location.href = iosLink(app, s.url);
     return "Opening " + (app === "infuse" ? "Infuse" : "VLC") + "… If nothing happens, install it first.";
   }
-  downloadM3u(s.url, s.label);
-  return "Playlist downloaded. Open it with VLC or any player.";
+  // Laptop: try VLC's own vlc:// link first (opens VLC straight away when it is installed).
+  // If the browser never hands over to another app, fall back to downloading an .m3u playlist.
+  let left = false; const mark = () => { left = true };
+  addEventListener("blur", mark, { once: true }); document.addEventListener("visibilitychange", mark, { once: true });
+  const f = document.createElement("iframe"); f.style.display = "none"; f.src = "vlc://" + s.url; document.body.append(f);
+  setTimeout(() => {
+    f.remove(); removeEventListener("blur", mark); document.removeEventListener("visibilitychange", mark);
+    if (!left) downloadM3u(s.url, s.label);
+  }, 2500);
+  return "Opening VLC… if it does not start, a playlist file is downloaded.";
 }
 
 export const linkOf = s => s.kind === "torrent" ? s.magnet : s.kind === "youtube" ? "https://www.youtube.com/watch?v=" + s.id : s.url;

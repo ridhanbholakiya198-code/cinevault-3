@@ -115,7 +115,7 @@ export function createStreamsUI(el, deps) {
         const blocked = s.kind === "direct" && !s.secure;
         l += sheetBtn("browser", ICO.play, "Play in browser", blocked ? "Not possible: this link is http, not https" : s.kind === "torrent" ? "Streams through Webtor" : "Built-in player", blocked ? "disabled" : "");
         if (s.kind === "direct") l += plat === "ios" ? sheetBtn("device", ICO.phone, "Play in device player", "VLC, Infuse")
-          : sheetBtn("app", ICO.phone, "Play in device player", plat === "android" ? "Opens your phone’s app chooser" : "Downloads a playlist for VLC", 'data-app=""');
+          : sheetBtn("app", ICO.phone, "Play in device player", plat === "android" ? "Opens your phone’s app chooser" : "Opens VLC (or downloads a playlist)", 'data-app=""');
         else if (s.kind === "torrent") l += sheetBtn("app", ICO.phone, "Play in device player", "Opens your torrent / streaming app", 'data-app=""');
         else if (s.kind === "youtube") l += sheetBtn("open", ICO.ext, "Open in YouTube", "YouTube app or website");
       }

@@ -26,7 +26,7 @@
   /* ---------- Tonight ---------- */
   const TIME = [["Quick · under 100 min", { "with_runtime.lte": 100, "with_runtime.gte": 60 }], ["Regular · about two hours", { "with_runtime.gte": 100, "with_runtime.lte": 140 }], ["Epic · 2½ hours or more", { "with_runtime.gte": 141 }], ["Any length", {}]];
   const MOOD = [["Feel-good", "35|10749"], ["Edge of my seat", "53|28"], ["Mind-bending", "878|9648"], ["Dark & gritty", "80|27"], ["Epic & grand", "12|14|10752"], ["Surprise me", ""]];
-  const LANG = [["Hindi", "hi"], ["English", "en"], ["Any language", ""]];
+  const LANG = [["Hindi", "hi"], ["Gujarati", "gu"], ["English", "en"], ["Any language", ""]];
   let tn = null;
   function tonight() {
     if (tn) return; const pick = {}; let pool = [], seen = new Set();

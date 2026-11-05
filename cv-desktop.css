@@ -1,0 +1,35 @@
+/* Parda v50 — laptop / iPad fixes (loaded last, overrides only) */
+
+/* 1. Smooth scroll on <html> makes every keyboard / Page-Down scroll animate and queue up -> feels laggy on laptop.
+      "Back to top" already asks for smooth explicitly in JS, so nothing is lost. */
+html{scroll-behavior:auto}
+
+/* 2. Full-screen blend layers that are re-composited on every scroll frame (the main laptop jank) */
+.grain{animation:none;mix-blend-mode:normal;opacity:.035}
+.hgr{mix-blend-mode:normal;opacity:.22}
+
+/* 3. Detail modal: scroll stays inside it, focus ring hidden (JS focuses it so keys work) */
+#modal,.cva-box,.cvf-body,.cva-doc,.pb{outline:0}
+#modal{overscroll-behavior:contain}
+@media(min-width:900px){
+  /* live blur over the whole page + huge glow shadow = heavy while the modal scrolls */
+  #modal{background:rgba(0,0,0,.94);-webkit-backdrop-filter:none;backdrop-filter:none}
+  .mbox{box-shadow:0 30px 80px -20px #000}
+  /* laptop cards are taller than the 330px guess -> scrollbar jumped while scrolling */
+  .row{contain-intrinsic-size:auto 440px}
+}
+
+/* 4. Filter panel: visible thin scrollbar so mouse users can see / drag it */
+.cvf-body{scrollbar-width:thin;scrollbar-color:#ffffff40 transparent}
+.cvf-body::-webkit-scrollbar{display:block;width:8px}
+.cvf-body::-webkit-scrollbar-thumb{background:#ffffff40;border-radius:8px}
+
+/* 5. iPad portrait (701–899px): there is no bottom nav here, but the layout still reserved space for it
+      (dark 92px band + big empty gaps). */
+@media(min-width:701px) and (max-width:899px){
+  body::after,.bn::before{display:none}
+  .hside{bottom:calc(36px + env(safe-area-inset-bottom))}
+  .hcont{bottom:calc(100px + env(safe-area-inset-bottom))}
+  .mi{padding-bottom:40px!important}
+  #foot{padding-bottom:32px}
+}

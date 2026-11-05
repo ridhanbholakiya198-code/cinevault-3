@@ -21,7 +21,7 @@
   const YEARS = [["new", "Last 12 months"], ["2020", "2020s"], ["2010", "2010s"], ["2000", "2000s"], ["1990", "90s"], ["1980", "80s"], ["old", "Before 1980"]];
   const RATES = [["6", "6+"], ["7", "7+"], ["8", "8+"], ["9", "9+"]];
   const RUNS = { movie: [["s", "Under 90 min", 0, 89], ["m", "90–120", 90, 120], ["l", "2–2½ hrs", 121, 150], ["x", "Epic 150+", 151, 400]], tv: [["s", "Under 30 min", 0, 30], ["m", "30–60", 31, 60], ["l", "Over 60", 61, 300]] };
-  const LANGS = [["", "Any"], ["en", "English"], ["hi", "Hindi"], ["ko", "Korean"], ["ja", "Japanese"], ["ta", "Tamil"], ["te", "Telugu"], ["ml", "Malayalam"], ["kn", "Kannada"], ["bn", "Bengali"], ["mr", "Marathi"], ["es", "Spanish"], ["fr", "French"], ["de", "German"], ["it", "Italian"], ["tr", "Turkish"], ["zh", "Chinese"], ["ru", "Russian"]];
+  const LANGS = [["", "Any"], ["en", "English"], ["hi", "Hindi"], ["gu", "Gujarati"], ["ko", "Korean"], ["ja", "Japanese"], ["ta", "Tamil"], ["te", "Telugu"], ["ml", "Malayalam"], ["kn", "Kannada"], ["bn", "Bengali"], ["mr", "Marathi"], ["es", "Spanish"], ["fr", "French"], ["de", "German"], ["it", "Italian"], ["tr", "Turkish"], ["zh", "Chinese"], ["ru", "Russian"]];
   const PROV_FALLBACK = [[8, "Netflix"], [9, "Prime Video"], [122, "JioHotstar"], [232, "Zee5"], [237, "SonyLIV"], [350, "Apple TV+"]];
 
   const tabInfo = () => { const sg = $("#seg .on") ? $("#seg .on").dataset.t : "movie", an = sg === "anime"; return { an, t: an ? $("#asel").value : sg } };

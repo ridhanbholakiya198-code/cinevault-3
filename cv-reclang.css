@@ -1,0 +1,35 @@
+/* v53 — "More like this" language ticket (Auto / Worldwide) */
+.cvt-pane[data-cvpane=more]{position:relative}
+#rec{transition:opacity .25s var(--ease)}
+#rec.rld{opacity:.5;min-height:210px}
+.rtk{position:absolute;right:0;top:46px;z-index:6}
+@media(max-width:899px){.rtk{right:-20px}}
+.rtk-s{all:unset;box-sizing:border-box;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;width:30px;height:94px;color:var(--accent);
+ background:#0d0d0f;background:linear-gradient(180deg,color-mix(in srgb,var(--accent) 22%,#121214),#09090a);
+ border-left:2px dashed color-mix(in srgb,var(--accent) 60%,transparent);border-radius:12px 0 0 12px;box-shadow:-12px 0 30px -8px #000d;
+ -webkit-mask:radial-gradient(circle 6px at 0 0,#0000 97%,#000) top/100% 51% no-repeat,radial-gradient(circle 6px at 0 100%,#0000 97%,#000) bottom/100% 51% no-repeat;
+ mask:radial-gradient(circle 6px at 0 0,#0000 97%,#000) top/100% 51% no-repeat,radial-gradient(circle 6px at 0 100%,#0000 97%,#000) bottom/100% 51% no-repeat;
+ transition:filter .2s,transform .2s var(--ease);-webkit-tap-highlight-color:transparent}
+.rtk-s:active{transform:translateX(-2px);filter:brightness(1.25)}
+.rtk-s:focus-visible{outline:2px solid var(--accent);outline-offset:-3px}
+.rtk-s svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round}
+.rtk-s span{writing-mode:vertical-rl;transform:rotate(180deg);font-size:9.5px;font-weight:600;letter-spacing:.24em;text-transform:uppercase}
+.rtk-p{position:absolute;right:38px;top:-12px;width:226px;padding:0 0 6px;--hy:46px;border-radius:16px;
+ background:linear-gradient(180deg,#19181c,#0a0a0b);border:1px solid color-mix(in srgb,var(--accent) 38%,#ffffff14);
+ box-shadow:0 26px 60px -14px #000,0 0 0 1px #0008;
+ -webkit-mask:radial-gradient(circle 8px at 0 var(--hy),#0000 97%,#000),radial-gradient(circle 8px at 100% var(--hy),#0000 97%,#000);-webkit-mask-composite:source-in;
+ mask:radial-gradient(circle 8px at 0 var(--hy),#0000 97%,#000),radial-gradient(circle 8px at 100% var(--hy),#0000 97%,#000);mask-composite:intersect;
+ transform-origin:calc(100% + 14px) 58px;animation:rtkIn .24s var(--ease)}
+.rtk-p[hidden]{display:none}
+@keyframes rtkIn{from{opacity:0;transform:translateX(12px) scale(.94)}}
+.rtk-h{height:var(--hy);display:flex;align-items:center;padding:0 18px;border-bottom:1.5px dashed #ffffff26}
+.rtk-h small{font-size:10px;letter-spacing:.24em;text-transform:uppercase;color:var(--mute)}
+.rtk-o{all:unset;box-sizing:border-box;display:block;width:100%;cursor:pointer;position:relative;padding:12px 18px 12px 40px;-webkit-tap-highlight-color:transparent}
+.rtk-o:active{background:#ffffff0d}
+.rtk-o:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+.rtk-o b{display:block;font-size:14.5px;font-weight:600;color:var(--fg)}
+.rtk-o em{display:block;margin-top:2px;font-style:normal;font-size:12px;color:var(--mute)}
+.rtk-o::before{content:"";position:absolute;left:17px;top:17px;width:9px;height:9px;border-radius:50%;border:1.5px solid #ffffff55;transition:all .2s}
+.rtk-o.on::before{background:var(--accent);border-color:var(--accent);box-shadow:0 0 12px var(--accent)}
+.rtk-o.on b{color:var(--accent)}
+@media(prefers-reduced-motion:reduce){.rtk-p{animation:none}#rec{transition:none}}
