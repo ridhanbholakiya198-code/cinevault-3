@@ -1,4 +1,4 @@
-/* PARDA FX — detail backdrop parallax, perf governor, PWA. (v54: reveal/row animations removed)
+/* PARDA FX — detail backdrop parallax, perf governor, PWA. (v55: quicker circular reveal; row-rise off)
    Add-on only: does not touch app.js logic. */
 (()=>{"use strict";
 const $=s=>document.querySelector(s),root=document.documentElement,md=$("#modal"),mc=$("#mc"),rows=$("#rows");
@@ -12,9 +12,19 @@ const lite=()=>root.classList.contains("lite");
    if(t-t0<2500)requestAnimationFrame(f);else if(n>40&&bad/n>.6){root.classList.add("lite");sessionStorage.setItem("cv_lite","1")}};
   requestAnimationFrame(f)},{once:true,passive:true})})();
 
-/* 2+3. (removed v54) circular reveal on detail open and rows rising on scroll — they looked broken, so details and rows now simply appear */
+/* 2. Circular reveal: the detail opens from the exact spot you tapped.
+   v55: back, but quicker (REVEAL_MS; the original was 720) and without the extra content slide-up. */
+const REVEAL_MS=480;
+let ox=innerWidth/2,oy=innerHeight/2;
+addEventListener("pointerdown",e=>{ox=e.clientX;oy=e.clientY},{capture:true,passive:true});
 let tgt=0,cur=0,raf=0;
-new MutationObserver(()=>{if(!md.hidden)tgt=cur=0}).observe(md,{attributes:true,attributeFilter:["hidden"]}); // parallax starts fresh each time
+new MutationObserver(()=>{if(md.hidden)return;tgt=cur=0;
+ if(RM||lite()||!md.animate)return;
+ const W=innerWidth,H=innerHeight,R=Math.hypot(Math.max(ox,W-ox),Math.max(oy,H-oy));
+ md.animate([{clipPath:`circle(0px at ${ox}px ${oy}px)`},{clipPath:`circle(${R}px at ${ox}px ${oy}px)`}],{duration:REVEAL_MS,easing:"cubic-bezier(.65,0,.2,1)"})
+}).observe(md,{attributes:true,attributeFilter:["hidden"]});
+
+/* 3. (off since v54) rows rising on scroll — rows now appear straight away, nothing blank while scrolling */
 
 /* 4. Detail backdrop parallax — own layer, moved with transform only (GPU), eased every frame */
 if(!RM&&mc){

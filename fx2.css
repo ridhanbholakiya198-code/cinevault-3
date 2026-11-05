@@ -1,4 +1,4 @@
-/* PARDA FX: circular reveal, row reveal, detail parallax, light mode */
+/* PARDA FX: circular reveal, detail parallax, light mode */
 #modal{animation:none!important}
 .tr{overflow:hidden}
 .trb{position:absolute;inset:-14% 0;z-index:0;background:center/cover no-repeat;transform:translate3d(0,var(--ty,0px),0) scale(1.04);will-change:transform}
