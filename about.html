@@ -56,6 +56,10 @@ p.big{font-size:clamp(18px,2vw,26px);line-height:1.6;color:#d6d0c4;max-width:34e
 .credit{color:var(--mute);font-size:.88em}
 .mail{display:inline-block;margin-top:6px;font:400 clamp(26px,5vw,60px)/1.1 "Cormorant Garamond",Georgia,serif;font-style:italic;text-decoration:none;border-bottom:1px solid var(--ac);word-break:break-all}
 .mail:hover{color:var(--ac)}
+.links{display:flex;flex-wrap:wrap;align-items:center;gap:18px 34px}
+.gh{display:inline-flex;align-items:center;gap:10px;min-height:44px;padding:0 20px;border:1px solid #ffffff22;border-radius:99px;color:var(--mute);text-decoration:none;font:500 14px "DM Sans",system-ui,sans-serif;letter-spacing:.08em;text-transform:uppercase;transition:color .25s,border-color .25s,background .25s}
+.gh svg{width:18px;height:18px;fill:currentColor}
+.gh:hover,.gh:active,.gh:focus-visible{color:var(--ac);border-color:var(--ac);background:color-mix(in srgb,var(--ac) 10%,transparent)}
 footer{border-top:1px solid var(--line);padding:30px var(--pad) calc(30px + env(safe-area-inset-bottom,0px));display:flex;flex-wrap:wrap;gap:12px 28px;align-items:center;color:var(--mute);font-size:14px}
 footer a{text-decoration:none}footer a:hover{color:var(--fg)}footer span{margin-left:auto}
 @media(max-width:900px){.grid{grid-template-columns:1fr}.split{grid-template-columns:1fr}footer span{margin-left:0;width:100%}}
@@ -80,7 +84,7 @@ footer a{text-decoration:none}footer a:hover{color:var(--fg)}footer span{margin-
 <div class="note rv" style="--d:.12s"><p>Film and series data and images by TMDB. <span class="credit">This product uses the TMDB API but is not endorsed or certified by TMDB.</span></p><p>Streaming availability data by JustWatch.</p></div></div></section>
 <section><p class="eyebrow rv">Independent</p><h2 class="rv">Made by one person, on purpose.</h2>
 <p class="big rv" style="--d:.1s">Parda is designed and built independently by Ridhan Bholakiya, without ads, trackers or investors steering it. Questions, feedback, rights requests and privacy requests all go to one inbox.</p>
-<p class="rv" style="--d:.2s;margin:34px 0 0"><a class="mail" id="mail" href="/privacy.html">Contact</a></p></section>
+<p class="rv links" style="--d:.2s;margin:34px 0 0"><a class="mail" id="mail" href="/privacy.html">Contact</a><a class="gh" href="https://github.com/ridhanbholakiya198-code" target="_blank" rel="noopener noreferrer" aria-label="Ridhan Bholakiya on GitHub"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 .5a11.5 11.5 0 0 0-3.64 22.41c.58.1.79-.25.79-.56v-2c-3.2.7-3.88-1.37-3.88-1.37-.52-1.33-1.28-1.69-1.28-1.69-1.04-.71.08-.7.08-.7 1.16.08 1.77 1.19 1.77 1.19 1.03 1.76 2.7 1.25 3.36.96.1-.75.4-1.25.73-1.54-2.55-.29-5.24-1.28-5.24-5.69 0-1.26.45-2.28 1.19-3.09-.12-.29-.52-1.46.11-3.05 0 0 .97-.31 3.17 1.18a11 11 0 0 1 5.77 0c2.2-1.49 3.17-1.18 3.17-1.18.63 1.59.23 2.76.11 3.05.74.81 1.19 1.83 1.19 3.09 0 4.42-2.69 5.39-5.25 5.68.41.36.78 1.06.78 2.14v3.17c0 .31.21.67.8.56A11.5 11.5 0 0 0 12 .5Z"/></svg><span>GitHub</span></a></p></section>
 </main>
 <footer><a href="/">Home</a><a href="/terms.html">Terms</a><a href="/privacy.html">Privacy</a><a href="/cookies.html">Cookies</a><span>© <b id="yr">2026</b> Parda</span></footer>
 <script>
