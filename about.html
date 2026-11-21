@@ -8,7 +8,7 @@
 *{box-sizing:border-box}html{scroll-behavior:smooth;background:#000;-webkit-text-size-adjust:100%}
 body{margin:0;background:var(--bg);color:var(--fg);font:400 clamp(16px,1.1vw + 12px,19px)/1.75 "DM Sans",system-ui,sans-serif;overflow-x:hidden}
 a{color:inherit}.logo{display:inline-flex;align-items:center;gap:.5em}.logo .lm{width:.92em;height:.92em;flex:none;margin-top:-.06em}
-.top{position:fixed;inset:0 0 auto;z-index:20;display:flex;align-items:center;justify-content:space-between;padding:calc(14px + env(safe-area-inset-top,0px)) max(var(--pad),env(safe-area-inset-right)) 14px max(var(--pad),env(safe-area-inset-left));background:linear-gradient(#000c,#0000)}
+.top{position:fixed;inset:0 0 auto;z-index:20;display:flex;align-items:center;justify-content:space-between;padding:calc(14px + env(safe-area-inset-top,0px)) max(var(--pad),env(safe-area-inset-right)) 14px max(var(--pad),env(safe-area-inset-left));background:linear-gradient(#000 0,#000e 62%,#0000);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
 .logo{font:400 26px "Bebas Neue",sans-serif;letter-spacing:.2em;text-decoration:none}
 .back{font-size:14px;color:var(--mute);text-decoration:none;border:1px solid var(--line);border-radius:99px;padding:7px 16px;background:#0008}
 .back:hover{color:var(--fg)}
@@ -59,6 +59,8 @@ p.big{font-size:clamp(18px,2vw,26px);line-height:1.6;color:#d6d0c4;max-width:34e
 .links{display:flex;flex-wrap:wrap;align-items:center;gap:18px 34px}
 .gh{display:inline-flex;align-items:center;gap:10px;min-height:44px;padding:0 20px;border:1px solid #ffffff22;border-radius:99px;color:var(--mute);text-decoration:none;font:500 14px "DM Sans",system-ui,sans-serif;letter-spacing:.08em;text-transform:uppercase;transition:color .25s,border-color .25s,background .25s}
 .gh svg{width:18px;height:18px;fill:currentColor}
+@media(min-width:900px){.gh{min-height:54px;padding:0 28px;font-size:15px;gap:12px}.gh svg{width:20px;height:20px}}
+@media(hover:none){.gh:hover{color:var(--mute);border-color:#ffffff22;background:none}.gh:active{color:var(--ac);border-color:var(--ac)}}
 .gh:hover,.gh:active,.gh:focus-visible{color:var(--ac);border-color:var(--ac);background:color-mix(in srgb,var(--ac) 10%,transparent)}
 footer{border-top:1px solid var(--line);padding:30px var(--pad) calc(30px + env(safe-area-inset-bottom,0px));display:flex;flex-wrap:wrap;gap:12px 28px;align-items:center;color:var(--mute);font-size:14px}
 footer a{text-decoration:none}footer a:hover{color:var(--fg)}footer span{margin-left:auto}
