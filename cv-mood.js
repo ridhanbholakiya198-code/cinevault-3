@@ -69,7 +69,7 @@
         const imgs = list.filter(Boolean), cols = imgs.length ? palette(imgs) : [], box = document.getElementById("mpal"); if (!box) return; if (!cols.length) return kill();
         const hs = cols.map(c => hex(c.r, c.g, c.b)); root.style.setProperty("--mg", hs[Math.floor(hs.length / 2)]);
         box.style.minHeight = ""; box.innerHTML = `<div class="mpal">${hs.map(h => `<button type="button" aria-label="Copy ${h}" data-h="${h}" style="background:${h}"><b>Copied</b></button>`).join("")}</div><div class="mhex">${hs.map(h => `<span>${h}</span>`).join("")}</div>`;
-        box.insertAdjacentHTML("beforeend", `<button type="button" class="mcardbtn">Create colour card</button>`); box.querySelector(".mcardbtn").onclick = () => CVCard.film({ title: d.title || d.name || "", year: (d.release_date || d.first_air_date || "").slice(0, 4), type: t, stills: bds.slice(0, 1).map(b => b.file_path), pal: hs });
+        box.insertAdjacentHTML("beforeend", `<button type="button" class="mcardbtn">Create colour card</button>`); box.querySelector(".mcardbtn").onclick = () => CVCard.film({ id: d.id, title: d.title || d.name || "", year: (d.release_date || d.first_air_date || "").slice(0, 4), type: t, stills: bds.slice(0, 1).map(b => b.file_path), pal: hs });
         box.onclick = e => { const b = e.target.closest("[data-h]"); if (!b) return; const done = () => { b.classList.add("ok"); setTimeout(() => b.classList.remove("ok"), 1100) }; try { navigator.clipboard.writeText(b.dataset.h).then(done, done) } catch (x) { done() } };
       } catch (e) { kill() } });
     }

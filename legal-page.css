@@ -27,3 +27,5 @@ code{background:#ffffff14;border-radius:5px;padding:1px 6px;font-size:.9em}
 
 .logo{display:inline-flex;align-items:center;gap:.5em}.logo .lm{width:.92em;height:.92em;flex:none;margin-top:-.06em}
 .lg-logo{display:inline-flex;align-items:center;gap:.5em}.lg-logo .lm{width:.92em;height:.92em;flex:none}
+
+.lm{object-fit:contain;display:block}

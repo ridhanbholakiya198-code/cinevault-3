@@ -71,7 +71,7 @@
   function rr(x, im, px, py, cw, ch) { x.save(); x.beginPath(); x.roundRect(px, py, cw, ch, 18); x.clip(); cover(x, im, px, py, cw, ch); x.restore() }
   const rgb = h => [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16));
 
-  function show(make, name, mid) {
+  function show(make, name, mid, link, label) {
     try { window.CVSound && CVSound.shutter() } catch (e) {}
     let shape = matchMedia("(min-width:700px)").matches ? "wide" : "story", url = "", blob = null; const cache = {};
     const ov = document.createElement("div"); ov.className = "cdov"; ov.style.setProperty("--cg", mid || "#000");
@@ -85,8 +85,14 @@
       if (b.dataset.s) { shape = b.dataset.s; ov.querySelectorAll("[data-s]").forEach(z => z.classList.toggle("on", z === b)); box.style.setProperty("--r", ar(shape)); return apply() }
       const a = b.dataset.a; if (a === "x") return close(); if (!blob) return;
       const file = new File([blob], name + "-" + shape + ".png", { type: "image/png" });
-      if (a === "share" && navigator.canShare && navigator.canShare({ files: [file] })) { try { await navigator.share({ files: [file], title: "Parda" }) } catch (er) {} return }
+      const msg = (label ? label + "\n" : "") + link;
+      if (a === "share") {
+        // image + link together: link goes in the text so apps that drop url keep it
+        if (navigator.canShare && navigator.canShare({ files: [file] })) { try { await navigator.share({ files: [file], title: "Parda", text: msg }) } catch (er) {} return }
+        if (navigator.share) { try { await navigator.share({ title: "Parda", text: label || "Parda", url: link }) } catch (er) {} return }
+      }
       const l = document.createElement("a"); l.href = url; l.download = file.name; document.body.append(l); l.click(); l.remove();
+      try { await navigator.clipboard.writeText(link); const o = b.textContent; b.textContent = "Saved · link copied"; setTimeout(() => { b.textContent = o }, 1600) } catch (er) {}
     };
     document.body.append(ov); apply();
   }
@@ -96,7 +102,7 @@
     async film(o) { // {title,year,type,stills:[path],pal:[hex]}
       const imgs = (await Promise.all(o.stills.map(p => load(IMG + "w1280" + p)))).filter(Boolean);
       const spec = { kicker: "The colour of", title: o.title, sub: [o.year, o.type === "tv" ? "Series" : "Film"].filter(Boolean).join("  ·  "), imgs, pal: o.pal };
-      show(sh => draw(spec, sh), "parda-" + slug(o.title), o.pal[Math.floor(o.pal.length / 2)]);
+      show(sh => draw(spec, sh), "parda-" + slug(o.title), o.pal[Math.floor(o.pal.length / 2)], o.id && typeof shareURL === "function" ? shareURL(o.type === "tv" ? "tv" : "movie", o.id) : location.origin + "/", "The colour of " + o.title + " on Parda");
     },
     async listHook(all) {
       const list = document.getElementById("list"), tabs = document.getElementById("tabs"); if (!list || !tabs) return;
@@ -108,7 +114,7 @@
       if (!box) { box = document.createElement("div"); box.id = "cinemaColour"; box.className = "ccx"; tabs.before(box) }
       box.dataset.k = key; box.style.setProperty("--cg", hs[Math.floor(hs.length / 2)]);
       box.innerHTML = `<small>YOUR CINEMA COLOUR</small><h3>${name}</h3><div class="cp">${hs.map(h => `<i style="background:${h}"></i>`).join("")}</div><p>Read from the posters of ${ims.length} titles in your list.</p><button type="button">Create card</button>`;
-      box.querySelector("button").onclick = async () => { const big = (await Promise.all(items.map(i => load(IMG + "w342" + i.poster)))).filter(Boolean); const spec = { kicker: "My cinema colour", title: name, sub: "from " + ims.length + " titles I saved", imgs: big, pal: hs, mosaic: true }; show(sh => draw(spec, sh), "parda-my-cinema-colour", hs[Math.floor(hs.length / 2)]) };
+      box.querySelector("button").onclick = async () => { const big = (await Promise.all(items.map(i => load(IMG + "w342" + i.poster)))).filter(Boolean); const spec = { kicker: "My cinema colour", title: name, sub: "from " + ims.length + " titles I saved", imgs: big, pal: hs, mosaic: true }; show(sh => draw(spec, sh), "parda-my-cinema-colour", hs[Math.floor(hs.length / 2)], location.origin + "/", "My cinema colour on Parda") };
     }
   };
 })();
