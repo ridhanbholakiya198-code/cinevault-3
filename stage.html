@@ -16,6 +16,7 @@ body.flat #bg{background:#000}body.flat #win{border-radius:0;box-shadow:none}
 #cur.on{opacity:1}#cur svg{width:100%;height:100%;transition:transform .12s}#cur.dn svg{transform:scale(.82)}
 .rip{position:absolute;width:20px;height:20px;margin:-10px 0 0 -10px;border-radius:50%;border:3px solid #fff;pointer-events:none;z-index:4;animation:rp .7s ease-out forwards}
 @keyframes rp{from{transform:scale(.4);opacity:.95}to{transform:scale(3.4);opacity:0}}
+#fade{position:fixed;inset:0;background:#000;opacity:0;pointer-events:none;transition:opacity .45s;z-index:15}
 #cd{position:fixed;inset:0;display:none;align-items:center;justify-content:center;font:700 120px system-ui;z-index:20;background:#0008}
 #stop{position:fixed;left:0;top:0;width:80px;height:80px;z-index:30}
 #panel{position:fixed;left:0;right:0;bottom:0;max-height:75vh;overflow:auto;padding:14px;background:#111c;backdrop-filter:blur(14px);z-index:25;border-top:1px solid #fff2}
@@ -33,7 +34,7 @@ button.g{background:#333}
  <iframe id="ifr" src="about:blank"></iframe>
  <div id="cur"><svg viewBox="0 0 24 24"><path d="M3 2l7.5 19 2.8-7.7L21 10.5z" fill="#fff" stroke="#000" stroke-width="1.6" stroke-linejoin="round"/></svg></div>
 </div></div></div>
-<div id="cd"></div><div id="stop"></div>
+<div id="fade"></div><div id="cd"></div><div id="stop"></div>
 <div id="panel">
  <div id="rot">Phone ko landscape me ghumao (wide screen).</div>
  <label>Site path <input type="text" id="path" value="/index.html"></label>
@@ -51,16 +52,89 @@ button.g{background:#333}
 const $=s=>document.querySelector(s),sleep=ms=>new Promise(r=>setTimeout(r,ms));
 let W=1440,H=900;const ifr=$('#ifr'),camEl=$('#cam'),win=$('#win'),curEl=$('#cur');
 const DEF=[
- {a:"wait",ms:7500},
- {a:"zoom",z:1.7,to:"#htitle",ms:1100},{a:"wait",ms:1400},
- {a:"zoom",z:1,ms:1000},
- {a:"move",to:"#hopen"},{a:"wait",ms:600},
- {a:"zoom",z:1.35,ms:800},
- {a:"scroll",to:"#rows",ms:2600},{a:"wait",ms:600},
- {a:"click",to:".card:not(.sk)"},{a:"wait",ms:1800},
- {a:"zoom",z:1,ms:900},{a:"wait",ms:900},
- {a:"click",to:"#mx"},{a:"wait",ms:700},
- {a:"scroll",y:0,ms:2200},{a:"wait",ms:1200}
+{"a":"cut","intro":true},
+{"a":"wait","ms":6500},
+{"a":"zoom","z":1.7,"to":"#htitle","ms":1100},
+{"a":"wait","ms":1500},
+{"a":"zoom","z":1,"ms":1000},
+{"a":"wait","ms":500},
+{"a":"cut"},
+{"a":"wait","ms":1200},
+{"a":"click","to":"#mnu"},
+{"a":"wait","ms":1700},
+{"a":"zoom","z":1.3,"ms":900},
+{"a":"hover","to":".cvn-l button@Movies","hold":1100},
+{"a":"hover","to":".cvn-l button@Series","hold":1100},
+{"a":"hover","to":".cvn-l button@Anime","hold":1100},
+{"a":"hover","to":".cvn-l button@Browse","hold":1100},
+{"a":"zoom","z":1,"ms":800},
+{"a":"click","to":".cvn-x"},
+{"a":"wait","ms":1200},
+{"a":"cut"},
+{"a":"wait","ms":1000},
+{"a":"click","to":"#hmore"},
+{"a":"wait","ms":2600},
+{"a":"zoom","z":1.25,"ms":900},
+{"a":"scroll","in":"#modal","by":700,"ms":3200},
+{"a":"wait","ms":800},
+{"a":"scroll","in":"#modal","y":0,"ms":2200},
+{"a":"zoom","z":1,"ms":700},
+{"a":"cut","reload":false},
+{"a":"click","to":"[data-cvt=mood]"},
+{"a":"wait","ms":1500},
+{"a":"zoom","z":1.4,"to":".mstills","ms":1000},
+{"a":"wait","ms":1500},
+{"a":"zoom","z":1.6,"to":"#mpal","ms":1000},
+{"a":"wait","ms":700},
+{"a":"click","to":"#mpal [data-h]"},
+{"a":"wait","ms":1500},
+{"a":"click","to":".mcardbtn"},
+{"a":"wait","ms":2800},
+{"a":"click","to":"[data-s=story]"},
+{"a":"wait","ms":1800},
+{"a":"zoom","z":1.25,"to":".cdi","ms":900},
+{"a":"wait","ms":2200},
+{"a":"zoom","z":1,"ms":700},
+{"a":"click","to":"[data-a=x]"},
+{"a":"wait","ms":800},
+{"a":"cut"},
+{"a":"wait","ms":800},
+{"a":"scroll","to":"#cvspot","off":90,"ms":2600},
+{"a":"zoom","z":1.35,"to":".sp-frame","ms":1000},
+{"a":"wait","ms":1500},
+{"a":"click","to":".sp-th [data-t='2']"},
+{"a":"wait","ms":2200},
+{"a":"click","to":".sp-th [data-t='3']"},
+{"a":"wait","ms":2200},
+{"a":"zoom","z":1,"ms":800},
+{"a":"cut"},
+{"a":"wait","ms":800},
+{"a":"click","to":"nav [data-v=browse]"},
+{"a":"wait","ms":2000},
+{"a":"click","to":"button@Hidden gems"},
+{"a":"wait","ms":2400},
+{"a":"click","to":"button@Mind-bending"},
+{"a":"wait","ms":2400},
+{"a":"click","to":"[data-c=Crimson]"},
+{"a":"wait","ms":2400},
+{"a":"click","to":"[data-c=Violet]"},
+{"a":"wait","ms":2600},
+{"a":"cut"},
+{"a":"wait","ms":1000},
+{"a":"click","to":"#mnu"},
+{"a":"wait","ms":1600},
+{"a":"click","to":".cvn-l button@Tonight"},
+{"a":"wait","ms":1600},
+{"a":"click","to":".tn .opts button@Regular"},
+{"a":"wait","ms":1300},
+{"a":"click","to":".tn .opts button@Mind-bending"},
+{"a":"wait","ms":1300},
+{"a":"click","to":".tn .opts button@English"},
+{"a":"wait","ms":4000},
+{"a":"zoom","z":1.3,"to":".tn .res","ms":1000},
+{"a":"wait","ms":2200},
+{"a":"zoom","z":1,"ms":800},
+{"a":"cut","reload":false,"hold":800}
 ];
 const cam={s:{z:1,x:W/2,y:H/2},m:{z:1,x:W/2,y:H/2},t:{z:1,x:W/2,y:H/2},follow:false,sp:4.5};
 const cur={x:W*.8,y:H*.85};
@@ -83,16 +157,22 @@ function tick(t){const dt=Math.min(.05,(t-last)/1000);last=t;const a=1-Math.exp(
  if(blurOn){const v=Math.hypot(cam.s.z-pz,(cam.s.x-px)/W,(cam.s.y-py)/H)/Math.max(dt,.001);camEl.style.filter=`blur(${Math.min(1.5,v*.4).toFixed(2)}px)`}else camEl.style.filter='';
  requestAnimationFrame(tick)}
 const D=()=>ifr.contentDocument,Wn=()=>ifr.contentWindow;
-function find(sel){const e=D().querySelector(sel);if(!e)throw Error('nahi mila: '+sel);return e}
+function find(sel){let e;
+ if(sel.includes('@')){const[i,t]=sel.split('@'),q=t.trim().toLowerCase();
+  e=[...D().querySelectorAll(i||'*')].filter(x=>x.getClientRects().length&&x.textContent.trim().toLowerCase().startsWith(q)).sort((a,b)=>a.textContent.length-b.textContent.length)[0]}
+ else e=D().querySelector(sel);
+ if(!e)throw Error('nahi mila: '+sel);return e}
 const ctr=e=>{const r=e.getBoundingClientRect();return{x:r.left+r.width/2,y:r.top+r.height/2}};
 function ease(p){return p<.5?4*p*p*p:1-Math.pow(-2*p+2,3)/2}
 function moveTo(x,y,ms){const d=Math.hypot(x-cur.x,y-cur.y);ms=ms||Math.max(450,Math.min(1400,d*1.1));
  const x0=cur.x,y0=cur.y,dx=x-x0,dy=y-y0,cx=x0+dx/2-dy*.12,cy=y0+dy/2+dx*.12;curEl.classList.add('on');
  return new Promise(res=>{const t0=performance.now();(function f(n){if(abort)return res();const p=ease(Math.min(1,(n-t0)/ms)),q=1-p;
   cur.x=q*q*x0+2*q*p*cx+p*p*x;cur.y=q*q*y0+2*q*p*cy+p*p*y;drawCur();p<1?requestAnimationFrame(f):res()})(t0)})}
-function scrollTo(y,ms){const w=Wn(),y0=w.scrollY;return new Promise(res=>{const t0=performance.now();(function f(n){if(abort)return res();
- const p=ease(Math.min(1,(n-t0)/ms));w.scrollTo(0,y0+(y-y0)*p);p<1?requestAnimationFrame(f):res()})(t0)})}
-async function reveal(e){const r=e.getBoundingClientRect();if(r.top<90||r.bottom>H-90)await scrollTo(Wn().scrollY+r.top-H/3,1200)}
+function scrollTo(y,ms,el){const w=el||Wn(),y0=el?el.scrollTop:w.scrollY;return new Promise(res=>{const t0=performance.now();(function f(n){if(abort)return res();
+ const p=ease(Math.min(1,(n-t0)/ms)),v=y0+(y-y0)*p;el?el.scrollTop=v:w.scrollTo(0,v);p<1?requestAnimationFrame(f):res()})(t0)})}
+function scroller(e){for(let n=e.parentElement;n;n=n.parentElement){const o=Wn().getComputedStyle(n).overflowY;if((o==='auto'||o==='scroll')&&n.scrollHeight>n.clientHeight+4)return n}return null}
+async function reveal(e){const r=e.getBoundingClientRect();if(r.top<90||r.bottom>H-90){const sc=scroller(e);
+ if(sc&&sc!==D().body&&sc!==D().documentElement)await scrollTo(sc.scrollTop+r.top-sc.getBoundingClientRect().top-H/3,1100,sc);else await scrollTo(Wn().scrollY+r.top-H/3,1200)}}
 function ripple(){const r=document.createElement('div');r.className='rip';r.style.left=cur.x+'px';r.style.top=cur.y+'px';camEl.appendChild(r);setTimeout(()=>r.remove(),800);
  curEl.classList.add('dn');setTimeout(()=>curEl.classList.remove('dn'),160)}
 const A={
@@ -106,16 +186,24 @@ const A={
   const t=D().elementFromPoint(c.x,c.y)||e;t.click();await sleep(200)},
  async type(s){const e=find(s.to);e.focus();for(const ch of s.text){if(abort)return;e.value+=ch;
   e.dispatchEvent(new Event('input',{bubbles:true}));await sleep(s.gap||85)}},
- async scroll(s){const y=s.to?Wn().scrollY+find(s.to).getBoundingClientRect().top-(s.off??120):s.y;await scrollTo(y,s.ms||1800)}
+ async scroll(s){const el=s.in?find(s.in):null,base=el?el.scrollTop:Wn().scrollY;
+  const y=s.to?base+find(s.to).getBoundingClientRect().top-(el?el.getBoundingClientRect().top:0)-(s.off??120):s.by!=null?base+s.by:s.y;await scrollTo(y,s.ms||1800,el)},
+ async hover(s){const e=find(s.to);await reveal(e);const c=ctr(e);await moveTo(c.x,c.y,s.ms);
+  for(const t of['pointerover','pointerenter'])e.dispatchEvent(new(Wn().PointerEvent)(t,{bubbles:true,pointerType:'mouse'}));await sleep(s.hold||1000)},
+ async cut(s){const f=$('#fade');f.style.opacity=1;await sleep(600);curEl.classList.remove('on');
+  for(const q of['s','m','t'])cam[q]={z:1,x:W/2,y:H/2};cam.follow=false;cur.x=W*.8;cur.y=H*.85;drawCur();
+  if(s.reload===false){await sleep(s.hold||1200);f.style.opacity=0;await sleep(600);return}
+  if(s.intro){ifr.src='about:blank';await sleep(500);f.style.opacity=0;await sleep(700);await loadSite($('#path').value,true)}
+  else{await loadSite($('#path').value,false);await sleep(s.hold||1200);f.style.opacity=0;await sleep(600)}}
 };
 async function run(steps){const bad=[];for(const s of steps){if(abort)break;
  try{await A[s.a](s)}catch(e){bad.push(s.a+': '+e.message)}}return bad}
-function loadSite(path){return new Promise(res=>{try{sessionStorage.removeItem('cv_i')}catch(e){}
+function loadSite(path,intro=true){return new Promise(res=>{try{intro?sessionStorage.removeItem('cv_i'):sessionStorage.setItem('cv_i','1')}catch(e){}
  ifr.onload=()=>res();ifr.src=path+(path.includes('?')?'&':'?')+'stage='+Date.now()})}
 async function start(){if(running)return;let steps;
  try{steps=JSON.parse($('#scr').value)}catch(e){$('#msg').textContent='Script JSON galat hai: '+e.message;return}
  try{localStorage.setItem('stg_scr',$('#scr').value)}catch(e){}
- running=true;abort=false;blurOn=$('#bl').checked;$('#msg').textContent='';
+ running=true;abort=false;$('#fade').style.opacity=0;blurOn=$('#bl').checked;$('#msg').textContent='';
  if($('#fs').checked)try{await document.documentElement.requestFullscreen()}catch(e){}
  layout();$('#panel').classList.add('h');curEl.classList.remove('on');
  for(const q of['s','m','t'])cam[q]={z:1,x:W/2,y:H/2};cam.follow=false;cur.x=W*.8;cur.y=H*.85;drawCur();
