@@ -53,7 +53,7 @@ const $=s=>document.querySelector(s),sleep=ms=>new Promise(r=>setTimeout(r,ms));
 let W=1440,H=900;const ifr=$('#ifr'),camEl=$('#cam'),win=$('#win'),curEl=$('#cur');
 const DEF=[
 {"a":"cut","intro":true},
-{"a":"wait","ms":6500},
+{"a":"wait","ms":5000},
 {"a":"zoom","z":1.7,"to":"#htitle","ms":1100},
 {"a":"wait","ms":1500},
 {"a":"zoom","z":1,"ms":1000},
@@ -139,7 +139,7 @@ const DEF=[
 const cam={s:{z:1,x:W/2,y:H/2},m:{z:1,x:W/2,y:H/2},t:{z:1,x:W/2,y:H/2},follow:false,sp:4.5};
 const cur={x:W*.8,y:H*.85};
 let k=1,ww=0,wh=0,abort=false,running=false,blurOn=false;
-function layout(){if($('#mode').value==='wide'){H=900;W=Math.max(1280,Math.min(2000,Math.round(900*innerWidth/innerHeight)))}else{W=1440;H=900}
+function layout(){if($('#mode').value==='wide'){W=Math.max(1280,Math.min(1600,Math.round(900*innerWidth/innerHeight)));H=Math.max(560,Math.round(W*innerHeight/innerWidth))}else{W=1440;H=900}
  camEl.style.width=ifr.style.width=W+'px';camEl.style.height=ifr.style.height=H+'px';
  const flat=!$('#fr').checked;document.body.classList.toggle('flat',flat);
  const p=flat?0:.06,vw=innerWidth,vh=innerHeight;ww=Math.min(vw*(1-2*p),vh*(1-2*p)*W/H);wh=ww*H/W;
@@ -175,15 +175,21 @@ async function reveal(e){const r=e.getBoundingClientRect();if(r.top<90||r.bottom
  if(sc&&sc!==D().body&&sc!==D().documentElement)await scrollTo(sc.scrollTop+r.top-sc.getBoundingClientRect().top-H/3,1100,sc);else await scrollTo(Wn().scrollY+r.top-H/3,1200)}}
 function ripple(){const r=document.createElement('div');r.className='rip';r.style.left=cur.x+'px';r.style.top=cur.y+'px';camEl.appendChild(r);setTimeout(()=>r.remove(),800);
  curEl.classList.add('dn');setTimeout(()=>curEl.classList.remove('dn'),160)}
+function tapEl(t){const w=Wn();let n=t;while(n&&typeof n.click!=='function')n=n.parentElement;n=n||t;
+ const o={bubbles:true,cancelable:true,view:w,pointerType:'mouse',button:0,clientX:cur.x,clientY:cur.y};
+ for(const ty of['pointerdown','mousedown','pointerup','mouseup']){try{n.dispatchEvent(new(ty[0]=='p'?w.PointerEvent:w.MouseEvent)(ty,o))}catch(e){}}
+ typeof n.click==='function'?n.click():n.dispatchEvent(new w.MouseEvent('click',o))}
 const A={
  wait:s=>sleep(s.ms||500),
- async zoom(s){cam.sp=s.sp||4.5;cam.t.z=s.z||1;
-  if(s.to){const e=find(s.to);await reveal(e);const c=ctr(e);cam.t.x=c.x;cam.t.y=c.y;cam.follow=false}
-  else if(cam.t.z>1)cam.follow=true;else{cam.follow=false;cam.t.x=W/2;cam.t.y=H/2}
+ async zoom(s){cam.sp=s.sp||4.5;const z=s.z||1;
+  if(s.to){const e=find(s.to);await reveal(e);const c=ctr(e);let mv;
+   if(z>1&&!s.nocursor){mv=moveTo(c.x,c.y);await sleep(350)}
+   cam.t.z=z;cam.t.x=c.x;cam.t.y=c.y;cam.follow=false;if(mv)await mv}
+  else{cam.t.z=z;if(z>1)cam.follow=true;else{cam.follow=false;cam.t.x=W/2;cam.t.y=H/2}}
   if(!s.nowait)await sleep(s.ms||800)},
  async move(s){const e=find(s.to);await reveal(e);const c=ctr(e);await moveTo(c.x,c.y,s.ms)},
  async click(s){const e=find(s.to);await reveal(e);const c=ctr(e);await moveTo(c.x,c.y,s.ms);await sleep(120);ripple();
-  const t=D().elementFromPoint(c.x,c.y)||e;t.click();await sleep(200)},
+  tapEl(D().elementFromPoint(c.x,c.y)||e);await sleep(200)},
  async type(s){const e=find(s.to);e.focus();for(const ch of s.text){if(abort)return;e.value+=ch;
   e.dispatchEvent(new Event('input',{bubbles:true}));await sleep(s.gap||85)}},
  async scroll(s){const el=s.in?find(s.in):null,base=el?el.scrollTop:Wn().scrollY;
@@ -217,7 +223,7 @@ async function start(){if(running)return;let steps;
 let tap=0;$('#stop').onclick=()=>{const n=Date.now();if(n-tap<500){abort=true;$('#cd').style.display='none'}tap=n};
 $('#go').onclick=start;
 $('#rs').onclick=()=>{$('#scr').value=JSON.stringify(DEF,null,1)};
-try{$('#scr').value=localStorage.getItem('stg_scr')||''}catch(e){}
+try{if(localStorage.getItem('stg_ver')==='3')$('#scr').value=localStorage.getItem('stg_scr')||'';localStorage.setItem('stg_ver','3')}catch(e){}
 if(!$('#scr').value)$('#rs').click();
 layout();drawCur();requestAnimationFrame(tick);
 </script></body></html>
