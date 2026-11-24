@@ -45,6 +45,7 @@ button.g{background:#333}
  <label>Pace <select id="pace"><option value="1">Normal</option><option value="1.25" selected>Slower</option><option value="1.5">Cinematic</option></select></label><br>
  <label><input type="checkbox" id="fr" checked> Frame + gradient</label>
  <label><input type="checkbox" id="bl"> Motion blur</label>
+ <label><input type="checkbox" id="lite" checked> Lite effects (smooth video)</label>
  <label><input type="checkbox" id="fs"> Fullscreen API (agar black screen aaye to OFF rakho)</label>
  <textarea id="scr" spellcheck="false"></textarea>
  <button id="go">&#9654; Start (countdown)</button><button class="g" id="rs">Reset script</button>
@@ -54,32 +55,31 @@ button.g{background:#333}
 <script>
 const $=s=>document.querySelector(s),sleep=ms=>new Promise(r=>setTimeout(r,ms));
 let W=1440,H=900;
-const ifr=$('#ifr'),camEl=$('#cam'),win=$('#win'),curEl=$('#cur'),fade=$('#fade');
+let ifr=$('#ifr');const camEl=$('#cam'),win=$('#win'),curEl=$('#cur'),fade=$('#fade');
 const DEF=[
 {"a":"mark","n":"01 intro+hero"},
 {"a":"hold","on":true},
 {"a":"wait","ms":6600},
-{"a":"auto","z":1.5,"out":1500},
-{"a":"move","to":"#htitle","z":1.7,"out":1800},
+{"a":"auto","z":0,"out":1500},
+{"a":"move","to":"#htitle","z":1.5,"out":1800},
 {"a":"wait","ms":2800},
 {"a":"cut"},
 {"a":"mark","n":"02 menu"},
 {"a":"hold","on":true},
 {"a":"wait","ms":900},
-{"a":"click","to":"#mnu","z":1.7,"out":500},
-{"a":"wait","ms":1900},
-{"a":"hover","to":".cvn-l button@Movies","z":1.25,"hold":1000,"out":2500},
-{"a":"hover","to":".cvn-l button@Series","z":1.25,"hold":1000,"out":2500},
-{"a":"hover","to":".cvn-l button@Anime","z":1.25,"hold":1000,"out":2500},
-{"a":"hover","to":".cvn-l button@Browse","z":1.25,"hold":1000,"out":2500},
-{"a":"zoom","z":1,"ms":600},
+{"a":"click","to":"#mnu","nozoom":true},
+{"a":"wait","ms":2000},
+{"a":"hover","to":".cvn-l button@Movies","nozoom":true,"hold":1100},
+{"a":"hover","to":".cvn-l button@Series","nozoom":true,"hold":1100},
+{"a":"hover","to":".cvn-l button@Anime","nozoom":true,"hold":1100},
+{"a":"hover","to":".cvn-l button@Browse","nozoom":true,"hold":1100},
 {"a":"click","to":".cvn-x","nozoom":true},
 {"a":"wait","ms":1000},
 {"a":"cut","pre":[{"a":"tap","to":"#hmore"},{"a":"wait","ms":2400},{"a":"tap","to":"#mx"},{"a":"wait","ms":900}]},
 {"a":"mark","n":"03 detail+parallax"},
 {"a":"hold","on":true},
 {"a":"wait","ms":600},
-{"a":"click","to":"#hmore","out":700},
+{"a":"click","to":"#hmore","nozoom":true},
 {"a":"wait","ms":2500},
 {"a":"scroll","in":"#modal","by":700,"ms":3200},
 {"a":"wait","ms":800},
@@ -87,58 +87,52 @@ const DEF=[
 {"a":"wait","ms":400},
 {"a":"cut","reload":false},
 {"a":"mark","n":"04 mood+colour card"},
-{"a":"click","to":"[data-cvt=mood]","z":1.35,"out":1200},
-{"a":"wait","ms":2300},
+{"a":"click","to":"[data-cvt=mood]","nozoom":true},
+{"a":"wait","ms":2400},
 {"a":"scroll","in":"#modal","to":"#mpal","off":230,"ms":1600},
-{"a":"wait","ms":700},
-{"a":"click","to":"#mpal [data-h]","z":1.6,"out":1500},
-{"a":"wait","ms":2500},
-{"a":"click","to":".mcardbtn","z":1.4,"out":900},
-{"a":"wait","ms":3000},
-{"a":"click","to":"[data-s=story]","z":1.3,"out":1200},
-{"a":"wait","ms":2300},
-{"a":"zoom","z":1.25,"to":".cdi","nocursor":true,"ms":2200},
-{"a":"zoom","z":1,"ms":800},
+{"a":"wait","ms":900},
+{"a":"click","to":"#mpal [data-h]","nozoom":true},
+{"a":"wait","ms":2200},
+{"a":"click","to":".mcardbtn","nozoom":true},
+{"a":"wait","ms":4500},
 {"a":"click","to":"[data-a=x]","nozoom":true},
 {"a":"wait","ms":900},
 {"a":"cut"},
 {"a":"mark","n":"05 spotlight"},
 {"a":"wait","ms":700},
 {"a":"scroll","to":"#cvspot","off":90,"ms":2400},
-{"a":"wait","ms":600},
-{"a":"click","to":".sp-th [data-t='2']","out":1400},
-{"a":"wait","ms":2200},
-{"a":"click","to":".sp-th [data-t='3']","out":1400},
-{"a":"wait","ms":2200},
+{"a":"wait","ms":900},
+{"a":"click","to":".sp-th [data-t='2']","nozoom":true},
+{"a":"wait","ms":2800},
+{"a":"click","to":".sp-th [data-t='3']","nozoom":true},
+{"a":"wait","ms":2800},
 {"a":"cut"},
 {"a":"mark","n":"06 browse"},
 {"a":"wait","ms":700},
-{"a":"click","to":"nav [data-v=browse]","out":900},
-{"a":"wait","ms":2000},
-{"a":"click","to":"button@Hidden gems","out":1200},
-{"a":"wait","ms":2400},
-{"a":"click","to":"button@Mind-bending","out":1200},
-{"a":"wait","ms":2400},
-{"a":"click","to":"[data-c=Crimson]","out":1200},
-{"a":"wait","ms":2400},
-{"a":"click","to":"[data-c=Violet]","out":1200},
-{"a":"wait","ms":2400},
+{"a":"click","to":"nav [data-v=browse]","nozoom":true},
+{"a":"wait","ms":2200},
+{"a":"click","to":"button@Hidden gems","nozoom":true},
+{"a":"wait","ms":2600},
+{"a":"click","to":"button@Mind-bending","nozoom":true},
+{"a":"wait","ms":2600},
+{"a":"click","to":"[data-c=Crimson]","nozoom":true},
+{"a":"wait","ms":2600},
+{"a":"click","to":"[data-c=Violet]","nozoom":true},
+{"a":"wait","ms":2600},
 {"a":"cut"},
 {"a":"mark","n":"07 tonight"},
 {"a":"hold","on":true},
 {"a":"wait","ms":800},
-{"a":"click","to":"#mnu","z":1.7,"out":500},
-{"a":"wait","ms":1700},
-{"a":"click","to":".cvn-l button@Tonight","z":1.4,"out":900},
-{"a":"wait","ms":1600},
-{"a":"click","to":".tn .opts button@Regular","out":900},
-{"a":"wait","ms":1400},
-{"a":"click","to":".tn .opts button@Mind-bending","out":900},
-{"a":"wait","ms":1400},
-{"a":"click","to":".tn .opts button@English","out":900},
-{"a":"wait","ms":4000},
-{"a":"zoom","z":1.3,"to":".tn .res","nocursor":true,"ms":2200},
-{"a":"zoom","z":1,"ms":600}
+{"a":"click","to":"#mnu","nozoom":true},
+{"a":"wait","ms":1900},
+{"a":"click","to":".cvn-l button@Tonight","nozoom":true},
+{"a":"wait","ms":1800},
+{"a":"click","to":".tn .opts button@Regular","nozoom":true},
+{"a":"wait","ms":1500},
+{"a":"click","to":".tn .opts button@Mind-bending","nozoom":true},
+{"a":"wait","ms":1500},
+{"a":"click","to":".tn .opts button@English","nozoom":true},
+{"a":"wait","ms":4500}
 ];
 const cam={z:1,x:W/2,y:H/2,tw:null,follow:false},cur={x:W*.8,y:H*.85},auto={z:0,out:1500};
 let pace=1.25;const T=ms=>ms*pace,ZD=.65;
@@ -150,8 +144,7 @@ function layout(){
  const flat=!$('#fr').checked;document.body.classList.toggle('flat',flat);
  const p=flat?0:.04,vw=innerWidth,vh=innerHeight;ww=Math.min(vw*(1-2*p),vh*(1-2*p)*W/H);wh=ww*H/W;
  win.style.width=ww+'px';win.style.height=wh+'px';k=ww/W}
-function kick(ms){const b=$('#bg'),t0=performance.now();(function f(n){b.style.opacity=Math.floor(n/16)%2?'.998':'1';if(n-t0<ms)requestAnimationFrame(f);else b.style.opacity=''})(t0)}
-addEventListener('resize',()=>{layout();kick(700)});document.addEventListener('fullscreenchange',()=>{layout();kick(900)});
+addEventListener('resize',layout);document.addEventListener('fullscreenchange',layout);
 $('#fr').onchange=layout;$('#mode').onchange=layout;
 function drawCur(){curEl.style.transform=`translate(${cur.x-3}px,${cur.y-2}px)`}
 /* camera: reference-style fast ease-out (about 0.5s), cursor-follow with dead zone */
@@ -230,13 +223,16 @@ const A={
 };
 async function run(steps){const bad=[];for(const s of steps){if(abort)break;try{await A[s.a](s)}catch(e){bad.push(s.a+': '+e.message)}}return bad}
 function patchDoc(){try{const C=Wn().Clipboard.prototype;C.writeText=()=>Promise.resolve();C.write=()=>Promise.resolve()}catch(e){}}
+function newFrame(){const n=document.createElement('iframe');n.id='ifr';n.style.width=W+'px';n.style.height=H+'px';ifr.replaceWith(n);ifr=n}
+function liteCss(){if(!$('#lite').checked)return;try{const d=D(),s=d.createElement('style');
+ s.textContent='*,*::before,*::after{backdrop-filter:none!important;-webkit-backdrop-filter:none!important}.grain{display:none!important}';d.head.appendChild(s)}catch(e){}}
 function loadSite(path,intro=true,keep=false){
  return new Promise(res=>{try{if(intro){sessionStorage.removeItem('cv_i');sessionStorage.removeItem('cv_intro')}else{sessionStorage.setItem('cv_i','1');sessionStorage.setItem('cv_intro','1')}}catch(e){}
-  fade.style.transition='none';fade.style.opacity=1;ifr.src='about:blank';
+  fade.style.transition='none';fade.style.opacity=1;newFrame();
   setTimeout(()=>{ifr.src=path+(path.includes('?')?'&':'?')+'stage='+Date.now();const t0=Date.now();
    const iv=setInterval(()=>{let ok=0;try{const d=ifr.contentDocument;ok=d&&d.body&&d.readyState!=='loading'&&d.location.href.indexOf('about:blank')<0}catch(e){}
-    if(ok||Date.now()-t0>6000){clearInterval(iv);patchDoc();if(keep)return res();
-     setTimeout(()=>{fade.style.transition='opacity .3s';fade.style.opacity=0;kick(900);res()},intro?100:600)}},40)},150)})}
+    if(ok||Date.now()-t0>6000){clearInterval(iv);patchDoc();liteCss();if(keep)return res();
+     setTimeout(()=>{fade.style.transition='opacity .3s';fade.style.opacity=0;res()},intro?100:600)}},40)},120)})}
 const fmt=t=>Math.floor(t/60)+':'+String(Math.floor(t%60)).padStart(2,'0');
 async function start(){if(running)return;let steps;
  try{steps=JSON.parse($('#scr').value)}catch(e){$('#msg').textContent='Script JSON galat hai: '+e.message;return}
@@ -259,7 +255,7 @@ async function start(){if(running)return;let steps;
 let tap=0;$('#stop').onclick=()=>{const n=Date.now();if(n-tap<500){abort=true;$('#cd').style.display='none'}tap=n};
 $('#go').onclick=start;
 $('#rs').onclick=()=>{$('#scr').value=JSON.stringify(DEF,null,1)};
-try{if(localStorage.getItem('stg_ver')==='6')$('#scr').value=localStorage.getItem('stg_scr')||'';localStorage.setItem('stg_ver','6')}catch(e){}
+try{if(localStorage.getItem('stg_ver')==='7')$('#scr').value=localStorage.getItem('stg_scr')||'';localStorage.setItem('stg_ver','7')}catch(e){}
 if(!$('#scr').value)$('#rs').click();
 $('#info').textContent=isApp()?'App mode ON (fullscreen app) - recording ke liye best.':'Tip: Chrome menu > Install app, phir "Parda Stage" icon se kholo. Isse fullscreen + landscape bina black screen ke milta hai.';
 layout();drawCur();requestAnimationFrame(tick);
