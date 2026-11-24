@@ -52,34 +52,39 @@ button.g{background:#333}
 const $=s=>document.querySelector(s),sleep=ms=>new Promise(r=>setTimeout(r,ms));
 let W=1440,H=900;const ifr=$('#ifr'),camEl=$('#cam'),win=$('#win'),curEl=$('#cur');
 const DEF=[
-{"a":"cut","intro":true},
-{"a":"wait","ms":5000},
-{"a":"zoom","z":1.7,"to":"#htitle","ms":1100},
-{"a":"wait","ms":1500},
+{"a":"mark","n":"01 intro+hero"},
+{"a":"hold","on":true},
+{"a":"wait","ms":5400},
+{"a":"move","to":"#htitle","z":1.7},
+{"a":"wait","ms":1700},
 {"a":"zoom","z":1,"ms":1000},
-{"a":"wait","ms":500},
+{"a":"wait","ms":600},
 {"a":"cut"},
-{"a":"wait","ms":1200},
+{"a":"mark","n":"02 menu"},
+{"a":"hold","on":true},
+{"a":"wait","ms":1000},
 {"a":"click","to":"#mnu"},
 {"a":"wait","ms":1700},
-{"a":"zoom","z":1.3,"ms":900},
-{"a":"hover","to":".cvn-l button@Movies","hold":1100},
+{"a":"hover","to":".cvn-l button@Movies","hold":1100,"z":1.3},
 {"a":"hover","to":".cvn-l button@Series","hold":1100},
 {"a":"hover","to":".cvn-l button@Anime","hold":1100},
 {"a":"hover","to":".cvn-l button@Browse","hold":1100},
 {"a":"zoom","z":1,"ms":800},
 {"a":"click","to":".cvn-x"},
-{"a":"wait","ms":1200},
-{"a":"cut"},
 {"a":"wait","ms":1000},
+{"a":"cut"},
+{"a":"mark","n":"03 detail+parallax"},
+{"a":"hold","on":true},
+{"a":"wait","ms":800},
 {"a":"click","to":"#hmore"},
 {"a":"wait","ms":2600},
-{"a":"zoom","z":1.25,"ms":900},
+{"a":"zoom","z":1.2,"to":"#modal","nocursor":true,"ms":900},
 {"a":"scroll","in":"#modal","by":700,"ms":3200},
 {"a":"wait","ms":800},
 {"a":"scroll","in":"#modal","y":0,"ms":2200},
 {"a":"zoom","z":1,"ms":700},
 {"a":"cut","reload":false},
+{"a":"mark","n":"04 mood+colour card"},
 {"a":"click","to":"[data-cvt=mood]"},
 {"a":"wait","ms":1500},
 {"a":"zoom","z":1.4,"to":".mstills","ms":1000},
@@ -98,7 +103,8 @@ const DEF=[
 {"a":"click","to":"[data-a=x]"},
 {"a":"wait","ms":800},
 {"a":"cut"},
-{"a":"wait","ms":800},
+{"a":"mark","n":"05 spotlight"},
+{"a":"wait","ms":700},
 {"a":"scroll","to":"#cvspot","off":90,"ms":2600},
 {"a":"zoom","z":1.35,"to":".sp-frame","ms":1000},
 {"a":"wait","ms":1500},
@@ -108,7 +114,8 @@ const DEF=[
 {"a":"wait","ms":2200},
 {"a":"zoom","z":1,"ms":800},
 {"a":"cut"},
-{"a":"wait","ms":800},
+{"a":"mark","n":"06 browse"},
+{"a":"wait","ms":700},
 {"a":"click","to":"nav [data-v=browse]"},
 {"a":"wait","ms":2000},
 {"a":"click","to":"button@Hidden gems"},
@@ -120,7 +127,9 @@ const DEF=[
 {"a":"click","to":"[data-c=Violet]"},
 {"a":"wait","ms":2600},
 {"a":"cut"},
-{"a":"wait","ms":1000},
+{"a":"mark","n":"07 tonight"},
+{"a":"hold","on":true},
+{"a":"wait","ms":900},
 {"a":"click","to":"#mnu"},
 {"a":"wait","ms":1600},
 {"a":"click","to":".cvn-l button@Tonight"},
@@ -133,8 +142,7 @@ const DEF=[
 {"a":"wait","ms":4000},
 {"a":"zoom","z":1.3,"to":".tn .res","ms":1000},
 {"a":"wait","ms":2200},
-{"a":"zoom","z":1,"ms":800},
-{"a":"cut","reload":false,"hold":800}
+{"a":"zoom","z":1,"ms":800}
 ];
 const cam={s:{z:1,x:W/2,y:H/2},m:{z:1,x:W/2,y:H/2},t:{z:1,x:W/2,y:H/2},follow:false,sp:4.5};
 const cur={x:W*.8,y:H*.85};
@@ -175,6 +183,11 @@ async function reveal(e){const r=e.getBoundingClientRect();if(r.top<90||r.bottom
  if(sc&&sc!==D().body&&sc!==D().documentElement)await scrollTo(sc.scrollTop+r.top-sc.getBoundingClientRect().top-H/3,1100,sc);else await scrollTo(Wn().scrollY+r.top-H/3,1200)}}
 function ripple(){const r=document.createElement('div');r.className='rip';r.style.left=cur.x+'px';r.style.top=cur.y+'px';camEl.appendChild(r);setTimeout(()=>r.remove(),800);
  curEl.classList.add('dn');setTimeout(()=>curEl.classList.remove('dn'),160)}
+let marks=[],T0=0;
+function resetCam(){for(const q of['s','m','t'])cam[q]={z:1,x:W/2,y:H/2};cam.follow=false;cur.x=W*.8;cur.y=H*.85;drawCur()}
+function camMode(z){cam.sp=4.5;cam.t.z=z||1;if(z>1)cam.follow=true;else{cam.follow=false;cam.t.x=W/2;cam.t.y=H/2}}
+async function aim(e,ms){await reveal(e);let c=ctr(e);await moveTo(c.x,c.y,ms);const c2=ctr(e);
+ if(Math.hypot(c2.x-c.x,c2.y-c.y)>10){await moveTo(c2.x,c2.y,300);c=c2}return c}
 function tapEl(t){const w=Wn();let n=t;while(n&&typeof n.click!=='function')n=n.parentElement;n=n||t;
  const o={bubbles:true,cancelable:true,view:w,pointerType:'mouse',button:0,clientX:cur.x,clientY:cur.y};
  for(const ty of['pointerdown','mousedown','pointerup','mouseup']){try{n.dispatchEvent(new(ty[0]=='p'?w.PointerEvent:w.MouseEvent)(ty,o))}catch(e){}}
@@ -182,48 +195,59 @@ function tapEl(t){const w=Wn();let n=t;while(n&&typeof n.click!=='function')n=n.
 const A={
  wait:s=>sleep(s.ms||500),
  async zoom(s){cam.sp=s.sp||4.5;const z=s.z||1;
-  if(s.to){const e=find(s.to);await reveal(e);const c=ctr(e);let mv;
-   if(z>1&&!s.nocursor){mv=moveTo(c.x,c.y);await sleep(350)}
+  if(s.to){const e=find(s.to);await reveal(e);let c=ctr(e),mv;
+   if(z>1&&!s.nocursor){mv=moveTo(c.x,c.y);await sleep(350);c=ctr(e)}
    cam.t.z=z;cam.t.x=c.x;cam.t.y=c.y;cam.follow=false;if(mv)await mv}
-  else{cam.t.z=z;if(z>1)cam.follow=true;else{cam.follow=false;cam.t.x=W/2;cam.t.y=H/2}}
+  else camMode(z);
   if(!s.nowait)await sleep(s.ms||800)},
- async move(s){const e=find(s.to);await reveal(e);const c=ctr(e);await moveTo(c.x,c.y,s.ms)},
- async click(s){const e=find(s.to);await reveal(e);const c=ctr(e);await moveTo(c.x,c.y,s.ms);await sleep(120);ripple();
+ async move(s){const e=find(s.to);if(s.z!==undefined)camMode(s.z);await aim(e,s.ms)},
+ async click(s){const e=find(s.to);if(s.z!==undefined)camMode(s.z);const c=await aim(e,s.ms);await sleep(120);ripple();
   tapEl(D().elementFromPoint(c.x,c.y)||e);await sleep(200)},
  async type(s){const e=find(s.to);e.focus();for(const ch of s.text){if(abort)return;e.value+=ch;
   e.dispatchEvent(new Event('input',{bubbles:true}));await sleep(s.gap||85)}},
  async scroll(s){const el=s.in?find(s.in):null,base=el?el.scrollTop:Wn().scrollY;
   const y=s.to?base+find(s.to).getBoundingClientRect().top-(el?el.getBoundingClientRect().top:0)-(s.off??120):s.by!=null?base+s.by:s.y;await scrollTo(y,s.ms||1800,el)},
- async hover(s){const e=find(s.to);await reveal(e);const c=ctr(e);await moveTo(c.x,c.y,s.ms);
+ async hover(s){const e=find(s.to);if(s.z!==undefined)camMode(s.z);await aim(e,s.ms);
   for(const t of['pointerover','pointerenter'])e.dispatchEvent(new(Wn().PointerEvent)(t,{bubbles:true,pointerType:'mouse'}));await sleep(s.hold||1000)},
- async cut(s){const f=$('#fade');f.style.opacity=1;await sleep(600);curEl.classList.remove('on');
-  for(const q of['s','m','t'])cam[q]={z:1,x:W/2,y:H/2};cam.follow=false;cur.x=W*.8;cur.y=H*.85;drawCur();
-  if(s.reload===false){await sleep(s.hold||1200);f.style.opacity=0;await sleep(600);return}
-  if(s.intro){ifr.src='about:blank';await sleep(500);f.style.opacity=0;await sleep(700);await loadSite($('#path').value,true)}
-  else{await loadSite($('#path').value,false);await sleep(s.hold||1200);f.style.opacity=0;await sleep(600)}}
+ hold:s=>{try{const d=D();s.on?Object.defineProperty(d,'hidden',{get:()=>true,configurable:true}):delete d.hidden}catch(e){}},
+ mark:s=>{marks.push([s.n,(performance.now()-T0)/1000])},
+ async cut(s){const f=$('#fade');f.style.transition='opacity .45s';f.style.opacity=1;await sleep(550);curEl.classList.remove('on');
+  resetCam();
+  if(s.reload===false){await sleep(s.hold||900);f.style.opacity=0;await sleep(500);return}
+  await loadSite($('#path').value,false);await sleep(s.hold||600)}
 };
 async function run(steps){const bad=[];for(const s of steps){if(abort)break;
  try{await A[s.a](s)}catch(e){bad.push(s.a+': '+e.message)}}return bad}
-function loadSite(path,intro=true){return new Promise(res=>{try{intro?sessionStorage.removeItem('cv_i'):sessionStorage.setItem('cv_i','1')}catch(e){}
- ifr.onload=()=>res();ifr.src=path+(path.includes('?')?'&':'?')+'stage='+Date.now()})}
+function loadSite(path,intro=true,keep=false){const f=$('#fade');
+ return new Promise(res=>{try{intro?sessionStorage.removeItem('cv_i'):sessionStorage.setItem('cv_i','1')}catch(e){}
+  f.style.transition='none';f.style.opacity=1;ifr.src='about:blank';
+  setTimeout(()=>{ifr.src=path+(path.includes('?')?'&':'?')+'stage='+Date.now();const t0=Date.now();
+   const iv=setInterval(()=>{let ok=0;try{const d=ifr.contentDocument;ok=d&&d.body&&d.readyState!=='loading'&&d.location.href.indexOf('about:blank')<0}catch(e){}
+    if(ok||Date.now()-t0>15000){clearInterval(iv);if(keep)return res();
+     setTimeout(()=>{f.style.transition='opacity .3s';f.style.opacity=0;res()},intro?100:700)}},40)},150)})}
+const fmt=t=>Math.floor(t/60)+':'+String(Math.floor(t%60)).padStart(2,'0');
 async function start(){if(running)return;let steps;
  try{steps=JSON.parse($('#scr').value)}catch(e){$('#msg').textContent='Script JSON galat hai: '+e.message;return}
  try{localStorage.setItem('stg_scr',$('#scr').value)}catch(e){}
- running=true;abort=false;$('#fade').style.opacity=0;blurOn=$('#bl').checked;$('#msg').textContent='';
+ running=true;abort=false;blurOn=$('#bl').checked;$('#msg').textContent='';marks=[];T0=performance.now();let wl;
  if($('#fs').checked)try{await document.documentElement.requestFullscreen()}catch(e){}
- layout();$('#panel').classList.add('h');curEl.classList.remove('on');
- for(const q of['s','m','t'])cam[q]={z:1,x:W/2,y:H/2};cam.follow=false;cur.x=W*.8;cur.y=H*.85;drawCur();
- await loadSite($('#path').value);ifr.style.visibility='hidden';
+ try{wl=await navigator.wakeLock.request('screen')}catch(e){}
+ layout();$('#panel').classList.add('h');curEl.classList.remove('on');resetCam();
+ const f=$('#fade');f.style.transition='none';f.style.opacity=1;
  const n=+$('#cdn').value||5,cd=$('#cd');cd.style.display='flex';
- for(let i=n;i>0&&!abort;i--){cd.textContent=i;await sleep(1000)}cd.style.display='none';ifr.style.visibility='';
- await loadSite($('#path').value);
+ const pre=loadSite($('#path').value,false,true);
+ for(let i=n;i>0&&!abort;i--){cd.textContent=i;await sleep(1000)}
+ await pre;cd.style.display='none';
+ if(!abort)await loadSite($('#path').value,true);
  const bad=abort?[]:await run(steps);
- running=false;curEl.classList.remove('on');$('#panel').classList.remove('h');
- $('#msg').textContent=(abort?'Rok diya.':'Done - ab recorder stop karo.')+(bad.length?'\nSkip hue:\n'+bad.join('\n'):'')}
+ marks.push(['END',(performance.now()-T0)/1000]);
+ running=false;curEl.classList.remove('on');$('#fade').style.opacity=0;$('#panel').classList.remove('h');try{wl&&wl.release()}catch(e){}
+ const lst=marks.map((m,i)=>m[0]==='END'?'':m[0]+'  '+fmt(m[1]+0)+' - '+fmt(marks[i+1][1])).filter(Boolean).join('\n');
+ $('#msg').textContent=(abort?'Rok diya.':'Done - ab recorder stop karo.')+'\nCut list (Start dabane ke time se, countdown "5" dikhne wale moment se gino):\n'+lst+(bad.length?'\nSkip hue:\n'+bad.join('\n'):'')}
 let tap=0;$('#stop').onclick=()=>{const n=Date.now();if(n-tap<500){abort=true;$('#cd').style.display='none'}tap=n};
 $('#go').onclick=start;
 $('#rs').onclick=()=>{$('#scr').value=JSON.stringify(DEF,null,1)};
-try{if(localStorage.getItem('stg_ver')==='3')$('#scr').value=localStorage.getItem('stg_scr')||'';localStorage.setItem('stg_ver','3')}catch(e){}
+try{if(localStorage.getItem('stg_ver')==='4')$('#scr').value=localStorage.getItem('stg_scr')||'';localStorage.setItem('stg_ver','4')}catch(e){}
 if(!$('#scr').value)$('#rs').click();
 layout();drawCur();requestAnimationFrame(tick);
 </script></body></html>
