@@ -50,6 +50,7 @@ function bestMatch(list,fp){return Promise.all(list.map(b=>new Promise(res=>{con
 // Set HERO_PIN=false to go back to the usual hero.
 const HERO_PIN=true;
 async function heroPins(){if(!HERO_PIN)return[];
+ try{const c=JSON.parse(localStorage.getItem("cv_hpin2")||"null");if(c&&Date.now()-c.t<216e5&&c.h&&c.h.length===2){c.h.forEach(i=>{if(i.logo!=null)lgc[kind(i)+i.id]=i.logo});return c.h}}catch{}
  const one=async(t,id,still,fx)=>{try{const d=await api(`/${t}/${id}`,{append_to_response:"images",include_image_language:"en,null"});
   const bs=((d.images||{}).backdrops||[]).filter(b=>!b.iso_639_1).sort((p,q)=>q.vote_average-p.vote_average); // same order as the Mood tab
   const pk=(still?bs[0]:(bs.filter(b=>b.width>=1920)[0]||bs[0]))||{};
@@ -57,7 +58,9 @@ async function heroPins(){if(!HERO_PIN)return[];
   if(!(pk.file_path||d.backdrop_path))return null;
   lgc[t+d.id]=pick((d.images||{}).logos);
   return{...d,media_type:t,bd:pk.file_path||d.backdrop_path,bw:pk.width||0,fx:fx,pref:still?1:0,pt:ps[0]?ps[0].file_path:"",runtime:d.runtime||(d.episode_run_time||[])[0]||0}}catch{return null}};
- return(await Promise.all([one("movie",335984,1,"46%"),one("tv",95557,0)])).filter(Boolean)}
+ const r=(await Promise.all([one("movie",335984,1,"46%"),one("tv",95557,0)])).filter(Boolean);
+ if(r.length===2)try{localStorage.setItem("cv_hpin2",JSON.stringify({t:Date.now(),h:r.map(slim)}))}catch{}
+ return r}
 async function heroPicks(){const r=await Promise.all(HERO.map(async([q,y,o])=>{try{o=o||{};
   let id=localStorage.getItem("hid:"+q+y);
   if(!id){const s=await api("/search/movie",{query:q,year:y}),m=s.results.find(x=>x.backdrop_path&&x.poster_path);if(!m)return null;id=m.id;try{localStorage.setItem("hid:"+q+y,id)}catch{}}
@@ -209,8 +212,11 @@ async function home(){let on=0;
  // first slide appears as soon as ONE title is ready; the rest join the carousel as they arrive
  const feed=i=>{if(hero.length>=6||hero.some(x=>x.id===i.id&&kind(x)===kind(i)))return;hero.push(i);if(!((kind(i)+i.id) in lgc))heroLogo(i);if(on)safeGrow();else{on=1;safeHero()}};
  const warm=heroCacheGet();
- (async()=>{const pins=await Promise.race([heroPins(),hsleep(3000).then(()=>[])]); // TEMP pinned slots first, the usual mix follows
-  if(warm){warm.forEach(i=>{if(i.logo!=null)lgc[kind(i)+i.id]=i.logo});const rest=warm.filter(w=>!pins.some(p=>p.id===w.id&&kind(p)===kind(w))).sort(()=>Math.random()-.5);hero=pins.concat(rest).slice(0,6);on=1;safeHero();
+ const pinsP=heroPins();
+ (async()=>{let pins=await Promise.race([pinsP,hsleep(2200).then(()=>null)]);const late=pins===null;if(late)pins=[]; // TEMP pinned slots first, the usual mix follows
+  const isPin=x=>pins.some(p=>p.id===x.id&&kind(p)===kind(x));
+  if(late)pinsP.then(ps=>{if(!ps.length)return;if(!on){ps.forEach(feed);return}hero=ps.concat(hero.filter(x=>!ps.some(p=>p.id===x.id&&kind(p)===kind(x)))).slice(0,6);growDots();setHero(0,1)}).catch(()=>{});
+  if(warm){warm.forEach(i=>{if(i.logo!=null)lgc[kind(i)+i.id]=i.logo});const rest=warm.filter(w=>!isPin(w)).sort(()=>Math.random()-.5);hero=pins.concat(rest).slice(0,6);on=1;safeHero();
    setTimeout(()=>heroItems().then(heroCachePut).catch(()=>{}),SLOW()?30000:2500)} // a fresh mix is prepared quietly for the next visit
   else{pins.forEach(feed);await heroItems(feed).then(h=>{h.forEach(feed);if(!on)throw Error("No titles loaded");heroCachePut(hero)})}
  })().catch(e=>{if(!on)setup(e)});
