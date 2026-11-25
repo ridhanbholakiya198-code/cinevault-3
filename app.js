@@ -12,12 +12,12 @@ const esc=s=>String(s==null?"":s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",
 // ---- Storage: swap for Firebase later (ROADMAP Part 4) ----
 const store={get:()=>JSON.parse(localStorage.getItem("cv_list")||"{}"),set:v=>{localStorage.setItem("cv_list",JSON.stringify(v));window.CVA&&CVA.push(v)}};
 // ---- API with memory + 30 min localStorage cache (fast repeat loads) ----
-const KEY=()=>localStorage.getItem("cv_key")||(TMDB_KEY.startsWith("PASTE")?"":TMDB_KEY),mem=new Map(),TTL=108e5;
+const KEY=()=>localStorage.getItem("cv_key")||((typeof TMDB_KEY!=="undefined"&&TMDB_KEY&&!String(TMDB_KEY).startsWith("PASTE"))?TMDB_KEY:""),mem=new Map(),TTL=108e5;
 async function api(p,q={},nc){if(!PX&&!KEY())throw Error("key");const ck="c:"+p+JSON.stringify(q);
  if(mem.has(ck))return mem.get(ck);
  try{const c=JSON.parse(localStorage.getItem(ck)||"null");if(c&&Date.now()-c.t<TTL){mem.set(ck,c.j);return c.j}}catch{}
  let j,er;for(let a=0;a<3;a++){er=null;try{j=await get(PX?"/api/tmdb":DIRECT,p,a?{...q,_r:Date.now()}:q);break}catch(e){er=e;if(PX&&KEY()&&e.message!=="401"&&e.message!=="404"){try{j=await get(DIRECT,p,q);er=null;break}catch(e2){er=e2}}
-  if(/^(401|404|key)$/.test(er.message))break;await new Promise(r=>setTimeout(r,700*(a+1)))}}if(er)throw er;
+  if(/^(401|404|key)$/.test(er.message))break;await new Promise(r=>setTimeout(r,700*(a+1)))}}if(er){try{CVDBG(`api ${p} failed: ${er.message}`)}catch{}throw er}
  mem.set(ck,j);
  if(!nc)try{localStorage.setItem(ck,JSON.stringify({t:Date.now(),j}))}catch{Object.keys(localStorage).filter(x=>x.startsWith("c:")).forEach(x=>localStorage.removeItem(x))}return j}
 const title=i=>i.title||i.name,kind=i=>i.media_type||(i.title?"movie":"tv");
@@ -47,14 +47,14 @@ function fpOf(im){const c=document.createElement("canvas");c.width=16;c.height=9
 function bestMatch(list,fp){return Promise.all(list.map(b=>new Promise(res=>{const im=new Image();im.crossOrigin="anonymous";
   im.onload=()=>{try{const d=fpOf(im);let e=0,j=0;for(let k=0;k<d.length;k++){if(k%4===3)continue;e+=(d[k]-fp[j++])**2}res([e,b])}catch{res([Infinity,b])}};im.onerror=()=>res([Infinity,b]);im.src=IMG+"w300"+b.file_path}))).then(r=>{r.sort((a,b)=>a[0]-b[0]);return r[0]&&r[0][0]<Infinity?r[0][1]:null})}
 // ---- build stamp + on-screen diagnostics (visible only when the address ends with ?debug=1)
-const PARDA_BUILD=62,DBG=/[?&]debug\b/.test(location.search);
+const PARDA_BUILD=63,DBG=/[?&]debug\b/.test(location.search);
 const dbg=window.CVDBG=m=>{if(!DBG)return;try{let e=document.getElementById("pdbg");if(!e){e=document.createElement("pre");e.id="pdbg";e.style.cssText="position:fixed;left:8px;right:8px;bottom:96px;z-index:99999;margin:0;padding:8px 10px;background:#000d;color:#8f8;font:11px/1.45 monospace;border-radius:8px;white-space:pre-wrap;pointer-events:none;max-height:40vh;overflow:hidden";document.body.append(e)}e.textContent+=m+"\n"}catch{}};
 // ---- TEMP: pinned hero slots. 1 = Blade Runner 2049 on its first Mood "Still" (the one the Mood tab lists first), 2 = Invincible. The normal mix follows.
 // Set HERO_PIN=false to go back to the usual hero.
 const HERO_PIN=true;
 async function heroPins(){if(!HERO_PIN)return[];
  try{const c=JSON.parse(localStorage.getItem("cv_hpin2")||"null");if(c&&Date.now()-c.t<216e5&&c.h&&c.h.length===2){c.h.forEach(i=>{if(i.logo!=null)lgc[kind(i)+i.id]=i.logo});dbg("pins: loaded from saved copy");return c.h}}catch{}
- const one=async(t,id,still,fx)=>{try{const d=await api(`/${t}/${id}`,{append_to_response:"images",include_image_language:"en,null"});
+ const one=async(t,id,still,fx)=>{try{let d;try{d=await api(`/${t}/${id}`,{append_to_response:"images",include_image_language:"en,null"})}catch(e1){dbg("pin "+t+id+" first request failed ("+(e1&&e1.message)+"), trying plain details + /images");const base=await api(`/${t}/${id}`),im=await api(`/${t}/${id}/images`,{include_image_language:"en,null"});d={...base,images:im}}
   const bs=((d.images||{}).backdrops||[]).filter(b=>!b.iso_639_1).sort((p,q)=>q.vote_average-p.vote_average); // same order as the Mood tab
   const pk=(still?bs[0]:(bs.filter(b=>b.width>=1920)[0]||bs[0]))||{};
   const ps=((d.images||{}).posters||[]).filter(p=>!p.iso_639_1&&p.height>=1200).sort((p,q)=>q.vote_average-p.vote_average);
@@ -64,6 +64,7 @@ async function heroPins(){if(!HERO_PIN)return[];
  const r=(await Promise.all([one("movie",335984,1,"46%"),one("tv",95557,0)])).filter(Boolean);dbg("pins fetched: "+r.map(x=>x.media_type+x.id+" bd="+x.bd).join(" | "));
  if(r.length===2)try{localStorage.setItem("cv_hpin2",JSON.stringify({t:Date.now(),h:r.map(slim)}))}catch{}
  return r}
+async function heroPinsRetry(){if(!HERO_PIN)return[];let best=[];for(let k=0;k<4;k++){const r=await heroPins();if(r.length>best.length)best=r;if(best.length===2)return best;dbg("pins retry "+(k+1));await hsleep(2000*(k+1))}return best}
 async function heroPicks(){const r=await Promise.all(HERO.map(async([q,y,o])=>{try{o=o||{};
   let id=localStorage.getItem("hid:"+q+y);
   if(!id){const s=await api("/search/movie",{query:q,year:y}),m=s.results.find(x=>x.backdrop_path&&x.poster_path);if(!m)return null;id=m.id;try{localStorage.setItem("hid:"+q+y,id)}catch{}}
@@ -215,7 +216,7 @@ async function home(){let on=0;dbg("build "+PARDA_BUILD+" (new app.js is live)")
  // first slide appears as soon as ONE title is ready; the rest join the carousel as they arrive
  const feed=i=>{if(hero.length>=6||hero.some(x=>x.id===i.id&&kind(x)===kind(i)))return;hero.push(i);if(!((kind(i)+i.id) in lgc))heroLogo(i);if(on)safeGrow();else{on=1;safeHero()}};
  const warm=heroCacheGet();
- const pinsP=heroPins();
+ const pinsP=heroPinsRetry();
  (async()=>{let pins=await Promise.race([pinsP,hsleep(2200).then(()=>null)]);const late=pins===null;if(late)pins=[];dbg("hero pins ready: "+pins.length+(late?" (still loading after 2.2s, join when ready)":"")); // TEMP pinned slots first, the usual mix follows
   const isPin=x=>pins.some(p=>p.id===x.id&&kind(p)===kind(x));
   if(late)pinsP.then(ps=>{dbg("late pins arrived: "+ps.length);if(!ps.length)return;if(!on){ps.forEach(feed);return}hero=ps.concat(hero.filter(x=>!ps.some(p=>p.id===x.id&&kind(p)===kind(x)))).slice(0,6);growDots();setHero(0,1)}).catch(()=>{});
