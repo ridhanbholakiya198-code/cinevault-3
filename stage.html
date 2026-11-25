@@ -10,20 +10,20 @@
 html,body{margin:0;height:100%;background:#07060d;overflow:hidden;font:14px system-ui,sans-serif;color:#eee}
 #bg{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;
  background:radial-gradient(1200px 700px at 12% 8%,#5b2bd6aa,transparent 60%),radial-gradient(900px 600px at 92% 96%,#d63a8faa,transparent 60%),#07060d}
-body.haspad #bg{padding-bottom:225px}
+body.haspad #bg{padding-bottom:250px}
 @media (orientation:landscape){body.haspad #bg{padding-bottom:0}}
-#win{position:relative;overflow:hidden;background:#000;border-radius:14px;box-shadow:0 24px 60px #0009,0 0 0 1px #ffffff26}
+#win{position:relative;overflow:hidden;contain:layout paint;background:#000;border-radius:14px;box-shadow:0 24px 60px #0009,0 0 0 1px #ffffff26}
 body.flat #bg{background:#000}body.flat #win{border-radius:0;box-shadow:none}
-#cam{position:absolute;left:0;top:0;width:1440px;height:900px;transform-origin:0 0;will-change:transform}
+#cam{position:absolute;left:0;top:0;width:1440px;height:900px;transform-origin:0 0;will-change:transform;backface-visibility:hidden;-webkit-backface-visibility:hidden}
 #ifr{position:absolute;inset:0;width:1440px;height:900px;border:0;background:#000}
-#cur{position:absolute;left:0;top:0;width:34px;height:34px;pointer-events:none;opacity:0;transition:opacity .3s;z-index:5;filter:drop-shadow(0 3px 5px #0009)}
+#cur{position:absolute;left:0;top:0;width:34px;height:34px;pointer-events:none;opacity:0;transition:opacity .3s;z-index:5;filter:drop-shadow(0 3px 5px #0009);will-change:transform}
 #cur.on{opacity:1}#cur svg{width:100%;height:100%;transition:transform .12s}#cur.dn svg{transform:scale(.82)}
 .rip{position:absolute;width:20px;height:20px;margin:-10px 0 0 -10px;border-radius:50%;border:3px solid #fff;pointer-events:none;z-index:4;animation:rp .7s ease-out forwards}
 @keyframes rp{from{transform:scale(.4);opacity:.95}to{transform:scale(3.4);opacity:0}}
 #fade{position:absolute;inset:0;background:#000;opacity:0;pointer-events:none;z-index:15}
 #cd{position:fixed;inset:0;display:none;align-items:center;justify-content:center;font:700 120px system-ui;z-index:20;background:#000}
 #stop{position:fixed;left:0;top:0;width:80px;height:80px;z-index:30}
-#panel{position:fixed;left:0;right:0;bottom:0;max-height:78vh;overflow:auto;padding:14px;background:#111e;z-index:25;border-top:1px solid #fff2}
+#panel{position:fixed;left:0;right:0;bottom:0;max-height:80vh;overflow:auto;padding:14px;background:#111e;z-index:25;border-top:1px solid #fff2}
 #panel.h{display:none}
 #panel label{display:inline-flex;align-items:center;gap:6px;margin:4px 12px 4px 0}
 #panel input[type=text],#panel input[type=number],#panel select{background:#000;color:#fff;border:1px solid #fff3;border-radius:8px;padding:8px}
@@ -36,21 +36,22 @@ button.g{background:#333}
 .mopts{margin:4px 0;padding:8px 10px;background:#ffffff0a;border:1px solid #ffffff1a;border-radius:10px}
 .hide{display:none!important}
 /* Virtual Trackpad (outside #win so recordings stay 100% clean) */
-#tpad{position:fixed;left:12px;right:12px;bottom:12px;height:206px;max-width:520px;margin:0 auto;z-index:22;
- display:flex;flex-direction:column;gap:8px;padding:10px;border-radius:18px;
- background:rgba(14,12,24,.78);border:1px solid rgba(255,255,255,.16);
+#tpad{position:fixed;left:10px;right:10px;bottom:10px;height:234px;max-width:540px;margin:0 auto;z-index:22;
+ display:flex;flex-direction:column;gap:6px;padding:8px;border-radius:18px;
+ background:rgba(14,12,24,.82);border:1px solid rgba(255,255,255,.16);
  box-shadow:0 12px 32px #0008;touch-action:none;user-select:none;-webkit-user-select:none}
-@media (orientation:landscape){#tpad{height:146px;max-width:360px;left:auto;right:12px;bottom:12px;opacity:.86}}
-#tpad-top{flex:1;display:flex;gap:8px;min-height:0}
+@media (orientation:landscape){#tpad{height:176px;max-width:390px;left:auto;right:10px;bottom:10px;opacity:.88}}
+#tpad-top{flex:1;display:flex;gap:6px;min-height:0}
 #tpad-surf{flex:1;position:relative;border-radius:12px;background:rgba(255,255,255,.05);border:1px dashed rgba(255,255,255,.16);
- display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.38);font-size:12px;text-align:center;padding:8px;touch-action:none}
-#tpad-scrl{width:56px;border-radius:12px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.14);
- display:flex;flex-direction:column;align-items:center;justify-content:space-between;padding:4px 0;color:rgba(255,255,255,.72);font-size:13px;touch-action:none}
-#tpad-scrl button{width:100%;height:34px;margin:0;padding:0;background:transparent;color:rgba(255,255,255,.78);font-size:13px;border-radius:8px}
-#tpad-scrl span{font-size:15px;opacity:.55;pointer-events:none}
-#tpad-bar{display:flex;gap:8px;height:36px}
-#tpad-bar button{flex:1;margin:0;padding:0 10px;font-size:12px;font-weight:600;border-radius:10px;background:rgba(255,255,255,.1);color:#eee;border:1px solid rgba(255,255,255,.12)}
-#tpad-bar button.on{background:#7c4dff;border-color:#9e7bff;color:#fff}
+ display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.38);font-size:11px;text-align:center;padding:8px;touch-action:none}
+#tpad-scrl{width:50px;border-radius:12px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.14);
+ display:flex;flex-direction:column;align-items:center;justify-content:space-between;padding:2px 0;color:rgba(255,255,255,.72);font-size:12px;touch-action:none}
+#tpad-scrl button{width:100%;height:32px;margin:0;padding:0;background:transparent;color:rgba(255,255,255,.82);font-size:12px;border-radius:8px}
+#tpad-scrl span{font-size:14px;opacity:.55;pointer-events:none}
+.tp-row{display:flex;gap:6px;height:34px}
+.tp-row button{flex:1;margin:0;padding:0 4px;font-size:11px;font-weight:600;border-radius:9px;background:rgba(255,255,255,.1);color:#eee;border:1px solid rgba(255,255,255,.12);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tp-row button.on{background:#7c4dff;border-color:#9e7bff;color:#fff}
+.tp-row button.dw{background:#00bfa5;border-color:#5df2d6;color:#05201c}
 </style></head><body>
 <div id="bg"><div id="win"><div id="cam">
  <iframe id="ifr" src="about:blank"></iframe>
@@ -59,17 +60,24 @@ button.g{background:#333}
 <div id="cd"></div><div id="stop"></div>
 <div id="tpad" class="hide">
  <div id="tpad-top">
-  <div id="tpad-surf">Trackpad: Slide = move cursor &bull; Tap = click + zoom &bull; 2-finger slide = scroll</div>
+  <div id="tpad-surf">Slide = mouse &bull; Tap = click &bull; 2-finger = scroll</div>
   <div id="tpad-scrl" title="Scroll">
    <button id="tp-up" type="button">&#9650;</button>
    <span>&#8693;</span>
    <button id="tp-dn" type="button">&#9660;</button>
   </div>
  </div>
- <div id="tpad-bar">
+ <div class="tp-row">
+  <button id="tp-left" type="button">&#9664; Left</button>
+  <button id="tp-right" type="button">Right &#9654;</button>
+  <button id="tp-back" type="button">&#8592; Back</button>
+ </div>
+ <div class="tp-row">
   <button id="tp-clk" type="button">Click</button>
-  <button id="tp-hold" type="button">Hold Zoom</button>
-  <button id="tp-out" type="button">1x Reset</button>
+  <button id="tp-tz" type="button" class="on">TapZoom</button>
+  <button id="tp-dw" type="button">Dwell</button>
+  <button id="tp-hold" type="button">Hold</button>
+  <button id="tp-out" type="button">1x</button>
  </div>
 </div>
 <div id="panel">
@@ -80,18 +88,26 @@ button.g{background:#333}
   <option value="auto">Auto Script (JSON)</option>
  </select></label><br>
  <div id="mopts" class="mopts">
-  <label>Tap zoom <select id="mz">
+  <label>Zoom level <select id="mz">
    <option value="1.5" selected>1.5x (script jaisa)</option>
    <option value="1.4">1.4x</option>
    <option value="1.6">1.6x</option>
    <option value="1.8">1.8x</option>
-   <option value="1">Off (no zoom)</option>
+   <option value="1">Off (1x)</option>
   </select></label>
   <label>Zoom-out <select id="mout">
    <option value="1500" selected>1.5s auto</option>
    <option value="2200">2.2s auto</option>
    <option value="800">0.8s fast</option>
-   <option value="0">Manual (Hold / 1x Reset)</option>
+   <option value="0">Manual (Hold / 1x)</option>
+  </select></label>
+  <label id="dwwrap">Dwell zoom <select id="mdw">
+   <option value="800">0.8s</option>
+   <option value="1000">1.0s</option>
+   <option value="1500" selected>1.5s</option>
+   <option value="2000">2.0s</option>
+   <option value="2500">2.5s</option>
+   <option value="3000">3.0s</option>
   </select></label>
   <label id="senswrap">Mouse speed <select id="msens">
    <option value="1.8">Smooth (1.8x)</option>
@@ -293,7 +309,7 @@ const DEF=[
 ];
 const cam={z:1,x:W/2,y:H/2,tw:null,follow:false},cur={x:W*.8,y:H*.85},auto={z:0,out:1500};
 let pace=1;const T=ms=>ms*pace,ZD=.7,ZO=.8;
-let k=1,ww=0,wh=0,abort=false,running=false,manualOn=false,trackOn=false,holdZoom=false,blurOn=false,outT=0,marks=[],T0=0,last=performance.now(),unsubManual=null,lastHoverEl=null;
+let k=1,ww=0,wh=0,abort=false,running=false,manualOn=false,trackOn=false,holdZoom=false,tapZoomOn=true,dwellOn=false,dwellZoomed=false,blurOn=false,outT=0,dwellT=0,marks=[],T0=0,last=performance.now(),unsubManual=null,lastHoverEl=null,lastTf='',lastBlur='',initHref='';
 const isApp=()=>matchMedia('(display-mode: fullscreen)').matches||matchMedia('(display-mode: standalone)').matches;
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 function layout(){
@@ -302,30 +318,31 @@ function layout(){
  const flat=!$('#fr').checked;document.body.classList.toggle('flat',flat);
  const padOpen=trackOn&&running;
  document.body.classList.toggle('haspad',padOpen);
- const p=flat?0:.04,vw=innerWidth,vh0=innerHeight,vh=vh0-(padOpen&&vh0>vw?225:0);
+ const p=flat?0:.04,vw=innerWidth,vh0=innerHeight,vh=vh0-(padOpen&&vh0>vw?250:0);
  ww=Math.min(vw*(1-2*p),vh*(1-2*p)*W/H);wh=ww*H/W;
- win.style.width=ww+'px';win.style.height=wh+'px';k=ww/W}
+ win.style.width=ww+'px';win.style.height=wh+'px';k=ww/W;lastTf=''}
 addEventListener('resize',layout);document.addEventListener('fullscreenchange',layout);
 $('#fr').onchange=layout;$('#mode').onchange=layout;
 function syncModeUI(){
  const rm=$('#runmode').value,isAuto=rm==='auto';
  $('#mopts').classList.toggle('hide',isAuto);
  $('#senswrap').classList.toggle('hide',rm!=='trackpad');
+ $('#dwwrap').classList.toggle('hide',rm!=='trackpad');
  $('#scrwrap').classList.toggle('hide',!isAuto);
  $('#rs').classList.toggle('hide',!isAuto);
  $('#hint').textContent=rm==='trackpad'
-  ?'Trackpad Mouse: Niche wale pad pe finger chalao -> screen pe mouse chalega (no text select, no finger block). Tap = zoom + click. Right strip (▲/▼/drag) = scroll. Top-left double-tap = stop.'
+  ?'Trackpad: Slide = mouse, Tap = click, Left/Right/Up/Down = scroll, Back = piche jao, TapZoom = har click pe zoom ON/OFF, Dwell = cursor rukne par auto-zoom -> click ke turant baad normal.'
   :rm==='manual'
   ?'Direct Touch: Screen pe finger = cursor, Tap = zoom + click, 2-finger tap = zoom-out. Top-left double-tap = stop.'
   :'Pehle recorder start karo, phir Start dabao. Rukne ke liye top-left corner pe double-tap.\nActions: wait, auto, zoom, move, click, hover, type, scroll, hold, mark, cut.';
  $('#msg').textContent='';
 }
 $('#runmode').onchange=syncModeUI;
-function drawCur(){curEl.style.transform=`translate(${cur.x-3}px,${cur.y-2}px)`}
+function drawCur(){curEl.style.transform=`translate3d(${(cur.x-3).toFixed(1)}px,${(cur.y-2).toFixed(1)}px,0)`}
 /* camera: reference-style fast ease-out (about 0.5s), cursor-follow with dead zone */
 function camTo(z,x,y,dur=ZD,delay=0){cam.tw={t0:performance.now()+delay,dur:dur*1000,a:{z:cam.z,x:cam.x,y:cam.y},b:{z,x,y}}}
 const curZ=()=>cam.tw?cam.tw.b.z:cam.z;
-function resetCam(){clearTimeout(outT);cam.tw=null;cam.z=1;cam.x=W/2;cam.y=H/2;cam.follow=false;cur.x=W*.8;cur.y=H*.85;drawCur()}
+function resetCam(){clearTimeout(outT);clearTimeout(dwellT);dwellZoomed=false;cam.tw=null;cam.z=1;cam.x=W/2;cam.y=H/2;cam.follow=false;cur.x=W*.8;cur.y=H*.85;drawCur()}
 function tick(t){const dt=Math.min(.05,(t-last)/1000);last=t;const pz=cam.z,px=cam.x,py=cam.y;
  if(cam.tw){const w=cam.tw,p=Math.min(1,Math.max(0,(t-w.t0)/w.dur)),e=1-Math.pow(1-p,3);
   cam.z=w.a.z*Math.pow(w.b.z/w.a.z,e);cam.x=w.a.x+(w.b.x-w.a.x)*e;cam.y=w.a.y+(w.b.y-w.a.y)*e;if(p>=1)cam.tw=null}
@@ -335,9 +352,11 @@ function tick(t){const dt=Math.min(.05,(t-last)/1000);last=t;const pz=cam.z,px=c
   const a=1-Math.exp(-dt*7);cam.x+=(tx-cam.x)*a;cam.y+=(ty-cam.y)*a}
  const s=k*cam.z;let tx=ww/2-cam.x*s,ty=wh/2-cam.y*s;
  tx=Math.min(0,Math.max(ww-W*s,tx));ty=Math.min(0,Math.max(wh-H*s,ty));
- camEl.style.transform=`translate(${tx}px,${ty}px) scale(${s})`;
+ const tf=`translate3d(${tx.toFixed(2)}px,${ty.toFixed(2)}px,0) scale(${s.toFixed(5)})`;
+ if(tf!==lastTf){camEl.style.transform=tf;lastTf=tf}
  const mv=Math.abs(cam.z-pz)*400+Math.abs(cam.x-px)+Math.abs(cam.y-py);
- camEl.style.filter=blurOn?`blur(${Math.min(1.5,mv/Math.max(dt,.001)*.0004).toFixed(2)}px)`:'';
+ const bf=blurOn&&mv>.2?`blur(${Math.min(1.5,mv/Math.max(dt,.001)*.0004).toFixed(2)}px)`:'';
+ if(bf!==lastBlur){camEl.style.filter=bf;lastBlur=bf}
  requestAnimationFrame(tick)}
 const D=()=>ifr.contentDocument,Wn=()=>ifr.contentWindow;
 function find(sel,idx){
@@ -354,6 +373,8 @@ function moveTo(x,y,ms){const x0=cur.x,y0=cur.y,dx=x-x0,dy=y-y0,cx=x0+dx/2-dy*.1
   cur.x=q*q*x0+2*q*p*cx+p*p*x;cur.y=q*q*y0+2*q*p*cy+p*p*y;drawCur();p<1?requestAnimationFrame(f):res()})(t0)})}
 function scrollTo(y,ms,el){const w=el||Wn(),y0=el?el.scrollTop:w.scrollY;return new Promise(res=>{const t0=performance.now();(function f(n){if(abort)return res();
  const p=ease(Math.min(1,(n-t0)/ms)),v=y0+(y-y0)*p;el?el.scrollTop=v:w.scrollTo(0,v);p<1?requestAnimationFrame(f):res()})(t0)})}
+function scrollHTo(x,ms,el){const x0=el.scrollLeft;return new Promise(res=>{const t0=performance.now();(function f(n){if(abort)return res();
+ const p=ease(Math.min(1,(n-t0)/ms));el.scrollLeft=x0+(x-x0)*p;p<1?requestAnimationFrame(f):res()})(t0)})}
 function scroller(e){for(let n=e;n&&n!==D().body&&n!==D().documentElement;n=n.parentElement){const o=Wn().getComputedStyle(n).overflowY;if((o==='auto'||o==='scroll'||o==='overlay')&&n.scrollHeight>n.clientHeight+4)return n}return null}
 function hscroller(e){for(let n=e;n&&n!==D().body;n=n.parentElement){const o=Wn().getComputedStyle(n).overflowX;if((o==='auto'||o==='scroll'||o==='overlay')&&n.scrollWidth>n.clientWidth+4)return n}return null}
 async function reveal(e){const r=e.getBoundingClientRect(),s0=scroller(e.parentElement||e),sc=s0&&s0!==D().body&&s0!==D().documentElement?s0:null;
@@ -417,7 +438,7 @@ async function run(steps){const bad=[];for(const s of steps){if(abort)break;try{
 function patchDoc(){try{const C=Wn().Clipboard.prototype;C.writeText=()=>Promise.resolve();C.write=()=>Promise.resolve()}catch(e){}}
 function newFrame(){const n=document.createElement('iframe');n.id='ifr';n.style.width=W+'px';n.style.height=H+'px';ifr.replaceWith(n);ifr=n}
 function liteCss(){try{const d=D(),s=d.createElement('style');
- let css='*{ -webkit-tap-highlight-color:transparent }';
+ let css='*{ -webkit-tap-highlight-color:transparent }html,body,*{scroll-behavior:auto!important}';
  if($('#lite').checked)css+='*,*::before,*::after{backdrop-filter:none!important;-webkit-backdrop-filter:none!important}.grain{display:none!important}';
  if(trackOn)css+='body,body *{user-select:none!important;-webkit-user-select:none!important}input,textarea,select{user-select:text!important;-webkit-user-select:text!important}';
  s.textContent=css;d.head.appendChild(s)}catch(e){}}
@@ -432,7 +453,22 @@ function manualZoomTap(holdOnly){
  setTimeout(()=>{if(manualOn||trackOn)cam.follow=true},dur*1000);
  if(!holdOnly&&!holdZoom&&out>0)outT=setTimeout(()=>{if(manualOn||trackOn){cam.follow=false;camTo(1,W/2,H/2,ZO)}},T(out));
 }
-function manualZoomOut(){clearTimeout(outT);cam.follow=false;camTo(1,W/2,H/2,ZO)}
+function manualZoomOut(fast){clearTimeout(outT);dwellZoomed=false;cam.follow=false;camTo(1,W/2,H/2,fast?.5:ZO)}
+function armDwell(){
+ clearTimeout(dwellT);
+ if(!trackOn||!dwellOn||holdZoom)return;
+ const ms=+$('#mdw').value||1500;
+ dwellT=setTimeout(()=>{
+  if(!trackOn||!dwellOn||holdZoom)return;
+  const z=+$('#mz').value||1;
+  if(z<=1)return;
+  dwellZoomed=true;
+  clearTimeout(outT);
+  cam.follow=false;
+  camTo(z,cur.x,cur.y,ZD);
+  setTimeout(()=>{if(trackOn)cam.follow=true},ZD*1000);
+ },ms);
+}
 function dispatchHover(){
  try{const d=D(),w=Wn();if(!d||!w)return;
   const el=d.elementFromPoint(cur.x,cur.y);
@@ -453,40 +489,107 @@ function getVScroller(){
  if(m&&m.scrollHeight>m.clientHeight+4&&Wn().getComputedStyle(m).display!=='none')return m;
  return d.scrollingElement||d.documentElement||d.body;
 }
+function getHScroller(){
+ const d=D();if(!d)return null;
+ const el=d.elementFromPoint(cur.x,cur.y);
+ const hs=el?hscroller(el):null;
+ if(hs)return hs;
+ const cands=[...d.querySelectorAll('.mstills,#rec,.fr-r,.row,[class*="row"],[class*="rail"]')];
+ for(const n of cands){
+  if(n.getClientRects().length&&n.scrollWidth>n.clientWidth+4){
+   const r=n.getBoundingClientRect();
+   if(r.bottom>0&&r.top<H)return n;
+  }
+ }
+ return null;
+}
 function scrollAtCursor(dx,dy){
  try{const d=D(),w=Wn();if(!d||!w)return;
-  const el=d.elementFromPoint(cur.x,cur.y);
-  if(Math.abs(dx)>Math.abs(dy)*1.2&&el){
-   const hs=hscroller(el);if(hs){hs.scrollLeft-=dx*2.2;return}
+  if(Math.abs(dx)>Math.abs(dy)*1.2){
+   const hs=getHScroller();if(hs){hs.scrollLeft-=dx*2.2;return}
   }
   const vs=getVScroller();
-  if(vs)vs.scrollTop-=dy*2.4;
+  if(vs)vs.scrollTop-=dy*2.2;
  }catch(e){}
 }
 function smoothScrollStep(by){
- try{const vs=getVScroller();if(vs)scrollTo(vs.scrollTop+by,340,vs)}catch(e){}
+ try{const vs=getVScroller();if(vs)scrollTo(vs.scrollTop+by,320,vs)}catch(e){}
+}
+function smoothHScrollStep(by){
+ try{const hs=getHScroller();if(hs)scrollHTo(hs.scrollLeft+by,340,hs)}catch(e){}
+}
+function goBackInFrame(){
+ try{
+  const d=D(),w=Wn();if(!d||!w)return;
+  const vis=sel=>{const el=d.querySelector(sel);return el&&el.getClientRects().length?el:null};
+  // 1. Close lightbox / colour card / fullscreen overlay if open
+  const ov=vis('[data-a=x]')||vis('.lb-x')||vis('.cdi [data-a=x]');
+  if(ov){tapEl(ov);return}
+  // 2. Click explicit Back button inside modal/page (e.g., Back to show, Back arrow)
+  const btns=[...d.querySelectorAll('button,[role=button]')].filter(b=>b.getClientRects().length);
+  const bk=btns.find(b=>{const t=b.textContent.trim().toLowerCase();return t.startsWith('back')||t==='←'||t==='‹'});
+  if(bk){tapEl(bk);return}
+  // 3. Close drawer/menu or modal if open
+  const mx=vis('.cvn-x')||vis('#mx');
+  if(mx){tapEl(mx);return}
+  // 4. Send Escape key
+  for(const x of[d,w])x.dispatchEvent(new w.KeyboardEvent('keydown',{key:'Escape',bubbles:true}));
+  // 5. Browser history back only if navigated away from initial URL
+  if(initHref&&w.location.href!==initHref&&w.history.length>1)w.history.back();
+ }catch(e){}
 }
 function clickAtCursor(){
+ clearTimeout(dwellT);
  ripple();
- manualZoomTap(false);
+ const wasDwellZoom=dwellZoomed;
+ dwellZoomed=false;
  try{const d=D(),el=d&&d.elementFromPoint(cur.x,cur.y);
   if(el){
    if(el.tagName==='INPUT'||el.tagName==='TEXTAREA'||el.tagName==='SELECT')el.focus();
    tapEl(el);
   }
  }catch(e){}
+ if(wasDwellZoom&&!holdZoom){
+  clearTimeout(outT);
+  outT=setTimeout(()=>{if(trackOn)manualZoomOut(true)},180);
+  return;
+ }
+ if(tapZoomOn&&!holdZoom)manualZoomTap(false);
 }
 
 function bindTrackpad(){
  curEl.classList.add('on');drawCur();
- const surf=$('#tpad-surf'),scrl=$('#tpad-scrl'),bClk=$('#tp-clk'),bHold=$('#tp-hold'),bOut=$('#tp-out'),bUp=$('#tp-up'),bDn=$('#tp-dn');
- let lx=0,ly=0,sx=0,sy=0,st=0,moved=false,twoFinger=false;
+ const surf=$('#tpad-surf'),scrl=$('#tpad-scrl'),bClk=$('#tp-clk'),bTz=$('#tp-tz'),bDw=$('#tp-dw'),bHold=$('#tp-hold'),bOut=$('#tp-out'),bUp=$('#tp-up'),bDn=$('#tp-dn'),bL=$('#tp-left'),bR=$('#tp-right'),bBk=$('#tp-back');
+ bTz.classList.toggle('on',tapZoomOn);
+ bDw.classList.toggle('dw',dwellOn);
+ bHold.classList.toggle('on',holdZoom);
+ let lx=0,ly=0,sx=0,sy=0,st=0,moved=false,twoFinger=false,pendDx=0,pendDy=0,pendScDx=0,pendScDy=0,rafMove=0,rafSc=0;
  const sens=()=>+$('#msens').value||2.3;
+ const flushMove=()=>{
+  rafMove=0;
+  if(!trackOn)return;
+  if(pendDx||pendDy){
+   cur.x=clamp(cur.x+pendDx*sens(),0,W);
+   cur.y=clamp(cur.y+pendDy*sens(),0,H);
+   pendDx=0;pendDy=0;
+   drawCur();curEl.classList.add('on');
+   dispatchHover();
+   armDwell();
+  }
+ };
+ const flushScroll=()=>{
+  rafSc=0;
+  if(!trackOn)return;
+  if(pendScDx||pendScDy){
+   scrollAtCursor(pendScDx,pendScDy);
+   pendScDx=0;pendScDy=0;
+  }
+ };
  surf.ontouchstart=e=>{
   if(!trackOn)return;
   e.preventDefault();
   if(e.touches.length>=2){
-   twoFinger=true;
+   twoFinger=true;clearTimeout(dwellT);
    lx=(e.touches[0].clientX+e.touches[1].clientX)/2;
    ly=(e.touches[0].clientY+e.touches[1].clientY)/2;
    st=performance.now();moved=false;
@@ -502,15 +605,14 @@ function bindTrackpad(){
    const cx=(e.touches[0].clientX+e.touches[1].clientX)/2,cy=(e.touches[0].clientY+e.touches[1].clientY)/2;
    const dx=cx-lx,dy=cy-ly;lx=cx;ly=cy;
    if(Math.hypot(dx,dy)>2)moved=true;
-   scrollAtCursor(dx,dy);
+   pendScDx+=dx;pendScDy+=dy;
+   if(!rafSc)rafSc=requestAnimationFrame(flushScroll);
    return;
   }
   const t=e.touches[0],dx=t.clientX-lx,dy=t.clientY-ly;lx=t.clientX;ly=t.clientY;
   if(Math.hypot(t.clientX-sx,t.clientY-sy)>6)moved=true;
-  cur.x=clamp(cur.x+dx*sens(),0,W);
-  cur.y=clamp(cur.y+dy*sens(),0,H);
-  drawCur();curEl.classList.add('on');
-  dispatchHover();
+  pendDx+=dx;pendDy+=dy;
+  if(!rafMove)rafMove=requestAnimationFrame(flushMove);
  };
  surf.ontouchend=e=>{
   if(!trackOn)return;
@@ -524,25 +626,35 @@ function bindTrackpad(){
   }
   if(!moved&&(performance.now()-st)<320)clickAtCursor();
  };
- let slx=0,sly=0,ssy=0,sst=0,smoved=false;
+ let slx=0,sly=0;
  scrl.ontouchstart=e=>{
   if(!trackOn||!e.touches.length)return;
   if(e.target===bUp||e.target===bDn)return;
-  e.preventDefault();slx=e.touches[0].clientX;sly=ssy=e.touches[0].clientY;sst=performance.now();smoved=false;
+  e.preventDefault();slx=e.touches[0].clientX;sly=e.touches[0].clientY;
  };
  scrl.ontouchmove=e=>{
   if(!trackOn||!e.touches.length)return;
   e.preventDefault();
   const cx=e.touches[0].clientX,cy=e.touches[0].clientY;
-  if(Math.abs(cy-ssy)>6)smoved=true;
-  scrollAtCursor(cx-slx,(cy-sly)*1.6);slx=cx;sly=cy;
+  pendScDx+=(cx-slx);pendScDy+=(cy-sly)*1.6;slx=cx;sly=cy;
+  if(!rafSc)rafSc=requestAnimationFrame(flushScroll);
  };
  bUp.onclick=()=>{if(trackOn)smoothScrollStep(-340)};
  bDn.onclick=()=>{if(trackOn)smoothScrollStep(340)};
+ bL.onclick=()=>{if(trackOn)smoothHScrollStep(-360)};
+ bR.onclick=()=>{if(trackOn)smoothHScrollStep(360)};
+ bBk.onclick=()=>{if(trackOn)goBackInFrame()};
  bClk.onclick=()=>{if(trackOn)clickAtCursor()};
+ bTz.onclick=()=>{if(!trackOn)return;tapZoomOn=!tapZoomOn;bTz.classList.toggle('on',tapZoomOn)};
+ bDw.onclick=()=>{
+  if(!trackOn)return;
+  dwellOn=!dwellOn;bDw.classList.toggle('dw',dwellOn);
+  if(dwellOn)armDwell();else clearTimeout(dwellT);
+ };
  bHold.onclick=()=>{
   if(!trackOn)return;
   holdZoom=!holdZoom;bHold.classList.toggle('on',holdZoom);
+  clearTimeout(dwellT);
   if(holdZoom)manualZoomTap(true);else manualZoomOut();
  };
  bOut.onclick=()=>{if(!trackOn)return;holdZoom=false;bHold.classList.remove('on');manualZoomOut()};
@@ -595,7 +707,7 @@ function loadSite(path,intro=true,keep=false){
   fade.style.transition='none';fade.style.opacity=1;newFrame();
   setTimeout(()=>{ifr.src=path+(path.includes('?')?'&':'?')+'stage='+Date.now();const t0=Date.now();
    let done=false;
-   const finish=()=>{if(done)return;done=true;clearInterval(iv);patchDoc();liteCss();if(manualOn)bindManual();
+   const finish=()=>{if(done)return;done=true;clearInterval(iv);patchDoc();liteCss();try{initHref=Wn().location.href}catch(e){}if(manualOn)bindManual();
     if(keep)return res();
     setTimeout(()=>{fade.style.transition='opacity .3s';fade.style.opacity=0;res()},intro?100:500)};
    const iv=setInterval(()=>{let ok=0;try{const d=ifr.contentDocument;ok=d&&d.body&&d.readyState!=='loading'&&d.location.href.indexOf('about:blank')<0}catch(e){}
@@ -610,7 +722,7 @@ async function start(){if(running)return;
   try{steps=JSON.parse($('#scr').value)}catch(e){$('#msg').textContent='Script JSON galat hai: '+e.message;return}
   try{localStorage.setItem('stg_scr',$('#scr').value)}catch(e){}
  }
- running=true;manualOn=isManual;trackOn=isTrack;holdZoom=false;abort=false;blurOn=$('#bl').checked;pace=+$('#pace').value||1;$('#msg').textContent='';marks=[];T0=performance.now();let wl;
+ running=true;manualOn=isManual;trackOn=isTrack;holdZoom=false;dwellZoomed=false;abort=false;blurOn=$('#bl').checked;pace=+$('#pace').value||1;$('#msg').textContent='';marks=[];T0=performance.now();let wl;
  if($('#fs').checked&&!document.fullscreenElement&&!isApp())try{await document.documentElement.requestFullscreen();await sleep(900)}catch(e){}
  try{wl=await navigator.wakeLock.request('screen')}catch(e){}
  layout();$('#panel').classList.add('h');curEl.classList.remove('on');resetCam();auto.z=0;
@@ -623,13 +735,13 @@ async function start(){if(running)return;
  if(isInteractive){
   if(!abort){
    fade.style.transition='opacity .3s';fade.style.opacity=0;
-   if(isTrack){$('#tpad').classList.remove('hide');$('#tp-hold').classList.remove('on');bindTrackpad()}
+   if(isTrack){$('#tpad').classList.remove('hide');bindTrackpad()}
    else bindManual();
   }
   while(running&&!abort)await sleep(250);
   if(unsubManual){unsubManual();unsubManual=null}
   $('#tpad').classList.add('hide');
-  running=false;manualOn=false;trackOn=false;holdZoom=false;layout();
+  running=false;manualOn=false;trackOn=false;holdZoom=false;dwellZoomed=false;clearTimeout(dwellT);layout();
   clearTimeout(outT);curEl.classList.remove('on');try{wl&&wl.release()}catch(e){}
   fade.style.opacity=0;$('#panel').classList.remove('h');
   $('#msg').textContent='Session ruk gaya.';
