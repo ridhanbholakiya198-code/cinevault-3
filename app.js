@@ -48,25 +48,25 @@ function fpOf(im){const c=document.createElement("canvas");c.width=16;c.height=9
 function bestMatch(list,fp){return Promise.all(list.map(b=>new Promise(res=>{const im=new Image();im.crossOrigin="anonymous";
   im.onload=()=>{try{const d=fpOf(im);let e=0,j=0;for(let k=0;k<d.length;k++){if(k%4===3)continue;e+=(d[k]-fp[j++])**2}res([e,b])}catch{res([Infinity,b])}};im.onerror=()=>res([Infinity,b]);im.src=IMG+"w300"+b.file_path}))).then(r=>{r.sort((a,b)=>a[0]-b[0]);return r[0]&&r[0][0]<Infinity?r[0][1]:null})}
 // ---- build stamp + on-screen diagnostics (visible only when the address ends with ?debug=1)
-const PARDA_BUILD=67,DBG=/[?&]debug\b/.test(location.search);
+const PARDA_BUILD=68,DBG=/[?&]debug\b/.test(location.search);
 const dbg=window.CVDBG=m=>{if(!DBG)return;try{let e=document.getElementById("pdbg");if(!e){e=document.createElement("pre");e.id="pdbg";e.style.cssText="position:fixed;left:8px;right:8px;bottom:96px;z-index:99999;margin:0;padding:8px 10px;background:#000d;color:#8f8;font:11px/1.45 monospace;border-radius:8px;white-space:pre-wrap;pointer-events:none;max-height:40vh;overflow:hidden";document.body.append(e)}e.textContent+=m+"\n"}catch{}};
 // ---- TEMP: pinned hero slots. 1 = Blade Runner 2049 on its first Mood "Still" (the one the Mood tab lists first), 2 = Invincible. The normal mix follows.
 // Set HERO_PIN=false to go back to the usual hero.
-const HERO_PIN=true;
+const HERO_PIN=true,PN=6; // PN = number of pinned hero slots (Blade Runner, Invincible, Top Gun: Maverick, Guardians Vol. 2, Gladiator, The Walking Dead)
 async function heroPins(){if(!HERO_PIN)return[];
- try{const c=JSON.parse(localStorage.getItem("cv_hpin2")||"null");if(c&&Date.now()-c.t<216e5&&c.h&&c.h.length===2){c.h.forEach(i=>{if(i.logo!=null)lgc[kind(i)+i.id]=i.logo});dbg("pins: loaded from saved copy");return c.h}}catch{}
+ try{const c=JSON.parse(localStorage.getItem("cv_hpin3")||"null");if(c&&Date.now()-c.t<216e5&&c.h&&c.h.length===PN){c.h.forEach(i=>{if(i.logo!=null)lgc[kind(i)+i.id]=i.logo});dbg("pins: loaded from saved copy");return c.h}}catch{}
  const pg=async(p,q)=>{try{return await api(p,q)}catch(e){if(!e||e.message!=="404")throw e;dbg("retry on fresh url: "+p);return await api(p,{...q,_r:Date.now()},1)}};
- const one=async(t,id,still,fx,q,y)=>{try{let d;try{d=await pg(`/${t}/${id}`,{append_to_response:"images",include_image_language:"en,null"})}catch(e1){dbg("pin "+t+id+" id not found ("+(e1&&e1.message)+"), searching by name: "+q);const sr=await pg(`/search/${t}`,t==="tv"?{query:q,first_air_date_year:y}:{query:q,year:y}),hit=(sr.results||[]).filter(x=>x.backdrop_path&&x.poster_path&&(t==="movie"||((x.genre_ids||[]).includes(16)&&String(x.first_air_date||"").startsWith(String(y)))))[0];if(!hit)throw e1;dbg("pin "+q+" found id "+hit.id);d=await pg(`/${t}/${hit.id}`,{append_to_response:"images",include_image_language:"en,null"})}
+ const one=async(t,id,still,fx,q,y)=>{try{let d;try{d=await pg(`/${t}/${id}`,{append_to_response:"images",include_image_language:"en,null"})}catch(e1){dbg("pin "+t+id+" id not found ("+(e1&&e1.message)+"), searching by name: "+q);const sr=await pg(`/search/${t}`,t==="tv"?{query:q,first_air_date_year:y}:{query:q,year:y}),hit=(sr.results||[]).filter(x=>x.backdrop_path&&x.poster_path&&(t==="movie"||q!=="Invincible"||((x.genre_ids||[]).includes(16)&&String(x.first_air_date||"").startsWith(String(y)))))[0];if(!hit)throw e1;dbg("pin "+q+" found id "+hit.id);d=await pg(`/${t}/${hit.id}`,{append_to_response:"images",include_image_language:"en,null"})}
   const bs=((d.images||{}).backdrops||[]).filter(b=>!b.iso_639_1).sort((p,q)=>q.vote_average-p.vote_average); // same order as the Mood tab
   const pk=(still?bs[0]:(bs.filter(b=>b.width>=1920)[0]||bs[0]))||{};
   const ps=((d.images||{}).posters||[]).filter(p=>!p.iso_639_1&&p.height>=1200).sort((p,q)=>q.vote_average-p.vote_average);
   if(!(pk.file_path||d.backdrop_path))return null;
   lgc[t+d.id]=pick((d.images||{}).logos);dbg("pin "+q+" OK id="+d.id+" stills="+bs.length+" pick="+(pk.file_path||"-"));
   return{...d,media_type:t,bd:pk.file_path||d.backdrop_path,bw:pk.width||0,fx:fx,pref:still?1:0,pt:ps[0]?ps[0].file_path:"",runtime:d.runtime||(d.episode_run_time||[])[0]||0}}catch(e){dbg("pin "+t+id+" FAILED: "+(e&&e.message));return null}};
- const r=(await Promise.all([one("movie",335984,1,"46%","Blade Runner 2049",2017),one("tv",95557,0,undefined,"Invincible",2021)])).filter(Boolean);dbg("pins fetched: "+r.map(x=>x.media_type+x.id+" bd="+x.bd).join(" | "));
- if(r.length===2)try{localStorage.setItem("cv_hpin2",JSON.stringify({t:Date.now(),h:r.map(slim)}))}catch{}
+ const r=(await Promise.all([one("movie",335984,1,"46%","Blade Runner 2049",2017),one("tv",95557,0,undefined,"Invincible",2021),one("movie",361743,0,undefined,"Top Gun: Maverick",2022),one("movie",283995,0,undefined,"Guardians of the Galaxy Vol. 2",2017),one("movie",98,0,undefined,"Gladiator",2000),one("tv",1402,0,undefined,"The Walking Dead",2010)])).filter(Boolean);dbg("pins fetched: "+r.map(x=>x.media_type+x.id+" bd="+x.bd).join(" | "));
+ if(r.length===PN)try{localStorage.setItem("cv_hpin3",JSON.stringify({t:Date.now(),h:r.map(slim)}))}catch{}
  return r}
-async function heroPinsRetry(){if(!HERO_PIN)return[];let best=[];for(let k=0;k<4;k++){const r=await heroPins();if(r.length>best.length)best=r;if(best.length===2)return best;dbg("pins retry "+(k+1));await hsleep(2000*(k+1))}return best}
+async function heroPinsRetry(){if(!HERO_PIN)return[];let best=[];for(let k=0;k<4;k++){const r=await heroPins();if(r.length>best.length)best=r;if(best.length===PN)return best;dbg("pins retry "+(k+1));await hsleep(2000*(k+1))}return best}
 async function heroPicks(){const r=await Promise.all(HERO.map(async([q,y,o])=>{try{o=o||{};
   let id=localStorage.getItem("hid:"+q+y);
   if(!id){const s=await api("/search/movie",{query:q,year:y}),m=s.results.find(x=>x.backdrop_path&&x.poster_path);if(!m)return null;id=m.id;try{localStorage.setItem("hid:"+q+y,id)}catch{}}
