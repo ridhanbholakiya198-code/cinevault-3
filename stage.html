@@ -378,8 +378,10 @@ const ease=p=>p<.5?4*p*p*p:1-Math.pow(-2*p+2,3)/2;
 function moveTo(x,y,ms){const x0=cur.x,y0=cur.y,dx=x-x0,dy=y-y0,cx=x0+dx/2-dy*.1,cy=y0+dy/2+dx*.1;curEl.classList.add('on');
  return new Promise(res=>{const t0=performance.now();(function f(n){if(abort)return res();const p=ease(Math.min(1,(n-t0)/ms)),q=1-p;
   cur.x=q*q*x0+2*q*p*cx+p*p*x;cur.y=q*q*y0+2*q*p*cy+p*p*y;drawCur();p<1?requestAnimationFrame(f):res()})(t0)})}
+/* tell the page this scroll is intentional (app.js 'no ghost scrolling' guard reverts scrolls without a recent input event inside the iframe) */
+function markScroll(){try{const w=Wn();if(!w)return;w.__stageScrollAt=Date.now();w.dispatchEvent(new w.Event('pointermove'))}catch(e){}}
 function scrollTo(y,ms,el){const w=el||Wn(),y0=el?el.scrollTop:w.scrollY;return new Promise(res=>{const t0=performance.now();(function f(n){if(abort)return res();
- const p=ease(Math.min(1,(n-t0)/ms)),v=y0+(y-y0)*p;el?el.scrollTop=v:w.scrollTo(0,v);p<1?requestAnimationFrame(f):res()})(t0)})}
+ markScroll();const p=ease(Math.min(1,(n-t0)/ms)),v=y0+(y-y0)*p;el?el.scrollTop=v:w.scrollTo(0,v);p<1?requestAnimationFrame(f):res()})(t0)})}
 function scrollHTo(x,ms,el){const x0=el.scrollLeft;return new Promise(res=>{const t0=performance.now();(function f(n){if(abort)return res();
  const p=ease(Math.min(1,(n-t0)/ms));el.scrollLeft=x0+(x-x0)*p;p<1?requestAnimationFrame(f):res()})(t0)})}
 function scroller(e){for(let n=e;n&&n!==D().body&&n!==D().documentElement;n=n.parentElement){const o=Wn().getComputedStyle(n).overflowY;if((o==='auto'||o==='scroll'||o==='overlay')&&n.scrollHeight>n.clientHeight+4)return n}return null}
@@ -512,7 +514,7 @@ function getHScroller(){
  return null;
 }
 function scrollAtCursor(dx,dy){
- try{const d=D(),w=Wn();if(!d||!w)return;
+ try{const d=D(),w=Wn();if(!d||!w)return;markScroll();
   const cl=v=>Math.max(-260,Math.min(260,v));dx=cl(dx);dy=cl(dy); /* no single frame may fling the page */
   if(Math.abs(dx)>Math.abs(dy)*1.2){
    const hs=getHScroller();if(hs){hs.scrollLeft-=dx*2.2;return}
@@ -522,13 +524,13 @@ function scrollAtCursor(dx,dy){
  }catch(e){}
 }
 function smoothScrollStep(by){
- try{const vs=getVScroller();if(!vs)return;const y0=vs.scrollTop;
+ try{const vs=getVScroller();if(!vs)return;markScroll();const y0=vs.scrollTop;
   scrollTo(y0+by,320,vs).then(()=>{ /* if that scroller did not move, scroll the page itself */
    if(Math.abs(vs.scrollTop-y0)>=2)return;const d=D(),root=d&&(d.scrollingElement||d.documentElement);
    if(root&&root!==vs)scrollTo(root.scrollTop+by,320,root)})}catch(e){}
 }
 function smoothHScrollStep(by){
- try{const hs=getHScroller();if(hs)scrollHTo(hs.scrollLeft+by,340,hs)}catch(e){}
+ try{const hs=getHScroller();if(hs){markScroll();scrollHTo(hs.scrollLeft+by,340,hs)}}catch(e){}
 }
 function openSelectPicker(sel){
  const pop=$('#selpop'),box=$('#selbox');

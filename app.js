@@ -160,7 +160,7 @@ try{history.scrollRestoration="manual"}catch{}
 let lastIn=0,okY=0,okUntil=0;const _st=window.scrollTo.bind(window);
 window.scrollTo=function(){okUntil=performance.now()+1800;return _st.apply(null,arguments)};
 ["touchstart","touchmove","touchend","wheel","keydown","pointerdown","pointermove","mousedown"].forEach(e=>addEventListener(e,()=>{lastIn=performance.now()},{capture:true,passive:true}));
-addEventListener("scroll",()=>{const n=performance.now();if(n-lastIn<3500||n<okUntil||!$("#modal").hidden){okY=scrollY;return}if(Math.abs(scrollY-okY)>2)_st({top:okY,behavior:"instant"})},{passive:true});
+addEventListener("scroll",()=>{const n=performance.now();if(n-lastIn<3500||n<okUntil||Date.now()-(window.__stageScrollAt||0)<3500||!$("#modal").hidden){okY=scrollY;return}if(Math.abs(scrollY-okY)>2)_st({top:okY,behavior:"instant"})},{passive:true});
 let tick;addEventListener("scroll",()=>{if(tick)return;tick=requestAnimationFrame(()=>{tick=0;$("#top").classList.toggle("s",scrollY>30);if(scrollY<innerHeight){py=Math.min(scrollY*.2,60);upd()}})},{passive:true});
 // ---- Rows: lazy-loaded in parallel as you scroll ----
 let RW=[];
