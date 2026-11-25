@@ -40,7 +40,7 @@ async function frSiblings(name,add){const STOP=new Set(["the","and","of","collec
   for(const c of(r.results||[]).slice(0,6)){const ct=toks(c.name);if(!(T.length>=2?T.every(w=>ct.includes(w)):(ct.length===1&&ct[0]===T[0])))continue;try{const cc=await api("/collection/"+c.id);(cc.parts||[]).forEach(p=>add("movie",p.id,p.release_date))}catch{}}}}
 // TMDB keeps these as separate collections but they are one world: if a franchise contains any title of a group, the whole group joins it
 const FR_MERGE=[[[120,"2001-12-18"],[121,"2002-12-18"],[122,"2003-12-17"],[49051,"2012-12-12"],[57158,"2013-12-11"],[122917,"2014-12-10"]]]; // Lord of the Rings trilogy + The Hobbit trilogy
-async function frGraph(fk){const ck="cv_frg3_"+fk,c=frGet(ck);if(c&&c.g&&c.g.items&&Date.now()-c.t<432e5)return c.g;
+async function frGraph(fk){const ck="cv_frg4_"+fk,c=frGet(ck);if(c&&c.g&&c.g.items&&Date.now()-c.t<432e5)return c.g;
  const m0=FRMEM.get(fk);if(m0&&Date.now()-m0.t<9e4)return m0.g;
  const t=fk[0]==="t"?"tv":"movie",id=+fk.slice(1),d=await api(`/${t}/${id}`,{append_to_response:"external_ids"});
  const mem=new Map(),add=(t2,id2,date)=>{const k=t2+id2,o=mem.get(k);if(!o)mem.set(k,{t:t2,id:id2,d:date||""});else if(date&&!o.d)o.d=date};
@@ -131,7 +131,7 @@ async function frRender(my,g,name,fk){const label=name||g.label,items=g.items.sl
   if(tv==="Groups")gl.forEach(([n,a])=>{grid.insertAdjacentHTML("beforeend",`<h3 class="fgh">${esc(n)}<small>${a.length}</small></h3>`);a.forEach((i,k)=>grid.append(frCard(i,k)))});
   else(tv==="Core"?core:tv==="Timeline"?tl.items:list).forEach((i,k)=>grid.append(frCard(i,k)))};draw()}
 async function openFranchise(fk,bk,name){const my=frShell(name||"Collection",bk,{k:"f",key:fk});
- try{const g=await frGraph(fk);if(my!==tok)return;await frRender(my,g,name,fk)}catch(e){if(my===tok){$("#mc").innerHTML='<div class="fail"><p class="empty">Could not load this collection.</p><button class="btn" id="rtd">Try again</button></div>';$("#rtd").onclick=()=>{localStorage.removeItem("cv_frg_"+fk);openFranchise(fk,1,name)}}}}
+ try{const g=await frGraph(fk);if(my!==tok)return;await frRender(my,g,name,fk)}catch(e){if(my===tok){$("#mc").innerHTML='<div class="fail"><p class="empty">Could not load this collection.</p><button class="btn" id="rtd">Try again</button></div>';$("#rtd").onclick=()=>{localStorage.removeItem("cv_frg_"+fk);localStorage.removeItem("cv_frg4_"+fk);openFranchise(fk,1,name)}}}}
 async function frColl(id){const ck="cv_frc_"+id,c=frGet(ck);if(c&&Date.now()-c.t<432e5)return c.r;const d=await api("/collection/"+id),r={name:d.name,items:(d.parts||[]).filter(x=>x.poster_path).map(x=>({t:"movie",id:x.id,d:x.release_date||""}))};frSet(ck,{t:Date.now(),r});return r}
 async function openCollection(id,bk){const my=frShell("Collection",bk,{k:"c",id});
  try{const r=await frColl(id);if(my!==tok)return;await frRender(my,{label:frClean(r.name),items:r.items},"",null)}catch{if(my===tok){$("#mc").innerHTML='<div class="fail"><p class="empty">Could not load this collection.</p><button class="btn" id="rtd">Try again</button></div>';$("#rtd").onclick=()=>{localStorage.removeItem("cv_frc_"+id);openCollection(id,1)}}}}
