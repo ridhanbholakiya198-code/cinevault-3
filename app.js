@@ -5,7 +5,7 @@ addEventListener("error",e=>{const t=e.target;if(t&&t.tagName==="IMG"&&t.src.inc
 function showErr(m){const d=document.createElement("div");d.className="err";d.textContent="Error: "+m;document.body.append(d);setTimeout(()=>d.remove(),9000)}
 addEventListener("error",e=>e.message&&showErr(e.message));addEventListener("unhandledrejection",e=>showErr(e.reason&&e.reason.message||e.reason));
 async function get(base,p,q){let u;if(base==="/api/tmdb"){u=new URL(base,location.origin);u.searchParams.set("path",p)}else{u=new URL(base+p,location.origin);u.searchParams.set("api_key",KEY())}for(const k in q)u.searchParams.set(k,q[k]);
- const c=new AbortController(),t=setTimeout(()=>c.abort(),20000);try{const r=await fetch(u,{signal:c.signal});if(!r.ok)throw Error(r.status);return await r.json()}finally{clearTimeout(t)}}
+ const c=new AbortController(),t=setTimeout(()=>c.abort(),20000);try{const r=await fetch(u,{signal:c.signal});if(!r.ok){const e=Error(r.status);try{const b=(await r.text()).replace(/\s+/g," ").slice(0,90);e.info="["+b+"] vercel-cache="+(r.headers.get("x-vercel-cache")||"-")+" age="+(r.headers.get("age")||"-")}catch{}throw e}return await r.json()}finally{clearTimeout(t)}}
 const $=s=>document.querySelector(s),root=document.documentElement,M=innerWidth<700,P=M?"w185":"w342";
 const STATUS=["Watching","Completed","On-Hold","Dropped","Plan to Watch"];
 const esc=s=>String(s==null?"":s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
@@ -17,7 +17,7 @@ async function api(p,q={},nc){if(!PX&&!KEY())throw Error("key");const ck="c:"+p+
  if(mem.has(ck))return mem.get(ck);
  try{const c=JSON.parse(localStorage.getItem(ck)||"null");if(c&&Date.now()-c.t<TTL){mem.set(ck,c.j);return c.j}}catch{}
  let j,er;for(let a=0;a<3;a++){er=null;try{j=await get(PX?"/api/tmdb":DIRECT,p,a?{...q,_r:Date.now()}:q);break}catch(e){er=e;if(PX&&KEY()&&e.message!=="401"&&e.message!=="404"){try{j=await get(DIRECT,p,q);er=null;break}catch(e2){er=e2}}
-  if(/^(401|404|key)$/.test(er.message))break;await new Promise(r=>setTimeout(r,700*(a+1)))}}if(er){try{CVDBG(`api ${p} failed: ${er.message}`)}catch{}throw er}
+  if(/^(401|404|key)$/.test(er.message))break;await new Promise(r=>setTimeout(r,700*(a+1)))}}if(er){try{CVDBG(`api ${p} failed: ${er.message} ${er.info||""}`)}catch{}throw er}
  mem.set(ck,j);
  if(!nc)try{localStorage.setItem(ck,JSON.stringify({t:Date.now(),j}))}catch{Object.keys(localStorage).filter(x=>x.startsWith("c:")).forEach(x=>localStorage.removeItem(x))}return j}
 const title=i=>i.title||i.name,kind=i=>i.media_type||(i.title?"movie":"tv");
@@ -47,19 +47,20 @@ function fpOf(im){const c=document.createElement("canvas");c.width=16;c.height=9
 function bestMatch(list,fp){return Promise.all(list.map(b=>new Promise(res=>{const im=new Image();im.crossOrigin="anonymous";
   im.onload=()=>{try{const d=fpOf(im);let e=0,j=0;for(let k=0;k<d.length;k++){if(k%4===3)continue;e+=(d[k]-fp[j++])**2}res([e,b])}catch{res([Infinity,b])}};im.onerror=()=>res([Infinity,b]);im.src=IMG+"w300"+b.file_path}))).then(r=>{r.sort((a,b)=>a[0]-b[0]);return r[0]&&r[0][0]<Infinity?r[0][1]:null})}
 // ---- build stamp + on-screen diagnostics (visible only when the address ends with ?debug=1)
-const PARDA_BUILD=64,DBG=/[?&]debug\b/.test(location.search);
+const PARDA_BUILD=65,DBG=/[?&]debug\b/.test(location.search);
 const dbg=window.CVDBG=m=>{if(!DBG)return;try{let e=document.getElementById("pdbg");if(!e){e=document.createElement("pre");e.id="pdbg";e.style.cssText="position:fixed;left:8px;right:8px;bottom:96px;z-index:99999;margin:0;padding:8px 10px;background:#000d;color:#8f8;font:11px/1.45 monospace;border-radius:8px;white-space:pre-wrap;pointer-events:none;max-height:40vh;overflow:hidden";document.body.append(e)}e.textContent+=m+"\n"}catch{}};
 // ---- TEMP: pinned hero slots. 1 = Blade Runner 2049 on its first Mood "Still" (the one the Mood tab lists first), 2 = Invincible. The normal mix follows.
 // Set HERO_PIN=false to go back to the usual hero.
 const HERO_PIN=true;
 async function heroPins(){if(!HERO_PIN)return[];
  try{const c=JSON.parse(localStorage.getItem("cv_hpin2")||"null");if(c&&Date.now()-c.t<216e5&&c.h&&c.h.length===2){c.h.forEach(i=>{if(i.logo!=null)lgc[kind(i)+i.id]=i.logo});dbg("pins: loaded from saved copy");return c.h}}catch{}
- const one=async(t,id,still,fx,q,y)=>{try{let d;try{d=await api(`/${t}/${id}`,{append_to_response:"images",include_image_language:"en,null"})}catch(e1){dbg("pin "+t+id+" id not found ("+(e1&&e1.message)+"), searching by name: "+q);const sr=await api(`/search/${t}`,t==="tv"?{query:q,first_air_date_year:y}:{query:q,year:y}),hit=(sr.results||[]).filter(x=>x.backdrop_path&&x.poster_path&&(t==="movie"||((x.genre_ids||[]).includes(16)&&String(x.first_air_date||"").startsWith(String(y)))))[0];if(!hit)throw e1;dbg("pin "+q+" found id "+hit.id);d=await api(`/${t}/${hit.id}`,{append_to_response:"images",include_image_language:"en,null"})}
+ const pg=async(p,q)=>{try{return await api(p,q)}catch(e){if(!e||e.message!=="404")throw e;dbg("retry on fresh url: "+p);return await api(p,{...q,_r:Date.now()},1)}};
+ const one=async(t,id,still,fx,q,y)=>{try{let d;try{d=await pg(`/${t}/${id}`,{append_to_response:"images",include_image_language:"en,null"})}catch(e1){dbg("pin "+t+id+" id not found ("+(e1&&e1.message)+"), searching by name: "+q);const sr=await pg(`/search/${t}`,t==="tv"?{query:q,first_air_date_year:y}:{query:q,year:y}),hit=(sr.results||[]).filter(x=>x.backdrop_path&&x.poster_path&&(t==="movie"||((x.genre_ids||[]).includes(16)&&String(x.first_air_date||"").startsWith(String(y)))))[0];if(!hit)throw e1;dbg("pin "+q+" found id "+hit.id);d=await pg(`/${t}/${hit.id}`,{append_to_response:"images",include_image_language:"en,null"})}
   const bs=((d.images||{}).backdrops||[]).filter(b=>!b.iso_639_1).sort((p,q)=>q.vote_average-p.vote_average); // same order as the Mood tab
   const pk=(still?bs[0]:(bs.filter(b=>b.width>=1920)[0]||bs[0]))||{};
   const ps=((d.images||{}).posters||[]).filter(p=>!p.iso_639_1&&p.height>=1200).sort((p,q)=>q.vote_average-p.vote_average);
   if(!(pk.file_path||d.backdrop_path))return null;
-  lgc[t+d.id]=pick((d.images||{}).logos);
+  lgc[t+d.id]=pick((d.images||{}).logos);dbg("pin "+q+" OK id="+d.id+" stills="+bs.length+" pick="+(pk.file_path||"-"));
   return{...d,media_type:t,bd:pk.file_path||d.backdrop_path,bw:pk.width||0,fx:fx,pref:still?1:0,pt:ps[0]?ps[0].file_path:"",runtime:d.runtime||(d.episode_run_time||[])[0]||0}}catch(e){dbg("pin "+t+id+" FAILED: "+(e&&e.message));return null}};
  const r=(await Promise.all([one("movie",335984,1,"46%","Blade Runner 2049",2017),one("tv",95557,0,undefined,"Invincible",2021)])).filter(Boolean);dbg("pins fetched: "+r.map(x=>x.media_type+x.id+" bd="+x.bd).join(" | "));
  if(r.length===2)try{localStorage.setItem("cv_hpin2",JSON.stringify({t:Date.now(),h:r.map(slim)}))}catch{}
