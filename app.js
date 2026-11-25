@@ -47,7 +47,7 @@ function fpOf(im){const c=document.createElement("canvas");c.width=16;c.height=9
 function bestMatch(list,fp){return Promise.all(list.map(b=>new Promise(res=>{const im=new Image();im.crossOrigin="anonymous";
   im.onload=()=>{try{const d=fpOf(im);let e=0,j=0;for(let k=0;k<d.length;k++){if(k%4===3)continue;e+=(d[k]-fp[j++])**2}res([e,b])}catch{res([Infinity,b])}};im.onerror=()=>res([Infinity,b]);im.src=IMG+"w300"+b.file_path}))).then(r=>{r.sort((a,b)=>a[0]-b[0]);return r[0]&&r[0][0]<Infinity?r[0][1]:null})}
 // ---- build stamp + on-screen diagnostics (visible only when the address ends with ?debug=1)
-const PARDA_BUILD=66,DBG=/[?&]debug\b/.test(location.search);
+const PARDA_BUILD=67,DBG=/[?&]debug\b/.test(location.search);
 const dbg=window.CVDBG=m=>{if(!DBG)return;try{let e=document.getElementById("pdbg");if(!e){e=document.createElement("pre");e.id="pdbg";e.style.cssText="position:fixed;left:8px;right:8px;bottom:96px;z-index:99999;margin:0;padding:8px 10px;background:#000d;color:#8f8;font:11px/1.45 monospace;border-radius:8px;white-space:pre-wrap;pointer-events:none;max-height:40vh;overflow:hidden";document.body.append(e)}e.textContent+=m+"\n"}catch{}};
 // ---- TEMP: pinned hero slots. 1 = Blade Runner 2049 on its first Mood "Still" (the one the Mood tab lists first), 2 = Invincible. The normal mix follows.
 // Set HERO_PIN=false to go back to the usual hero.
@@ -270,6 +270,8 @@ const lk=(a,r)=>a.map(x=>`<span class="lk" data-p="${x.id}" data-r="${r}">${esc(
 function crewOf(d,t){let cr;if(t==="tv"&&d.aggregate_credits&&(d.aggregate_credits.crew||[]).length)cr=d.aggregate_credits.crew;else cr=((d.credits&&d.credits.crew)||[]).map(c=>({id:c.id,name:c.name,jobs:[{job:c.job,episode_count:1}]}));
  const sc=(c,re)=>Math.max(0,...(c.jobs||[]).filter(j=>re.test(j.job)).map(j=>j.episode_count||1)),by=re=>cr.filter(c=>sc(c,re)>0).sort((x,y)=>sc(y,re)-sc(x,re)).map(c=>({id:c.id,name:c.name}));
  const dir=pn(by(/^Director$/)).slice(0,4),wr=pn([...(t==="tv"?(d.created_by||[]).map(c=>({id:c.id,name:c.name})):[]),...by(WJ)]).slice(0,6);return{dir,wr}}
+// best language-free still (highest voted, wide enough); many series ship a dark / text-only default backdrop
+const bestBd=d=>{const b=((d.images||{}).backdrops||[]).filter(x=>!x.iso_639_1&&x.width>=1280).sort((p,q)=>q.vote_average-p.vote_average)[0];return b?b.file_path:(d.backdrop_path||"")};
 function crewHTML(d,t){const c=crewOf(d,t),b=(l,a,r)=>a.length?`<h3>${l}</h3><div class="chips g cw">${a.map(n=>`<i data-p="${n.id}" data-r="${r}">${esc(n.name)}</i>`).join("")}</div>`:"";return b(c.dir.length>1?"Directors":"Director",c.dir,"dir")+b(c.wr.length>1?"Writers":"Writer",c.wr,"wr")}
 let ES=[],ESN=0;
 function trBack(tr){if(tr.classList.contains("pl")){tr.classList.remove("pl");tr.innerHTML=CUR.tc;if(!tr.querySelector(".trb"))tr.style.backgroundImage=CUR.bk?`url(${CUR.bk})`:"none";CUR.bind&&CUR.bind()}}
@@ -380,7 +382,7 @@ async function openDetail(t,id,bk){$("#simp").hidden=$("#sheet").hidden=true;nav
  const stt=t==="tv"?(nx?`Ongoing · next ep ${when(nx.air_date)}`:/Ended|Canceled/.test(d.status)?"Ended":"Returning"):(!d.release_date?"Upcoming":d.release_date>day(0)?`Releases ${fd(d.release_date)}`:"Released");
  const m={id,type:t,title:title(d),poster:d.poster_path,lang:d.original_language,genres:(d.genres||[]).map(g=>g.id)};learn(m,1);CUR={d,t,m};
  const cast=d.credits.cast.slice(0,20).map(c=>`<div data-p="${c.id}" data-r="cast">${c.profile_path?`<img loading="lazy" decoding="async" src="${IMG}w185${c.profile_path}" alt="">`:"<i></i>"}<b>${esc(c.name)}</b><small>${esc(c.character||"")}</small></div>`).join("");
- const run=d.runtime?d.runtime+" min":"",bk=d.backdrop_path?IMG+(innerWidth>900?"w1280":"w780")+d.backdrop_path:"",lg=pick(d.images&&d.images.logos);
+ const run=d.runtime?d.runtime+" min":"",bbd=bestBd(d),bk=bbd?IMG+(innerWidth>900?"w1280":"w780")+bbd:(d.poster_path?IMG+"w780"+d.poster_path:""),lg=pick(d.images&&d.images.logos);
  $("#mc").innerHTML=`<div class="tr" style="background-image:url(${bk})"><div class="tbg"></div><div class="tc">${lg?`<img class="tlg" src="${lg}" alt="">`:""}${v?'<button class="btn play" id="pl">Play trailer</button>':'<p class="notr">No trailer available</p>'}</div></div>
  <div class="mi"><div class="mw"><img class="dp" alt="" src="${d.poster_path?IMG+"w342"+d.poster_path:""}"><div class="mx">
  <div class="chips"><i class="c1">${cat(d,t)}</i><i>${(d.release_date||d.first_air_date||"").slice(0,4)||"TBA"}</i><i>${STAR}${(d.vote_average||0).toFixed(1)}</i><i>${stt}</i></div>

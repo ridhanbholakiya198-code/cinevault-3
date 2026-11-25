@@ -98,7 +98,7 @@
 .cvm-tip{margin:14px 2px 0;color:#6f6b63;font-size:12.5px;line-height:1.5}
 @media(min-width:700px){
   .cva.cv-menu{background:transparent;display:block;animation:none}
-  .cva.cv-menu .cva-box{position:absolute;width:340px;max-width:calc(100vw - 16px);max-height:calc(100vh - 16px);padding:6px 16px 8px;border:1px solid #ffffff22;border-radius:16px;box-shadow:0 30px 80px #000,0 0 0 1px #000;animation:cvsPop .16s}
+  .cva.cv-menu .cva-box{position:absolute;width:340px;max-width:calc(100vw - 16px);max-height:calc(100vh - 16px);max-height:calc(100dvh - 16px);padding:6px 16px 8px;border:1px solid #ffffff22;border-radius:16px;box-shadow:0 30px 80px #000,0 0 0 1px #000;animation:cvsPop .16s}
   .cvm-grip{display:none}.cvm-h{padding:14px 0 12px}
 }
 

@@ -60,7 +60,7 @@ header{padding-left:max(5vw,env(safe-area-inset-left))!important;padding-right:m
 /* soft-light blending over a moving full-screen picture is very heavy on phone/tablet GPUs: a plain tint looks the same */
 @media(hover:none){.hgr{mix-blend-mode:normal;opacity:.13}}
 /* older Android WebViews (no svh unit) kept a collapsed hero */
-@supports not (height:1svh){#hx{height:92vh}@media(min-width:900px){#hx{height:100vh}}}
+@supports not (height:1svh){#hx{height:92vh}@media(min-width:900px){#hx{height:100vh;height:100dvh}}}
 /* small tablets (701-899px): header was squeezing the search box to nothing */
 @media(min-width:701px) and (max-width:899px){header{gap:12px}header nav{gap:12px}header nav a{font-size:13.5px}header nav a[data-v="home"]{display:none}#q{flex:1 1 120px;width:auto;min-width:90px;max-width:280px}}
 
@@ -83,3 +83,10 @@ html,body{overflow-anchor:none}
 .logo{display:inline-flex;align-items:center;gap:.5em}.logo .lm{width:.92em;height:.92em;flex:none;margin-top:-.06em}
 
 .lm{object-fit:contain;display:block}
+
+/* v67 polish: placeholders so a slow image never shows as a hole, no layout jump when the modal locks scrolling, no sideways wobble */
+.tr{background-color:#0d0c0b}.sp-img,.sp-amb{background-color:#0d0c0b}.sp-th button{background-color:#17140f}
+body{overflow-x:clip}
+@media(hover:hover) and (pointer:fine){html{scrollbar-gutter:stable}}
+#modal{overscroll-behavior:contain}
+img{-webkit-user-drag:none}
