@@ -487,10 +487,11 @@ function dispatchHover(){
   if(el){try{el.dispatchEvent(new w.PointerEvent('pointermove',{bubbles:true,pointerType:'mouse',clientX:cur.x,clientY:cur.y}));el.dispatchEvent(new w.MouseEvent('mousemove',{bubbles:true,clientX:cur.x,clientY:cur.y}))}catch(e){}}
  }catch(e){}
 }
+function pageScroller(e){const d=D(),w=Wn();for(let n=e;n&&n!==d.body&&n!==d.documentElement;n=n.parentElement){const cs=w.getComputedStyle(n),o=cs.overflowY;if((o==='auto'||o==='scroll'||o==='overlay')&&cs.overflowX!=='auto'&&cs.overflowX!=='scroll'&&n.scrollHeight>n.clientHeight+40&&n.clientHeight>=H*0.4)return n}return null}
 function getVScroller(){
  const d=D();if(!d)return null;
  const el=d.elementFromPoint(cur.x,cur.y);
- const vs=el?scroller(el):null;
+ const vs=el?pageScroller(el):null;
  if(vs)return vs;
  const m=d.querySelector('#modal');
  if(m&&m.scrollHeight>m.clientHeight+4&&Wn().getComputedStyle(m).display!=='none')return m;
@@ -512,6 +513,7 @@ function getHScroller(){
 }
 function scrollAtCursor(dx,dy){
  try{const d=D(),w=Wn();if(!d||!w)return;
+  const cl=v=>Math.max(-260,Math.min(260,v));dx=cl(dx);dy=cl(dy); /* no single frame may fling the page */
   if(Math.abs(dx)>Math.abs(dy)*1.2){
    const hs=getHScroller();if(hs){hs.scrollLeft-=dx*2.2;return}
   }
@@ -520,7 +522,10 @@ function scrollAtCursor(dx,dy){
  }catch(e){}
 }
 function smoothScrollStep(by){
- try{const vs=getVScroller();if(vs)scrollTo(vs.scrollTop+by,320,vs)}catch(e){}
+ try{const vs=getVScroller();if(!vs)return;const y0=vs.scrollTop;
+  scrollTo(y0+by,320,vs).then(()=>{ /* if that scroller did not move, scroll the page itself */
+   if(Math.abs(vs.scrollTop-y0)>=2)return;const d=D(),root=d&&(d.scrollingElement||d.documentElement);
+   if(root&&root!==vs)scrollTo(root.scrollTop+by,320,root)})}catch(e){}
 }
 function smoothHScrollStep(by){
  try{const hs=getHScroller();if(hs)scrollHTo(hs.scrollLeft+by,340,hs)}catch(e){}
@@ -653,19 +658,22 @@ function bindTrackpad(){
   }
   if(!moved&&(performance.now()-st)<320)clickAtCursor();
  };
- let slx=0,sly=0;
+ let slx=null,sly=null,scBtn=false,scMoved=0;
  scrl.ontouchstart=e=>{
   if(!trackOn||!e.touches.length)return;
-  if(e.target===bUp||e.target===bDn)return;
-  e.preventDefault();slx=e.touches[0].clientX;sly=e.touches[0].clientY;
+  slx=e.touches[0].clientX;sly=e.touches[0].clientY;scMoved=0;
+  scBtn=(e.target===bUp||e.target===bDn); /* on the arrow buttons the tap must go through (no preventDefault) and must not start a drag */
+  if(!scBtn)e.preventDefault();
  };
  scrl.ontouchmove=e=>{
-  if(!trackOn||!e.touches.length)return;
-  e.preventDefault();
+  if(!trackOn||!e.touches.length||slx===null)return; /* never scroll from an unknown start point */
   const cx=e.touches[0].clientX,cy=e.touches[0].clientY;
+  if(scBtn){scMoved+=Math.hypot(cx-slx,cy-sly);slx=cx;sly=cy;if(scMoved<14)return;scBtn=false} /* small wobble on an arrow = still a tap; a real drag becomes scrolling */
+  e.preventDefault();
   pendScDx+=(cx-slx);pendScDy+=(cy-sly)*1.6;slx=cx;sly=cy;
   if(!rafSc)rafSc=requestAnimationFrame(flushScroll);
  };
+ scrl.ontouchend=scrl.ontouchcancel=()=>{slx=sly=null;scBtn=false;scMoved=0};
  bUp.onclick=()=>{if(trackOn)smoothScrollStep(-340)};
  bDn.onclick=()=>{if(trackOn)smoothScrollStep(340)};
  bL.onclick=()=>{if(trackOn)smoothHScrollStep(-360)};
