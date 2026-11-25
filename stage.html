@@ -12,7 +12,7 @@ html,body{margin:0;height:100%;background:#07060d;overflow:hidden;font:14px syst
  background:radial-gradient(1200px 700px at 12% 8%,#5b2bd6aa,transparent 60%),radial-gradient(900px 600px at 92% 96%,#d63a8faa,transparent 60%),#07060d}
 #win{position:relative;overflow:hidden;background:#000;border-radius:14px;box-shadow:0 24px 60px #0009,0 0 0 1px #ffffff26}
 body.flat #bg{background:#000}body.flat #win{border-radius:0;box-shadow:none}
-#cam{position:absolute;left:0;top:0;width:1440px;height:900px;transform-origin:0 0}
+#cam{position:absolute;left:0;top:0;width:1440px;height:900px;transform-origin:0 0;will-change:transform}
 #ifr{position:absolute;inset:0;width:1440px;height:900px;border:0;background:#000}
 #cur{position:absolute;left:0;top:0;width:34px;height:34px;pointer-events:none;opacity:0;transition:opacity .3s;z-index:5;filter:drop-shadow(0 3px 5px #0009)}
 #cur.on{opacity:1}#cur svg{width:100%;height:100%;transition:transform .12s}#cur.dn svg{transform:scale(.82)}
@@ -21,16 +21,18 @@ body.flat #bg{background:#000}body.flat #win{border-radius:0;box-shadow:none}
 #fade{position:absolute;inset:0;background:#000;opacity:0;pointer-events:none;z-index:15}
 #cd{position:fixed;inset:0;display:none;align-items:center;justify-content:center;font:700 120px system-ui;z-index:20;background:#000}
 #stop{position:fixed;left:0;top:0;width:80px;height:80px;z-index:30}
-#panel{position:fixed;left:0;right:0;bottom:0;max-height:75vh;overflow:auto;padding:14px;background:#111e;z-index:25;border-top:1px solid #fff2}
+#panel{position:fixed;left:0;right:0;bottom:0;max-height:78vh;overflow:auto;padding:14px;background:#111e;z-index:25;border-top:1px solid #fff2}
 #panel.h{display:none}
 #panel label{display:inline-flex;align-items:center;gap:6px;margin:4px 12px 4px 0}
 #panel input[type=text],#panel input[type=number],#panel select{background:#000;color:#fff;border:1px solid #fff3;border-radius:8px;padding:8px}
 #panel input[type=text]{width:150px}
-textarea{width:100%;height:170px;background:#000;color:#9fe;border:1px solid #fff3;border-radius:8px;padding:8px;font:12px monospace;margin-top:8px}
+textarea{width:100%;height:160px;background:#000;color:#9fe;border:1px solid #fff3;border-radius:8px;padding:8px;font:12px monospace;margin-top:8px}
 button{background:#7c4dff;color:#fff;border:0;border-radius:10px;padding:12px 18px;font:600 15px system-ui;margin:8px 8px 0 0}
 button.g{background:#333}
 #msg{margin-top:8px;color:#fc6;font-size:12px;white-space:pre-wrap}
 #info{margin-top:6px;opacity:.75;font-size:12px}
+.mopts{margin:4px 0;padding:8px 10px;background:#ffffff0a;border:1px solid #ffffff1a;border-radius:10px}
+.hide{display:none}
 </style></head><body>
 <div id="bg"><div id="win"><div id="cam">
  <iframe id="ifr" src="about:blank"></iframe>
@@ -39,6 +41,25 @@ button.g{background:#333}
 <div id="cd"></div><div id="stop"></div>
 <div id="panel">
  <div id="info"></div>
+ <label>Control <select id="runmode">
+  <option value="manual" selected>Manual (finger = cursor + tap zoom)</option>
+  <option value="auto">Auto Script (JSON)</option>
+ </select></label><br>
+ <div id="mopts" class="mopts">
+  <label>Tap zoom <select id="mz">
+   <option value="1.5" selected>1.5x (script jaisa)</option>
+   <option value="1.4">1.4x</option>
+   <option value="1.6">1.6x</option>
+   <option value="1.8">1.8x</option>
+   <option value="1">Off (no zoom)</option>
+  </select></label>
+  <label>Zoom-out <select id="mout">
+   <option value="1500" selected>1.5s auto</option>
+   <option value="2200">2.2s auto</option>
+   <option value="800">0.8s fast</option>
+   <option value="0">Manual (2-finger tap)</option>
+  </select></label>
+ </div>
  <label>Site path <input type="text" id="path" value="/index.html"></label>
  <label>Countdown (sec) <input type="number" id="cdn" value="5" min="1" max="15" style="width:70px"></label><br>
  <label>Screen <select id="mode"><option value="fit">Fit 1440x900 (premium frame)</option><option value="wide">Wide - poori screen bhare</option></select></label><br>
@@ -47,9 +68,11 @@ button.g{background:#333}
  <label><input type="checkbox" id="bl"> Motion blur</label>
  <label><input type="checkbox" id="lite" checked> Lite effects (smooth video)</label>
  <label><input type="checkbox" id="fs"> Fullscreen API (agar black screen aaye to OFF rakho)</label>
- <textarea id="scr" spellcheck="false"></textarea>
+ <div id="scrwrap" class="hide">
+  <textarea id="scr" spellcheck="false"></textarea>
+ </div>
  <button id="go">&#9654; Start (countdown)</button><button class="g" id="rs">Reset script</button>
- <div style="margin-top:8px;opacity:.7;font-size:12px">Pehle recorder start karo, phir Start dabao. Rukne ke liye top-left corner pe double-tap.<br>Actions: wait, auto, zoom, move, click, hover, type, scroll, hold, mark, cut.</div>
+ <div id="hint" style="margin-top:8px;opacity:.7;font-size:12px">Manual mode: Finger move = cursor, Tap = zoom-in + click + auto zoom-out, Long-press = hold zoom, 2-finger tap = zoom-out. Rukne ke liye top-left corner pe double-tap.</div>
  <div id="msg"></div>
 </div>
 <script>
@@ -231,8 +254,9 @@ const DEF=[
 ];
 const cam={z:1,x:W/2,y:H/2,tw:null,follow:false},cur={x:W*.8,y:H*.85},auto={z:0,out:1500};
 let pace=1;const T=ms=>ms*pace,ZD=.7,ZO=.8;
-let k=1,ww=0,wh=0,abort=false,running=false,blurOn=false,outT=0,marks=[],T0=0,wc=0,lastMove=0,last=performance.now();
+let k=1,ww=0,wh=0,abort=false,running=false,manualOn=false,blurOn=false,outT=0,marks=[],T0=0,last=performance.now(),unsubManual=null;
 const isApp=()=>matchMedia('(display-mode: fullscreen)').matches||matchMedia('(display-mode: standalone)').matches;
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 function layout(){
  if($('#mode').value==='wide'){W=Math.max(1280,Math.min(1600,Math.round(900*innerWidth/innerHeight)));H=Math.max(560,Math.round(W*innerHeight/innerWidth))}else{W=1440;H=900}
  camEl.style.width=ifr.style.width=W+'px';camEl.style.height=ifr.style.height=H+'px';
@@ -241,6 +265,17 @@ function layout(){
  win.style.width=ww+'px';win.style.height=wh+'px';k=ww/W}
 addEventListener('resize',layout);document.addEventListener('fullscreenchange',layout);
 $('#fr').onchange=layout;$('#mode').onchange=layout;
+function syncModeUI(){
+ const m=$('#runmode').value==='manual';
+ $('#mopts').classList.toggle('hide',!m);
+ $('#scrwrap').classList.toggle('hide',m);
+ $('#rs').classList.toggle('hide',m);
+ $('#hint').textContent=m
+  ?'Manual mode: Finger move = cursor, Tap = zoom-in + click + auto zoom-out, Long-press = hold zoom, 2-finger tap = zoom-out. Rukne ke liye top-left corner pe double-tap.'
+  :'Pehle recorder start karo, phir Start dabao. Rukne ke liye top-left corner pe double-tap.\nActions: wait, auto, zoom, move, click, hover, type, scroll, hold, mark, cut.';
+ $('#msg').textContent='';
+}
+$('#runmode').onchange=syncModeUI;
 function drawCur(){curEl.style.transform=`translate(${cur.x-3}px,${cur.y-2}px)`}
 /* camera: reference-style fast ease-out (about 0.5s), cursor-follow with dead zone */
 function camTo(z,x,y,dur=ZD,delay=0){cam.tw={t0:performance.now()+delay,dur:dur*1000,a:{z:cam.z,x:cam.x,y:cam.y},b:{z,x,y}}}
@@ -257,7 +292,6 @@ function tick(t){const dt=Math.min(.05,(t-last)/1000);last=t;const pz=cam.z,px=c
  tx=Math.min(0,Math.max(ww-W*s,tx));ty=Math.min(0,Math.max(wh-H*s,ty));
  camEl.style.transform=`translate(${tx}px,${ty}px) scale(${s})`;
  const mv=Math.abs(cam.z-pz)*400+Math.abs(cam.x-px)+Math.abs(cam.y-py);
- if(mv>.15){lastMove=t;if(!wc){camEl.style.willChange='transform';wc=1}}else if(wc&&t-lastMove>350){camEl.style.willChange='auto';wc=0}
  camEl.style.filter=blurOn?`blur(${Math.min(1.5,mv/Math.max(dt,.001)*.0004).toFixed(2)}px)`:'';
  requestAnimationFrame(tick)}
 const D=()=>ifr.contentDocument,Wn=()=>ifr.contentWindow;
@@ -338,27 +372,113 @@ function patchDoc(){try{const C=Wn().Clipboard.prototype;C.writeText=()=>Promise
 function newFrame(){const n=document.createElement('iframe');n.id='ifr';n.style.width=W+'px';n.style.height=H+'px';ifr.replaceWith(n);ifr=n}
 function liteCss(){if(!$('#lite').checked)return;try{const d=D(),s=d.createElement('style');
  s.textContent='*,*::before,*::after{backdrop-filter:none!important;-webkit-backdrop-filter:none!important}.grain{display:none!important}';d.head.appendChild(s)}catch(e){}}
+function bindManual(){
+ if(unsubManual){unsubManual();unsubManual=null}
+ const d=D();if(!d)return;
+ let sx=0,sy=0,st=0,moved=false,longT=0,held=false;
+ const setCur=(x,y)=>{cur.x=clamp(x,0,W);cur.y=clamp(y,0,H);drawCur();curEl.classList.add('on')};
+ const zoomTap=(holdOnly)=>{
+  const z=+$('#mz').value||1,out=+$('#mout').value;
+  clearTimeout(outT);
+  if(z<=1)return;
+  const dur=curZ()>1.05?.45:ZD;
+  cam.follow=false;
+  camTo(z,cur.x,cur.y,dur);
+  setTimeout(()=>{if(manualOn)cam.follow=true},dur*1000);
+  if(!holdOnly&&out>0)outT=setTimeout(()=>{if(manualOn){cam.follow=false;camTo(1,W/2,H/2,ZO)}},T(out));
+ };
+ const zoomOutNow=()=>{clearTimeout(outT);cam.follow=false;camTo(1,W/2,H/2,ZO)};
+ const onTouchStart=e=>{
+  if(!manualOn)return;
+  if(e.touches.length>=2){clearTimeout(longT);moved=true;zoomOutNow();return}
+  const t=e.touches[0];sx=t.clientX;sy=t.clientY;st=performance.now();moved=false;held=false;
+  setCur(sx,sy);
+  clearTimeout(longT);
+  longT=setTimeout(()=>{if(!moved&&manualOn){held=true;zoomTap(true)}},450);
+ };
+ const onTouchMove=e=>{
+  if(!manualOn||!e.touches.length)return;
+  const t=e.touches[0];
+  setCur(t.clientX,t.clientY);
+  if(Math.hypot(t.clientX-sx,t.clientY-sy)>12){moved=true;clearTimeout(longT)}
+ };
+ const onTouchEnd=e=>{
+  clearTimeout(longT);
+  if(!manualOn)return;
+  const t=e.changedTouches[0];
+  if(t)setCur(t.clientX,t.clientY);
+  if(!moved&&!held&&(performance.now()-st)<420){ripple();zoomTap(false)}
+ };
+ const onPtrDown=e=>{
+  if(!manualOn||e.pointerType!=='mouse')return;
+  sx=e.clientX;sy=e.clientY;st=performance.now();moved=false;setCur(sx,sy);
+ };
+ const onPtrMove=e=>{
+  if(!manualOn||e.pointerType!=='mouse')return;
+  setCur(e.clientX,e.clientY);
+  if(Math.hypot(e.clientX-sx,e.clientY-sy)>10)moved=true;
+ };
+ const onPtrUp=e=>{
+  if(!manualOn||e.pointerType!=='mouse')return;
+  setCur(e.clientX,e.clientY);
+  if(!moved&&(performance.now()-st)<420){ripple();zoomTap(false)}
+ };
+ d.addEventListener('touchstart',onTouchStart,{passive:true,capture:true});
+ d.addEventListener('touchmove',onTouchMove,{passive:true,capture:true});
+ d.addEventListener('touchend',onTouchEnd,{passive:true,capture:true});
+ d.addEventListener('pointerdown',onPtrDown,{passive:true,capture:true});
+ d.addEventListener('pointermove',onPtrMove,{passive:true,capture:true});
+ d.addEventListener('pointerup',onPtrUp,{passive:true,capture:true});
+ unsubManual=()=>{
+  try{
+   d.removeEventListener('touchstart',onTouchStart,{capture:true});
+   d.removeEventListener('touchmove',onTouchMove,{capture:true});
+   d.removeEventListener('touchend',onTouchEnd,{capture:true});
+   d.removeEventListener('pointerdown',onPtrDown,{capture:true});
+   d.removeEventListener('pointermove',onPtrMove,{capture:true});
+   d.removeEventListener('pointerup',onPtrUp,{capture:true});
+  }catch(e){}
+ };
+}
 function loadSite(path,intro=true,keep=false){
  return new Promise(res=>{try{if(intro){sessionStorage.removeItem('cv_i');sessionStorage.removeItem('cv_intro')}else{sessionStorage.setItem('cv_i','1');sessionStorage.setItem('cv_intro','1')}}catch(e){}
   fade.style.transition='none';fade.style.opacity=1;newFrame();
   setTimeout(()=>{ifr.src=path+(path.includes('?')?'&':'?')+'stage='+Date.now();const t0=Date.now();
+   let done=false;
+   const finish=()=>{if(done)return;done=true;clearInterval(iv);patchDoc();liteCss();if(manualOn)bindManual();
+    if(keep)return res();
+    setTimeout(()=>{fade.style.transition='opacity .3s';fade.style.opacity=0;res()},intro?100:500)};
    const iv=setInterval(()=>{let ok=0;try{const d=ifr.contentDocument;ok=d&&d.body&&d.readyState!=='loading'&&d.location.href.indexOf('about:blank')<0}catch(e){}
-    if(ok||Date.now()-t0>6000){clearInterval(iv);patchDoc();liteCss();if(keep)return res();
-     setTimeout(()=>{fade.style.transition='opacity .3s';fade.style.opacity=0;res()},intro?100:600)}},40)},120)})}
+    if(ok||Date.now()-t0>6000)finish()},40);
+   ifr.addEventListener('load',()=>{if(Date.now()-t0>200)finish()},{once:true});
+  },120)})}
 const fmt=t=>Math.floor(t/60)+':'+String(Math.floor(t%60)).padStart(2,'0');
-async function start(){if(running)return;let steps;
- try{steps=JSON.parse($('#scr').value)}catch(e){$('#msg').textContent='Script JSON galat hai: '+e.message;return}
- try{localStorage.setItem('stg_scr',$('#scr').value)}catch(e){}
- running=true;abort=false;blurOn=$('#bl').checked;pace=+$('#pace').value||1;$('#msg').textContent='';marks=[];T0=performance.now();let wl;
+async function start(){if(running)return;
+ const isManual=$('#runmode').value==='manual';
+ let steps=[];
+ if(!isManual){
+  try{steps=JSON.parse($('#scr').value)}catch(e){$('#msg').textContent='Script JSON galat hai: '+e.message;return}
+  try{localStorage.setItem('stg_scr',$('#scr').value)}catch(e){}
+ }
+ running=true;manualOn=isManual;abort=false;blurOn=$('#bl').checked;pace=+$('#pace').value||1;$('#msg').textContent='';marks=[];T0=performance.now();let wl;
  if($('#fs').checked&&!document.fullscreenElement&&!isApp())try{await document.documentElement.requestFullscreen();await sleep(900)}catch(e){}
  try{wl=await navigator.wakeLock.request('screen')}catch(e){}
  layout();$('#panel').classList.add('h');curEl.classList.remove('on');resetCam();auto.z=0;
  fade.style.transition='none';fade.style.opacity=1;
  const n=+$('#cdn').value||5,cd=$('#cd');cd.style.display='flex';
- const pre=loadSite($('#path').value,false,true);
+ const pre=isManual?Promise.resolve():loadSite($('#path').value,false,true);
  for(let i=n;i>0&&!abort;i--){cd.textContent=i;await sleep(1000)}
  await pre;cd.style.display='none';
  if(!abort)await loadSite($('#path').value,true);
+ if(isManual){
+  if(!abort){fade.style.transition='opacity .3s';fade.style.opacity=0;bindManual()}
+  while(running&&!abort)await sleep(250);
+  if(unsubManual){unsubManual();unsubManual=null}
+  running=false;manualOn=false;clearTimeout(outT);curEl.classList.remove('on');try{wl&&wl.release()}catch(e){}
+  fade.style.opacity=0;$('#panel').classList.remove('h');
+  $('#msg').textContent='Manual session ruk gaya.';
+  return;
+ }
  const bad=abort?[]:await run(steps);
  marks.push(['END',(performance.now()-T0)/1000]);
  running=false;clearTimeout(outT);curEl.classList.remove('on');try{wl&&wl.release()}catch(e){}
@@ -371,5 +491,5 @@ $('#rs').onclick=()=>{$('#scr').value=JSON.stringify(DEF,null,1)};
 try{if(localStorage.getItem('stg_ver')==='9')$('#scr').value=localStorage.getItem('stg_scr')||'';localStorage.setItem('stg_ver','9')}catch(e){}
 if(!$('#scr').value)$('#rs').click();
 $('#info').textContent=isApp()?'App mode ON (fullscreen app) - recording ke liye best.':'Tip: Chrome menu > Install app, phir "Parda Stage" icon se kholo. Isse fullscreen + landscape bina black screen ke milta hai.';
-layout();drawCur();requestAnimationFrame(tick);
+syncModeUI();layout();drawCur();requestAnimationFrame(tick);
 </script></body></html>
