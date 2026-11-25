@@ -12,9 +12,9 @@ html,body{margin:0;height:100%;background:#07060d;overflow:hidden;font:14px syst
  background:radial-gradient(1200px 700px at 12% 8%,#5b2bd6aa,transparent 60%),radial-gradient(900px 600px at 92% 96%,#d63a8faa,transparent 60%),#07060d}
 body.haspad #bg{padding-bottom:250px}
 @media (orientation:landscape){body.haspad #bg{padding-bottom:0}}
-#win{position:relative;overflow:hidden;contain:layout paint;background:#000;border-radius:14px;box-shadow:0 24px 60px #0009,0 0 0 1px #ffffff26}
+#win{position:relative;overflow:hidden;background:#000;border-radius:14px;box-shadow:0 24px 60px #0009,0 0 0 1px #ffffff26}
 body.flat #bg{background:#000}body.flat #win{border-radius:0;box-shadow:none}
-#cam{position:absolute;left:0;top:0;width:1440px;height:900px;transform-origin:0 0;will-change:transform;backface-visibility:hidden;-webkit-backface-visibility:hidden}
+#cam{position:absolute;left:0;top:0;width:1440px;height:900px;transform-origin:0 0}
 #ifr{position:absolute;inset:0;width:1440px;height:900px;border:0;background:#000}
 #cur{position:absolute;left:0;top:0;width:34px;height:34px;pointer-events:none;opacity:0;transition:opacity .3s;z-index:5;filter:drop-shadow(0 3px 5px #0009);will-change:transform}
 #cur.on{opacity:1}#cur svg{width:100%;height:100%;transition:transform .12s}#cur.dn svg{transform:scale(.82)}
@@ -52,12 +52,18 @@ button.g{background:#333}
 .tp-row button{flex:1;margin:0;padding:0 4px;font-size:11px;font-weight:600;border-radius:9px;background:rgba(255,255,255,.1);color:#eee;border:1px solid rgba(255,255,255,.12);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .tp-row button.on{background:#7c4dff;border-color:#9e7bff;color:#fff}
 .tp-row button.dw{background:#00bfa5;border-color:#5df2d6;color:#05201c}
+/* Select dropdown picker for Trackpad/Manual mode */
+#selpop{position:fixed;inset:0;z-index:35;background:rgba(0,0,0,.65);display:flex;align-items:center;justify-content:center;padding:18px}
+#selbox{width:100%;max-width:340px;max-height:65vh;overflow:auto;background:#161424;border:1px solid #ffffff26;border-radius:16px;padding:10px;box-shadow:0 20px 50px #000b}
+#selbox button{display:block;width:100%;text-align:left;margin:4px 0;padding:11px 14px;border-radius:10px;background:#ffffff0d;color:#eee;font:500 14px system-ui}
+#selbox button.cur{background:#7c4dff;color:#fff;font-weight:600}
 </style></head><body>
 <div id="bg"><div id="win"><div id="cam">
  <iframe id="ifr" src="about:blank"></iframe>
  <div id="cur"><svg viewBox="0 0 24 24"><path d="M3 2l7.5 19 2.8-7.7L21 10.5z" fill="#fff" stroke="#000" stroke-width="1.6" stroke-linejoin="round"/></svg></div>
 </div><div id="fade"></div></div></div>
 <div id="cd"></div><div id="stop"></div>
+<div id="selpop" class="hide"><div id="selbox"></div></div>
 <div id="tpad" class="hide">
  <div id="tpad-top">
   <div id="tpad-surf">Slide = mouse &bull; Tap = click &bull; 2-finger = scroll</div>
@@ -309,7 +315,7 @@ const DEF=[
 ];
 const cam={z:1,x:W/2,y:H/2,tw:null,follow:false},cur={x:W*.8,y:H*.85},auto={z:0,out:1500};
 let pace=1;const T=ms=>ms*pace,ZD=.7,ZO=.8;
-let k=1,ww=0,wh=0,abort=false,running=false,manualOn=false,trackOn=false,holdZoom=false,tapZoomOn=true,dwellOn=false,dwellZoomed=false,blurOn=false,outT=0,dwellT=0,marks=[],T0=0,last=performance.now(),unsubManual=null,lastHoverEl=null,lastTf='',lastBlur='',initHref='';
+let k=1,ww=0,wh=0,abort=false,running=false,manualOn=false,trackOn=false,holdZoom=false,tapZoomOn=true,dwellOn=false,dwellZoomed=false,blurOn=false,outT=0,dwellT=0,marks=[],T0=0,last=performance.now(),unsubManual=null,lastHoverEl=null,lastTf='',lastBlur='',initHref='',wc=0,lastMove=0;
 const isApp=()=>matchMedia('(display-mode: fullscreen)').matches||matchMedia('(display-mode: standalone)').matches;
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 function layout(){
@@ -352,9 +358,10 @@ function tick(t){const dt=Math.min(.05,(t-last)/1000);last=t;const pz=cam.z,px=c
   const a=1-Math.exp(-dt*7);cam.x+=(tx-cam.x)*a;cam.y+=(ty-cam.y)*a}
  const s=k*cam.z;let tx=ww/2-cam.x*s,ty=wh/2-cam.y*s;
  tx=Math.min(0,Math.max(ww-W*s,tx));ty=Math.min(0,Math.max(wh-H*s,ty));
- const tf=`translate3d(${tx.toFixed(2)}px,${ty.toFixed(2)}px,0) scale(${s.toFixed(5)})`;
- if(tf!==lastTf){camEl.style.transform=tf;lastTf=tf}
  const mv=Math.abs(cam.z-pz)*400+Math.abs(cam.x-px)+Math.abs(cam.y-py);
+ if(mv>.15){lastMove=t;if(!wc){camEl.style.willChange='transform';wc=1}}else if(wc&&t-lastMove>350){camEl.style.willChange='auto';wc=0}
+ const tf=`translate(${tx.toFixed(2)}px,${ty.toFixed(2)}px) scale(${s.toFixed(5)})`;
+ if(tf!==lastTf){camEl.style.transform=tf;lastTf=tf}
  const bf=blurOn&&mv>.2?`blur(${Math.min(1.5,mv/Math.max(dt,.001)*.0004).toFixed(2)}px)`:'';
  if(bf!==lastBlur){camEl.style.filter=bf;lastBlur=bf}
  requestAnimationFrame(tick)}
@@ -518,23 +525,41 @@ function smoothScrollStep(by){
 function smoothHScrollStep(by){
  try{const hs=getHScroller();if(hs)scrollHTo(hs.scrollLeft+by,340,hs)}catch(e){}
 }
+function openSelectPicker(sel){
+ const pop=$('#selpop'),box=$('#selbox');
+ box.innerHTML='';
+ [...sel.options].forEach(opt=>{
+  const b=document.createElement('button');
+  b.type='button';
+  b.textContent=opt.textContent;
+  if(opt.value===sel.value)b.className='cur';
+  b.onclick=()=>{
+   sel.value=opt.value;
+   sel.dispatchEvent(new Event('input',{bubbles:true}));
+   sel.dispatchEvent(new Event('change',{bubbles:true}));
+   pop.classList.add('hide');
+   if(dwellZoomed&&!holdZoom)manualZoomOut(true);
+   else if(tapZoomOn&&!holdZoom)manualZoomTap(false);
+  };
+  box.appendChild(b);
+ });
+ pop.classList.remove('hide');
+}
+$('#selpop').onclick=e=>{if(e.target===$('#selpop'))$('#selpop').classList.add('hide')};
+
 function goBackInFrame(){
  try{
+  if(!$('#selpop').classList.contains('hide')){$('#selpop').classList.add('hide');return}
   const d=D(),w=Wn();if(!d||!w)return;
   const vis=sel=>{const el=d.querySelector(sel);return el&&el.getClientRects().length?el:null};
-  // 1. Close lightbox / colour card / fullscreen overlay if open
   const ov=vis('[data-a=x]')||vis('.lb-x')||vis('.cdi [data-a=x]');
   if(ov){tapEl(ov);return}
-  // 2. Click explicit Back button inside modal/page (e.g., Back to show, Back arrow)
   const btns=[...d.querySelectorAll('button,[role=button]')].filter(b=>b.getClientRects().length);
   const bk=btns.find(b=>{const t=b.textContent.trim().toLowerCase();return t.startsWith('back')||t==='←'||t==='‹'});
   if(bk){tapEl(bk);return}
-  // 3. Close drawer/menu or modal if open
   const mx=vis('.cvn-x')||vis('#mx');
   if(mx){tapEl(mx);return}
-  // 4. Send Escape key
   for(const x of[d,w])x.dispatchEvent(new w.KeyboardEvent('keydown',{key:'Escape',bubbles:true}));
-  // 5. Browser history back only if navigated away from initial URL
   if(initHref&&w.location.href!==initHref&&w.history.length>1)w.history.back();
  }catch(e){}
 }
@@ -544,8 +569,10 @@ function clickAtCursor(){
  const wasDwellZoom=dwellZoomed;
  dwellZoomed=false;
  try{const d=D(),el=d&&d.elementFromPoint(cur.x,cur.y);
+  const sel=el?(el.tagName==='SELECT'?el:el.closest('select')):null;
+  if(sel){openSelectPicker(sel);return}
   if(el){
-   if(el.tagName==='INPUT'||el.tagName==='TEXTAREA'||el.tagName==='SELECT')el.focus();
+   if(el.tagName==='INPUT'||el.tagName==='TEXTAREA')el.focus();
    tapEl(el);
   }
  }catch(e){}
@@ -702,18 +729,18 @@ function bindManual(){
   }catch(e){}
  };
 }
-function loadSite(path,intro=true,keep=false){
+function loadSite(path,intro=true,keep=false,instant=false){
  return new Promise(res=>{try{if(intro){sessionStorage.removeItem('cv_i');sessionStorage.removeItem('cv_intro')}else{sessionStorage.setItem('cv_i','1');sessionStorage.setItem('cv_intro','1')}}catch(e){}
-  fade.style.transition='none';fade.style.opacity=1;newFrame();
+  fade.style.transition='none';fade.style.opacity=instant?0:1;newFrame();
   setTimeout(()=>{ifr.src=path+(path.includes('?')?'&':'?')+'stage='+Date.now();const t0=Date.now();
    let done=false;
    const finish=()=>{if(done)return;done=true;clearInterval(iv);patchDoc();liteCss();try{initHref=Wn().location.href}catch(e){}if(manualOn)bindManual();
-    if(keep)return res();
+    if(keep||instant){fade.style.opacity=0;return res()}
     setTimeout(()=>{fade.style.transition='opacity .3s';fade.style.opacity=0;res()},intro?100:500)};
    const iv=setInterval(()=>{let ok=0;try{const d=ifr.contentDocument;ok=d&&d.body&&d.readyState!=='loading'&&d.location.href.indexOf('about:blank')<0}catch(e){}
-    if(ok||Date.now()-t0>6000)finish()},40);
-   ifr.addEventListener('load',()=>{if(Date.now()-t0>200)finish()},{once:true});
-  },120)})}
+    if(ok||Date.now()-t0>6000)finish()},30);
+   ifr.addEventListener('load',()=>{if(Date.now()-t0>150)finish()},{once:true});
+  },60)})}
 const fmt=t=>Math.floor(t/60)+':'+String(Math.floor(t%60)).padStart(2,'0');
 async function start(){if(running)return;
  const rm=$('#runmode').value,isManual=rm==='manual',isTrack=rm==='trackpad',isInteractive=isManual||isTrack;
@@ -731,16 +758,16 @@ async function start(){if(running)return;
  const pre=isInteractive?Promise.resolve():loadSite($('#path').value,false,true);
  for(let i=n;i>0&&!abort;i--){cd.textContent=i;await sleep(1000)}
  await pre;cd.style.display='none';
- if(!abort)await loadSite($('#path').value,true);
+ if(!abort)await loadSite($('#path').value,true,false,isInteractive);
  if(isInteractive){
   if(!abort){
-   fade.style.transition='opacity .3s';fade.style.opacity=0;
+   fade.style.opacity=0;
    if(isTrack){$('#tpad').classList.remove('hide');bindTrackpad()}
    else bindManual();
   }
   while(running&&!abort)await sleep(250);
   if(unsubManual){unsubManual();unsubManual=null}
-  $('#tpad').classList.add('hide');
+  $('#tpad').classList.add('hide');$('#selpop').classList.add('hide');
   running=false;manualOn=false;trackOn=false;holdZoom=false;dwellZoomed=false;clearTimeout(dwellT);layout();
   clearTimeout(outT);curEl.classList.remove('on');try{wl&&wl.release()}catch(e){}
   fade.style.opacity=0;$('#panel').classList.remove('h');
