@@ -296,7 +296,7 @@ function layout(){
  const flat=!$('#fr').checked;document.body.classList.toggle('flat',flat);
  const padOpen=trackOn&&running;
  document.body.classList.toggle('haspad',padOpen);
- const p=flat?0:.04,vw=innerWidth,vh=innerHeight-(padOpen&&vh>vw?225:0);
+ const p=flat?0:.04,vw=innerWidth,vh0=innerHeight,vh=vh0-(padOpen&&vh0>vw?225:0);
  ww=Math.min(vw*(1-2*p),vh*(1-2*p)*W/H);wh=ww*H/W;
  win.style.width=ww+'px';win.style.height=wh+'px';k=ww/W}
 addEventListener('resize',layout);document.addEventListener('fullscreenchange',layout);
