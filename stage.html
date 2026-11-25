@@ -10,6 +10,8 @@
 html,body{margin:0;height:100%;background:#07060d;overflow:hidden;font:14px system-ui,sans-serif;color:#eee}
 #bg{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;
  background:radial-gradient(1200px 700px at 12% 8%,#5b2bd6aa,transparent 60%),radial-gradient(900px 600px at 92% 96%,#d63a8faa,transparent 60%),#07060d}
+body.haspad #bg{padding-bottom:225px}
+@media (orientation:landscape){body.haspad #bg{padding-bottom:0}}
 #win{position:relative;overflow:hidden;background:#000;border-radius:14px;box-shadow:0 24px 60px #0009,0 0 0 1px #ffffff26}
 body.flat #bg{background:#000}body.flat #win{border-radius:0;box-shadow:none}
 #cam{position:absolute;left:0;top:0;width:1440px;height:900px;transform-origin:0 0;will-change:transform}
@@ -32,17 +34,43 @@ button.g{background:#333}
 #msg{margin-top:8px;color:#fc6;font-size:12px;white-space:pre-wrap}
 #info{margin-top:6px;opacity:.75;font-size:12px}
 .mopts{margin:4px 0;padding:8px 10px;background:#ffffff0a;border:1px solid #ffffff1a;border-radius:10px}
-.hide{display:none}
+.hide{display:none!important}
+/* Virtual Trackpad (outside #win so recordings stay 100% clean) */
+#tpad{position:fixed;left:12px;right:12px;bottom:12px;height:206px;max-width:520px;margin:0 auto;z-index:22;
+ display:flex;flex-direction:column;gap:8px;padding:10px;border-radius:18px;
+ background:rgba(14,12,24,.78);border:1px solid rgba(255,255,255,.16);
+ box-shadow:0 12px 32px #0008;touch-action:none;user-select:none;-webkit-user-select:none}
+@media (orientation:landscape){#tpad{height:146px;max-width:360px;left:auto;right:12px;bottom:12px;opacity:.86}}
+#tpad-top{flex:1;display:flex;gap:8px;min-height:0}
+#tpad-surf{flex:1;position:relative;border-radius:12px;background:rgba(255,255,255,.05);border:1px dashed rgba(255,255,255,.16);
+ display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.38);font-size:12px;text-align:center;padding:8px;touch-action:none}
+#tpad-scrl{width:46px;border-radius:12px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.14);
+ display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.55);font-size:16px;touch-action:none}
+#tpad-bar{display:flex;gap:8px;height:36px}
+#tpad-bar button{flex:1;margin:0;padding:0 10px;font-size:12px;font-weight:600;border-radius:10px;background:rgba(255,255,255,.1);color:#eee;border:1px solid rgba(255,255,255,.12)}
+#tpad-bar button.on{background:#7c4dff;border-color:#9e7bff;color:#fff}
 </style></head><body>
 <div id="bg"><div id="win"><div id="cam">
  <iframe id="ifr" src="about:blank"></iframe>
  <div id="cur"><svg viewBox="0 0 24 24"><path d="M3 2l7.5 19 2.8-7.7L21 10.5z" fill="#fff" stroke="#000" stroke-width="1.6" stroke-linejoin="round"/></svg></div>
 </div><div id="fade"></div></div></div>
 <div id="cd"></div><div id="stop"></div>
+<div id="tpad" class="hide">
+ <div id="tpad-top">
+  <div id="tpad-surf">Trackpad: Slide = move cursor &bull; Tap = click + zoom &bull; 2-finger slide = scroll</div>
+  <div id="tpad-scrl" title="Scroll">&#8693;</div>
+ </div>
+ <div id="tpad-bar">
+  <button id="tp-clk" type="button">Click</button>
+  <button id="tp-hold" type="button">Hold Zoom</button>
+  <button id="tp-out" type="button">1x Reset</button>
+ </div>
+</div>
 <div id="panel">
  <div id="info"></div>
  <label>Control <select id="runmode">
-  <option value="manual" selected>Manual (finger = cursor + tap zoom)</option>
+  <option value="trackpad" selected>Trackpad Mouse (best for mobile)</option>
+  <option value="manual">Direct Touch (finger on screen)</option>
   <option value="auto">Auto Script (JSON)</option>
  </select></label><br>
  <div id="mopts" class="mopts">
@@ -57,7 +85,12 @@ button.g{background:#333}
    <option value="1500" selected>1.5s auto</option>
    <option value="2200">2.2s auto</option>
    <option value="800">0.8s fast</option>
-   <option value="0">Manual (2-finger tap)</option>
+   <option value="0">Manual (Hold / 1x Reset)</option>
+  </select></label>
+  <label id="senswrap">Mouse speed <select id="msens">
+   <option value="1.8">Smooth (1.8x)</option>
+   <option value="2.3" selected>Normal (2.3x)</option>
+   <option value="3.0">Fast (3.0x)</option>
   </select></label>
  </div>
  <label>Site path <input type="text" id="path" value="/index.html"></label>
@@ -72,7 +105,7 @@ button.g{background:#333}
   <textarea id="scr" spellcheck="false"></textarea>
  </div>
  <button id="go">&#9654; Start (countdown)</button><button class="g" id="rs">Reset script</button>
- <div id="hint" style="margin-top:8px;opacity:.7;font-size:12px">Manual mode: Finger move = cursor, Tap = zoom-in + click + auto zoom-out, Long-press = hold zoom, 2-finger tap = zoom-out. Rukne ke liye top-left corner pe double-tap.</div>
+ <div id="hint" style="margin-top:8px;opacity:.7;font-size:12px"></div>
  <div id="msg"></div>
 </div>
 <script>
@@ -254,24 +287,30 @@ const DEF=[
 ];
 const cam={z:1,x:W/2,y:H/2,tw:null,follow:false},cur={x:W*.8,y:H*.85},auto={z:0,out:1500};
 let pace=1;const T=ms=>ms*pace,ZD=.7,ZO=.8;
-let k=1,ww=0,wh=0,abort=false,running=false,manualOn=false,blurOn=false,outT=0,marks=[],T0=0,last=performance.now(),unsubManual=null;
+let k=1,ww=0,wh=0,abort=false,running=false,manualOn=false,trackOn=false,holdZoom=false,blurOn=false,outT=0,marks=[],T0=0,last=performance.now(),unsubManual=null,lastHoverEl=null;
 const isApp=()=>matchMedia('(display-mode: fullscreen)').matches||matchMedia('(display-mode: standalone)').matches;
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 function layout(){
  if($('#mode').value==='wide'){W=Math.max(1280,Math.min(1600,Math.round(900*innerWidth/innerHeight)));H=Math.max(560,Math.round(W*innerHeight/innerWidth))}else{W=1440;H=900}
  camEl.style.width=ifr.style.width=W+'px';camEl.style.height=ifr.style.height=H+'px';
  const flat=!$('#fr').checked;document.body.classList.toggle('flat',flat);
- const p=flat?0:.04,vw=innerWidth,vh=innerHeight;ww=Math.min(vw*(1-2*p),vh*(1-2*p)*W/H);wh=ww*H/W;
+ const padOpen=trackOn&&running;
+ document.body.classList.toggle('haspad',padOpen);
+ const p=flat?0:.04,vw=innerWidth,vh=innerHeight-(padOpen&&vh>vw?225:0);
+ ww=Math.min(vw*(1-2*p),vh*(1-2*p)*W/H);wh=ww*H/W;
  win.style.width=ww+'px';win.style.height=wh+'px';k=ww/W}
 addEventListener('resize',layout);document.addEventListener('fullscreenchange',layout);
 $('#fr').onchange=layout;$('#mode').onchange=layout;
 function syncModeUI(){
- const m=$('#runmode').value==='manual';
- $('#mopts').classList.toggle('hide',!m);
- $('#scrwrap').classList.toggle('hide',m);
- $('#rs').classList.toggle('hide',m);
- $('#hint').textContent=m
-  ?'Manual mode: Finger move = cursor, Tap = zoom-in + click + auto zoom-out, Long-press = hold zoom, 2-finger tap = zoom-out. Rukne ke liye top-left corner pe double-tap.'
+ const rm=$('#runmode').value,isAuto=rm==='auto';
+ $('#mopts').classList.toggle('hide',isAuto);
+ $('#senswrap').classList.toggle('hide',rm!=='trackpad');
+ $('#scrwrap').classList.toggle('hide',!isAuto);
+ $('#rs').classList.toggle('hide',!isAuto);
+ $('#hint').textContent=rm==='trackpad'
+  ?'Trackpad Mouse: Niche wale pad pe finger chalao -> screen pe mouse chalega (no text select, no finger block). Tap = zoom + click. Right strip = scroll. Top-left double-tap = stop.'
+  :rm==='manual'
+  ?'Direct Touch: Screen pe finger = cursor, Tap = zoom + click, 2-finger tap = zoom-out. Top-left double-tap = stop.'
   :'Pehle recorder start karo, phir Start dabao. Rukne ke liye top-left corner pe double-tap.\nActions: wait, auto, zoom, move, click, hover, type, scroll, hold, mark, cut.';
  $('#msg').textContent='';
 }
@@ -299,7 +338,7 @@ function find(sel,idx){
  if(Array.isArray(sel)){for(const s of sel){try{return find(s,idx)}catch(e){}}throw Error('nahi mila: '+sel[0])}
  let list;
  if(sel.includes('@')){const[i,x]=sel.split('@'),q=x.trim().toLowerCase();
-  list=[...D().querySelectorAll(i||'*')].filter(n=>n.getClientRects().length&&n.textContent.trim().toLowerCase().startsWith(q)).sort((p,r)=>p.textContent.length-r.textContent.length)}
+  list=[...D().querySelectorAll(i||'*')].filter(n=>n.getClientRects().length&&n.textContent.trim().toLowerCase().startsWith(q)).sort((p,r)=>p.textContent.length-p.textContent.length)}
  else{const all=[...D().querySelectorAll(sel)],vis=all.filter(n=>n.getClientRects().length);list=vis.length?vis:all}
  const e=list[idx||0];if(!e)throw Error('nahi mila: '+sel);return e}
 const ctr=e=>{const r=e.getBoundingClientRect();return{x:r.left+r.width/2,y:r.top+r.height/2}};
@@ -310,6 +349,7 @@ function moveTo(x,y,ms){const x0=cur.x,y0=cur.y,dx=x-x0,dy=y-y0,cx=x0+dx/2-dy*.1
 function scrollTo(y,ms,el){const w=el||Wn(),y0=el?el.scrollTop:w.scrollY;return new Promise(res=>{const t0=performance.now();(function f(n){if(abort)return res();
  const p=ease(Math.min(1,(n-t0)/ms)),v=y0+(y-y0)*p;el?el.scrollTop=v:w.scrollTo(0,v);p<1?requestAnimationFrame(f):res()})(t0)})}
 function scroller(e){for(let n=e.parentElement;n;n=n.parentElement){const o=Wn().getComputedStyle(n).overflowY;if((o==='auto'||o==='scroll')&&n.scrollHeight>n.clientHeight+4)return n}return null}
+function hscroller(e){for(let n=e;n&&n!==D().body;n=n.parentElement){const o=Wn().getComputedStyle(n).overflowX;if((o==='auto'||o==='scroll')&&n.scrollWidth>n.clientWidth+4)return n}return null}
 async function reveal(e){const r=e.getBoundingClientRect(),s0=scroller(e),sc=s0&&s0!==D().body&&s0!==D().documentElement?s0:null;
  const vh=sc?sc.clientHeight:H,top=sc?sc.getBoundingClientRect().top:0,rt=r.top-top,rb=r.bottom-top;
  if(rt<70||rb>vh-70){const g=r.height>vh-140?rt-70:rt+r.height/2-vh/2;sc?await scrollTo(sc.scrollTop+g,1100,sc):await scrollTo(Wn().scrollY+g,1200)}}
@@ -370,59 +410,143 @@ const A={
 async function run(steps){const bad=[];for(const s of steps){if(abort)break;try{await A[s.a](s)}catch(e){bad.push(s.a+': '+e.message)}}return bad}
 function patchDoc(){try{const C=Wn().Clipboard.prototype;C.writeText=()=>Promise.resolve();C.write=()=>Promise.resolve()}catch(e){}}
 function newFrame(){const n=document.createElement('iframe');n.id='ifr';n.style.width=W+'px';n.style.height=H+'px';ifr.replaceWith(n);ifr=n}
-function liteCss(){if(!$('#lite').checked)return;try{const d=D(),s=d.createElement('style');
- s.textContent='*,*::before,*::after{backdrop-filter:none!important;-webkit-backdrop-filter:none!important}.grain{display:none!important}';d.head.appendChild(s)}catch(e){}}
+function liteCss(){try{const d=D(),s=d.createElement('style');
+ let css='*{ -webkit-tap-highlight-color:transparent }';
+ if($('#lite').checked)css+='*,*::before,*::after{backdrop-filter:none!important;-webkit-backdrop-filter:none!important}.grain{display:none!important}';
+ if(trackOn)css+='body,body *{user-select:none!important;-webkit-user-select:none!important}input,textarea,select{user-select:text!important;-webkit-user-select:text!important}';
+ s.textContent=css;d.head.appendChild(s)}catch(e){}}
+
+function manualZoomTap(holdOnly){
+ const z=+$('#mz').value||1,out=+$('#mout').value;
+ clearTimeout(outT);
+ if(z<=1)return;
+ const dur=curZ()>1.05?.45:ZD;
+ cam.follow=false;
+ camTo(z,cur.x,cur.y,dur);
+ setTimeout(()=>{if(manualOn||trackOn)cam.follow=true},dur*1000);
+ if(!holdOnly&&!holdZoom&&out>0)outT=setTimeout(()=>{if(manualOn||trackOn){cam.follow=false;camTo(1,W/2,H/2,ZO)}},T(out));
+}
+function manualZoomOut(){clearTimeout(outT);cam.follow=false;camTo(1,W/2,H/2,ZO)}
+function dispatchHover(){
+ try{const d=D(),w=Wn();if(!d||!w)return;
+  const el=d.elementFromPoint(cur.x,cur.y);
+  if(el!==lastHoverEl){
+   if(lastHoverEl){try{lastHoverEl.dispatchEvent(new w.PointerEvent('pointerout',{bubbles:true,pointerType:'mouse',clientX:cur.x,clientY:cur.y}));lastHoverEl.dispatchEvent(new w.MouseEvent('mouseout',{bubbles:true,clientX:cur.x,clientY:cur.y}))}catch(e){}}
+   if(el){try{el.dispatchEvent(new w.PointerEvent('pointerover',{bubbles:true,pointerType:'mouse',clientX:cur.x,clientY:cur.y}));el.dispatchEvent(new w.MouseEvent('mouseover',{bubbles:true,clientX:cur.x,clientY:cur.y}))}catch(e){}}
+   lastHoverEl=el;
+  }
+  if(el){try{el.dispatchEvent(new w.PointerEvent('pointermove',{bubbles:true,pointerType:'mouse',clientX:cur.x,clientY:cur.y}));el.dispatchEvent(new w.MouseEvent('mousemove',{bubbles:true,clientX:cur.x,clientY:cur.y}))}catch(e){}}
+ }catch(e){}
+}
+function scrollAtCursor(dx,dy){
+ try{const d=D(),w=Wn();if(!d||!w)return;
+  const el=d.elementFromPoint(cur.x,cur.y);
+  if(Math.abs(dx)>Math.abs(dy)*1.2&&el){
+   const hs=hscroller(el);if(hs){hs.scrollLeft-=dx*2;return}
+  }
+  const vs=el?scroller(el):null;
+  if(vs&&vs!==d.body&&vs!==d.documentElement)vs.scrollTop-=dy*2;
+  else w.scrollBy(0,-dy*2);
+ }catch(e){}
+}
+function clickAtCursor(){
+ ripple();
+ manualZoomTap(false);
+ try{const d=D(),el=d&&d.elementFromPoint(cur.x,cur.y);
+  if(el){
+   if(el.tagName==='INPUT'||el.tagName==='TEXTAREA'||el.tagName==='SELECT')el.focus();
+   tapEl(el);
+  }
+ }catch(e){}
+}
+
+function bindTrackpad(){
+ curEl.classList.add('on');drawCur();
+ const surf=$('#tpad-surf'),scrl=$('#tpad-scrl'),bClk=$('#tp-clk'),bHold=$('#tp-hold'),bOut=$('#tp-out');
+ let lx=0,ly=0,sx=0,sy=0,st=0,moved=false,twoFinger=false;
+ const sens=()=>+$('#msens').value||2.3;
+ surf.ontouchstart=e=>{
+  if(!trackOn)return;
+  e.preventDefault();
+  if(e.touches.length>=2){
+   twoFinger=true;
+   lx=(e.touches[0].clientX+e.touches[1].clientX)/2;
+   ly=(e.touches[0].clientY+e.touches[1].clientY)/2;
+   st=performance.now();moved=false;
+   return;
+  }
+  twoFinger=false;
+  const t=e.touches[0];lx=sx=t.clientX;ly=sy=t.clientY;st=performance.now();moved=false;
+ };
+ surf.ontouchmove=e=>{
+  if(!trackOn||!e.touches.length)return;
+  e.preventDefault();
+  if(e.touches.length>=2){
+   const cx=(e.touches[0].clientX+e.touches[1].clientX)/2,cy=(e.touches[0].clientY+e.touches[1].clientY)/2;
+   const dx=cx-lx,dy=cy-ly;lx=cx;ly=cy;
+   if(Math.hypot(dx,dy)>2)moved=true;
+   scrollAtCursor(dx,dy);
+   return;
+  }
+  const t=e.touches[0],dx=t.clientX-lx,dy=t.clientY-ly;lx=t.clientX;ly=t.clientY;
+  if(Math.hypot(t.clientX-sx,t.clientY-sy)>6)moved=true;
+  cur.x=clamp(cur.x+dx*sens(),0,W);
+  cur.y=clamp(cur.y+dy*sens(),0,H);
+  drawCur();curEl.classList.add('on');
+  dispatchHover();
+ };
+ surf.ontouchend=e=>{
+  if(!trackOn)return;
+  e.preventDefault();
+  if(twoFinger){
+   if(e.touches.length===0){
+    if(!moved&&(performance.now()-st)<350){holdZoom=false;bHold.classList.remove('on');manualZoomOut()}
+    twoFinger=false;
+   }
+   return;
+  }
+  if(!moved&&(performance.now()-st)<320)clickAtCursor();
+ };
+ let slx=0,sly=0;
+ scrl.ontouchstart=e=>{if(!trackOn||!e.touches.length)return;e.preventDefault();slx=e.touches[0].clientX;sly=e.touches[0].clientY};
+ scrl.ontouchmove=e=>{if(!trackOn||!e.touches.length)return;e.preventDefault();
+  const cx=e.touches[0].clientX,cy=e.touches[0].clientY;
+  scrollAtCursor(cx-slx,(cy-sly)*1.4);slx=cx;sly=cy;
+ };
+ bClk.onclick=()=>{if(trackOn)clickAtCursor()};
+ bHold.onclick=()=>{
+  if(!trackOn)return;
+  holdZoom=!holdZoom;bHold.classList.toggle('on',holdZoom);
+  if(holdZoom)manualZoomTap(true);else manualZoomOut();
+ };
+ bOut.onclick=()=>{if(!trackOn)return;holdZoom=false;bHold.classList.remove('on');manualZoomOut()};
+}
+
 function bindManual(){
  if(unsubManual){unsubManual();unsubManual=null}
  const d=D();if(!d)return;
  let sx=0,sy=0,st=0,moved=false,longT=0,held=false;
- const setCur=(x,y)=>{cur.x=clamp(x,0,W);cur.y=clamp(y,0,H);drawCur();curEl.classList.add('on')};
- const zoomTap=(holdOnly)=>{
-  const z=+$('#mz').value||1,out=+$('#mout').value;
-  clearTimeout(outT);
-  if(z<=1)return;
-  const dur=curZ()>1.05?.45:ZD;
-  cam.follow=false;
-  camTo(z,cur.x,cur.y,dur);
-  setTimeout(()=>{if(manualOn)cam.follow=true},dur*1000);
-  if(!holdOnly&&out>0)outT=setTimeout(()=>{if(manualOn){cam.follow=false;camTo(1,W/2,H/2,ZO)}},T(out));
- };
- const zoomOutNow=()=>{clearTimeout(outT);cam.follow=false;camTo(1,W/2,H/2,ZO)};
+ const setCur=(x,y)=>{cur.x=clamp(x,0,W);cur.y=clamp(y,0,H);drawCur();curEl.classList.add('on');dispatchHover()};
  const onTouchStart=e=>{
   if(!manualOn)return;
-  if(e.touches.length>=2){clearTimeout(longT);moved=true;zoomOutNow();return}
+  if(e.touches.length>=2){clearTimeout(longT);moved=true;manualZoomOut();return}
   const t=e.touches[0];sx=t.clientX;sy=t.clientY;st=performance.now();moved=false;held=false;
-  setCur(sx,sy);
-  clearTimeout(longT);
-  longT=setTimeout(()=>{if(!moved&&manualOn){held=true;zoomTap(true)}},450);
+  setCur(sx,sy);clearTimeout(longT);
+  longT=setTimeout(()=>{if(!moved&&manualOn){held=true;manualZoomTap(true)}},450);
  };
  const onTouchMove=e=>{
   if(!manualOn||!e.touches.length)return;
-  const t=e.touches[0];
-  setCur(t.clientX,t.clientY);
+  const t=e.touches[0];setCur(t.clientX,t.clientY);
   if(Math.hypot(t.clientX-sx,t.clientY-sy)>12){moved=true;clearTimeout(longT)}
  };
  const onTouchEnd=e=>{
-  clearTimeout(longT);
-  if(!manualOn)return;
-  const t=e.changedTouches[0];
-  if(t)setCur(t.clientX,t.clientY);
-  if(!moved&&!held&&(performance.now()-st)<420){ripple();zoomTap(false)}
+  clearTimeout(longT);if(!manualOn)return;
+  const t=e.changedTouches[0];if(t)setCur(t.clientX,t.clientY);
+  if(!moved&&!held&&(performance.now()-st)<420){ripple();manualZoomTap(false)}
  };
- const onPtrDown=e=>{
-  if(!manualOn||e.pointerType!=='mouse')return;
-  sx=e.clientX;sy=e.clientY;st=performance.now();moved=false;setCur(sx,sy);
- };
- const onPtrMove=e=>{
-  if(!manualOn||e.pointerType!=='mouse')return;
-  setCur(e.clientX,e.clientY);
-  if(Math.hypot(e.clientX-sx,e.clientY-sy)>10)moved=true;
- };
- const onPtrUp=e=>{
-  if(!manualOn||e.pointerType!=='mouse')return;
-  setCur(e.clientX,e.clientY);
-  if(!moved&&(performance.now()-st)<420){ripple();zoomTap(false)}
- };
+ const onPtrDown=e=>{if(!manualOn||e.pointerType!=='mouse')return;sx=e.clientX;sy=e.clientY;st=performance.now();moved=false;setCur(sx,sy)};
+ const onPtrMove=e=>{if(!manualOn||e.pointerType!=='mouse')return;setCur(e.clientX,e.clientY);if(Math.hypot(e.clientX-sx,e.clientY-sy)>10)moved=true};
+ const onPtrUp=e=>{if(!manualOn||e.pointerType!=='mouse')return;setCur(e.clientX,e.clientY);if(!moved&&(performance.now()-st)<420){ripple();manualZoomTap(false)}};
  d.addEventListener('touchstart',onTouchStart,{passive:true,capture:true});
  d.addEventListener('touchmove',onTouchMove,{passive:true,capture:true});
  d.addEventListener('touchend',onTouchEnd,{passive:true,capture:true});
@@ -454,29 +578,35 @@ function loadSite(path,intro=true,keep=false){
   },120)})}
 const fmt=t=>Math.floor(t/60)+':'+String(Math.floor(t%60)).padStart(2,'0');
 async function start(){if(running)return;
- const isManual=$('#runmode').value==='manual';
+ const rm=$('#runmode').value,isManual=rm==='manual',isTrack=rm==='trackpad',isInteractive=isManual||isTrack;
  let steps=[];
- if(!isManual){
+ if(!isInteractive){
   try{steps=JSON.parse($('#scr').value)}catch(e){$('#msg').textContent='Script JSON galat hai: '+e.message;return}
   try{localStorage.setItem('stg_scr',$('#scr').value)}catch(e){}
  }
- running=true;manualOn=isManual;abort=false;blurOn=$('#bl').checked;pace=+$('#pace').value||1;$('#msg').textContent='';marks=[];T0=performance.now();let wl;
+ running=true;manualOn=isManual;trackOn=isTrack;holdZoom=false;abort=false;blurOn=$('#bl').checked;pace=+$('#pace').value||1;$('#msg').textContent='';marks=[];T0=performance.now();let wl;
  if($('#fs').checked&&!document.fullscreenElement&&!isApp())try{await document.documentElement.requestFullscreen();await sleep(900)}catch(e){}
  try{wl=await navigator.wakeLock.request('screen')}catch(e){}
  layout();$('#panel').classList.add('h');curEl.classList.remove('on');resetCam();auto.z=0;
  fade.style.transition='none';fade.style.opacity=1;
  const n=+$('#cdn').value||5,cd=$('#cd');cd.style.display='flex';
- const pre=isManual?Promise.resolve():loadSite($('#path').value,false,true);
+ const pre=isInteractive?Promise.resolve():loadSite($('#path').value,false,true);
  for(let i=n;i>0&&!abort;i--){cd.textContent=i;await sleep(1000)}
  await pre;cd.style.display='none';
  if(!abort)await loadSite($('#path').value,true);
- if(isManual){
-  if(!abort){fade.style.transition='opacity .3s';fade.style.opacity=0;bindManual()}
+ if(isInteractive){
+  if(!abort){
+   fade.style.transition='opacity .3s';fade.style.opacity=0;
+   if(isTrack){$('#tpad').classList.remove('hide');$('#tp-hold').classList.remove('on');bindTrackpad()}
+   else bindManual();
+  }
   while(running&&!abort)await sleep(250);
   if(unsubManual){unsubManual();unsubManual=null}
-  running=false;manualOn=false;clearTimeout(outT);curEl.classList.remove('on');try{wl&&wl.release()}catch(e){}
+  $('#tpad').classList.add('hide');
+  running=false;manualOn=false;trackOn=false;holdZoom=false;layout();
+  clearTimeout(outT);curEl.classList.remove('on');try{wl&&wl.release()}catch(e){}
   fade.style.opacity=0;$('#panel').classList.remove('h');
-  $('#msg').textContent='Manual session ruk gaya.';
+  $('#msg').textContent='Session ruk gaya.';
   return;
  }
  const bad=abort?[]:await run(steps);
