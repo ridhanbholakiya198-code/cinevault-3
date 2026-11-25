@@ -1,4 +1,4 @@
-window.cvOvr=(it,k)=>/avengers:?\s*doomsday/i.test((it&&(it.title||it.name))||"")?"/art/doomsday-"+k+".jpg":"";
+window.cvOvr=(it,k)=>{const t=((it&&(it.title||it.name))||"").trim();return /avengers:?\s*doomsday/i.test(t)?"/art/doomsday-"+k+".jpg":/^the\s+walking\s+dead$/i.test(t)?"/art/walkingdead-"+k+".jpg":""};
 const DIRECT="https://api.themoviedb.org/3",DIMG="https://image.tmdb.org/t/p/";
 // On hosted sites, go through our own domain (vercel.json rewrites) so ISP blocks on TMDB domains don't matter
 const PX=location.protocol.startsWith("http")&&!/^(localhost|127\.|192\.168\.|10\.)/.test(location.hostname),IMG=PX?"/timg/":DIMG;
