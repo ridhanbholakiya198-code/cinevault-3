@@ -48,7 +48,8 @@ async function frGraph(fk){const ck="cv_frg3_"+fk,c=frGet(ck);if(c&&c.g&&c.g.ite
  const col=d.belongs_to_collection;if(col&&col.id){colName=frClean(col.name);jobs.push(api("/collection/"+col.id).then(cc=>{(cc.parts||[]).forEach(p=>add("movie",p.id,p.release_date))}).catch(()=>{full=false}))}
  const q=d.external_ids&&d.external_ids.wikidata_id;if(q)jobs.push(frWikiRetry(q).then(r=>{wl=frClean(r.label);r.items.forEach(x=>add(x.t,x.id,x.d))}).catch(()=>{full=false}));
  await Promise.all(jobs);
- for(const grp of FR_MERGE)if(grp.some(([i])=>mem.has("movie"+i)))grp.forEach(([i,dt])=>add("movie",i,dt));
+ const n0=mem.size;for(const grp of FR_MERGE)if(grp.some(([i])=>mem.has("movie"+i)))grp.forEach(([i,dt])=>add("movie",i,dt));
+ try{window.CVDBG&&CVDBG("franchise "+fk+": "+n0+" -> "+mem.size+" titles (Hobbit merge "+(mem.size>n0?"applied":"not needed")+")")}catch{}
  if(t==="movie"){const nm=colName||frStem(d.title||d.name);if(nm.length>=4)try{await frSiblings(nm,add)}catch{}}
  if(mem.size<3){const stem=frStem(d.title||d.name),lang=d.original_language;if(stem.length>=5){for(const kind of["movie","tv"]){try{const r=await api("/search/"+kind,{query:stem});(r.results||[]).filter(x=>x.original_language===lang&&nrm(x.title||x.name).startsWith(nrm(stem))).forEach(x=>add(kind,x.id,x.release_date||x.first_air_date))}catch{}}}colName=colName||frStem(d.title||d.name)}
  let items=[...mem.values()].sort(frDate);if(items.length>220){const me=mem.get(t+id);items=[me,...items.filter(x=>x!==me).slice(0,219)].sort(frDate)}

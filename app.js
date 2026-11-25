@@ -46,19 +46,22 @@ const STRONG=(navigator.deviceMemory||4)>=8&&(navigator.hardwareConcurrency||4)>
 function fpOf(im){const c=document.createElement("canvas");c.width=16;c.height=9;const x=c.getContext("2d");x.drawImage(im,0,0,16,9);return x.getImageData(0,0,16,9).data}
 function bestMatch(list,fp){return Promise.all(list.map(b=>new Promise(res=>{const im=new Image();im.crossOrigin="anonymous";
   im.onload=()=>{try{const d=fpOf(im);let e=0,j=0;for(let k=0;k<d.length;k++){if(k%4===3)continue;e+=(d[k]-fp[j++])**2}res([e,b])}catch{res([Infinity,b])}};im.onerror=()=>res([Infinity,b]);im.src=IMG+"w300"+b.file_path}))).then(r=>{r.sort((a,b)=>a[0]-b[0]);return r[0]&&r[0][0]<Infinity?r[0][1]:null})}
+// ---- build stamp + on-screen diagnostics (visible only when the address ends with ?debug=1)
+const PARDA_BUILD=62,DBG=/[?&]debug\b/.test(location.search);
+const dbg=window.CVDBG=m=>{if(!DBG)return;try{let e=document.getElementById("pdbg");if(!e){e=document.createElement("pre");e.id="pdbg";e.style.cssText="position:fixed;left:8px;right:8px;bottom:96px;z-index:99999;margin:0;padding:8px 10px;background:#000d;color:#8f8;font:11px/1.45 monospace;border-radius:8px;white-space:pre-wrap;pointer-events:none;max-height:40vh;overflow:hidden";document.body.append(e)}e.textContent+=m+"\n"}catch{}};
 // ---- TEMP: pinned hero slots. 1 = Blade Runner 2049 on its first Mood "Still" (the one the Mood tab lists first), 2 = Invincible. The normal mix follows.
 // Set HERO_PIN=false to go back to the usual hero.
 const HERO_PIN=true;
 async function heroPins(){if(!HERO_PIN)return[];
- try{const c=JSON.parse(localStorage.getItem("cv_hpin2")||"null");if(c&&Date.now()-c.t<216e5&&c.h&&c.h.length===2){c.h.forEach(i=>{if(i.logo!=null)lgc[kind(i)+i.id]=i.logo});return c.h}}catch{}
+ try{const c=JSON.parse(localStorage.getItem("cv_hpin2")||"null");if(c&&Date.now()-c.t<216e5&&c.h&&c.h.length===2){c.h.forEach(i=>{if(i.logo!=null)lgc[kind(i)+i.id]=i.logo});dbg("pins: loaded from saved copy");return c.h}}catch{}
  const one=async(t,id,still,fx)=>{try{const d=await api(`/${t}/${id}`,{append_to_response:"images",include_image_language:"en,null"});
   const bs=((d.images||{}).backdrops||[]).filter(b=>!b.iso_639_1).sort((p,q)=>q.vote_average-p.vote_average); // same order as the Mood tab
   const pk=(still?bs[0]:(bs.filter(b=>b.width>=1920)[0]||bs[0]))||{};
   const ps=((d.images||{}).posters||[]).filter(p=>!p.iso_639_1&&p.height>=1200).sort((p,q)=>q.vote_average-p.vote_average);
   if(!(pk.file_path||d.backdrop_path))return null;
   lgc[t+d.id]=pick((d.images||{}).logos);
-  return{...d,media_type:t,bd:pk.file_path||d.backdrop_path,bw:pk.width||0,fx:fx,pref:still?1:0,pt:ps[0]?ps[0].file_path:"",runtime:d.runtime||(d.episode_run_time||[])[0]||0}}catch{return null}};
- const r=(await Promise.all([one("movie",335984,1,"46%"),one("tv",95557,0)])).filter(Boolean);
+  return{...d,media_type:t,bd:pk.file_path||d.backdrop_path,bw:pk.width||0,fx:fx,pref:still?1:0,pt:ps[0]?ps[0].file_path:"",runtime:d.runtime||(d.episode_run_time||[])[0]||0}}catch(e){dbg("pin "+t+id+" FAILED: "+(e&&e.message));return null}};
+ const r=(await Promise.all([one("movie",335984,1,"46%"),one("tv",95557,0)])).filter(Boolean);dbg("pins fetched: "+r.map(x=>x.media_type+x.id+" bd="+x.bd).join(" | "));
  if(r.length===2)try{localStorage.setItem("cv_hpin2",JSON.stringify({t:Date.now(),h:r.map(slim)}))}catch{}
  return r}
 async function heroPicks(){const r=await Promise.all(HERO.map(async([q,y,o])=>{try{o=o||{};
@@ -208,14 +211,14 @@ const HC="cv_hero3",slim=i=>({id:i.id,media_type:kind(i),title:i.title,name:i.na
 function heroCacheGet(){try{const c=JSON.parse(localStorage.getItem(HC)||"null");if(c&&Date.now()-c.t<216e5&&Array.isArray(c.h)&&c.h.length>=3&&c.h.every(x=>x&&x.id&&(x.bd||x.backdrop_path)))return c.h}catch{}return null}
 function heroCachePut(h){try{if(h&&h.length>=4)localStorage.setItem(HC,JSON.stringify({t:Date.now(),h:h.slice(0,6).map(slim)}))}catch{}}
 const safeHero=()=>{try{startHero()}catch(e){console.error(e);showErr("hero: "+(e&&e.message))}},safeGrow=()=>{try{growHero()}catch(e){console.error(e)}};
-async function home(){let on=0;
+async function home(){let on=0;dbg("build "+PARDA_BUILD+" (new app.js is live)");
  // first slide appears as soon as ONE title is ready; the rest join the carousel as they arrive
  const feed=i=>{if(hero.length>=6||hero.some(x=>x.id===i.id&&kind(x)===kind(i)))return;hero.push(i);if(!((kind(i)+i.id) in lgc))heroLogo(i);if(on)safeGrow();else{on=1;safeHero()}};
  const warm=heroCacheGet();
  const pinsP=heroPins();
- (async()=>{let pins=await Promise.race([pinsP,hsleep(2200).then(()=>null)]);const late=pins===null;if(late)pins=[]; // TEMP pinned slots first, the usual mix follows
+ (async()=>{let pins=await Promise.race([pinsP,hsleep(2200).then(()=>null)]);const late=pins===null;if(late)pins=[];dbg("hero pins ready: "+pins.length+(late?" (still loading after 2.2s, join when ready)":"")); // TEMP pinned slots first, the usual mix follows
   const isPin=x=>pins.some(p=>p.id===x.id&&kind(p)===kind(x));
-  if(late)pinsP.then(ps=>{if(!ps.length)return;if(!on){ps.forEach(feed);return}hero=ps.concat(hero.filter(x=>!ps.some(p=>p.id===x.id&&kind(p)===kind(x)))).slice(0,6);growDots();setHero(0,1)}).catch(()=>{});
+  if(late)pinsP.then(ps=>{dbg("late pins arrived: "+ps.length);if(!ps.length)return;if(!on){ps.forEach(feed);return}hero=ps.concat(hero.filter(x=>!ps.some(p=>p.id===x.id&&kind(p)===kind(x)))).slice(0,6);growDots();setHero(0,1)}).catch(()=>{});
   if(warm){warm.forEach(i=>{if(i.logo!=null)lgc[kind(i)+i.id]=i.logo});const rest=warm.filter(w=>!isPin(w)).sort(()=>Math.random()-.5);hero=pins.concat(rest).slice(0,6);on=1;safeHero();
    setTimeout(()=>heroItems().then(heroCachePut).catch(()=>{}),SLOW()?30000:2500)} // a fresh mix is prepared quietly for the next visit
   else{pins.forEach(feed);await heroItems(feed).then(h=>{h.forEach(feed);if(!on)throw Error("No titles loaded");heroCachePut(hero)})}
