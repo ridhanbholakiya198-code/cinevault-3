@@ -7,8 +7,8 @@ module.exports = async (req, res) => {
   const host = (req.headers["x-forwarded-host"] || req.headers.host || "").split(",")[0];
   const origin = host ? "https://" + host : "";
   let title = "Parda", desc = "Films, series and anime - all in one place.", img = "", good = false, target = "/", path = "";
-  const key = process.env.TMDB_API_KEY || "";
-  const tmdb = async (p) => { const r = await fetch("https://api.themoviedb.org/3" + p + (p.includes("?") ? "&" : "?") + "api_key=" + key); return r.ok ? r.json() : null; };
+  const key = ["TMDB_API_KEY","TMDB_KEY","TMDB_READ_TOKEN","TMDB_ACCESS_TOKEN","TMDB_TOKEN","TMDB_API_TOKEN","TMDB_BEARER_TOKEN","TMDB"].map((n) => (process.env[n] || "").trim()).find(Boolean) || "";
+  const tmdb = async (p) => { const tok = key.startsWith("eyJ"); const r = await fetch("https://api.themoviedb.org/3" + p + (tok ? "" : (p.includes("?") ? "&" : "?") + "api_key=" + key), tok ? { headers: { Authorization: "Bearer " + key } } : undefined); return r.ok ? r.json() : null; };
   try {
     if (/^(movie|tv|person|collection)$/.test(kind) && /^\d{1,9}$/.test(id)) {
       target = "/#" + kind + "-" + id; path = "/s/" + kind + "/" + id;
