@@ -44,8 +44,10 @@ button.g{background:#333}
 #tpad-top{flex:1;display:flex;gap:8px;min-height:0}
 #tpad-surf{flex:1;position:relative;border-radius:12px;background:rgba(255,255,255,.05);border:1px dashed rgba(255,255,255,.16);
  display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.38);font-size:12px;text-align:center;padding:8px;touch-action:none}
-#tpad-scrl{width:46px;border-radius:12px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.14);
- display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.55);font-size:16px;touch-action:none}
+#tpad-scrl{width:56px;border-radius:12px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.14);
+ display:flex;flex-direction:column;align-items:center;justify-content:space-between;padding:4px 0;color:rgba(255,255,255,.72);font-size:13px;touch-action:none}
+#tpad-scrl button{width:100%;height:34px;margin:0;padding:0;background:transparent;color:rgba(255,255,255,.78);font-size:13px;border-radius:8px}
+#tpad-scrl span{font-size:15px;opacity:.55;pointer-events:none}
 #tpad-bar{display:flex;gap:8px;height:36px}
 #tpad-bar button{flex:1;margin:0;padding:0 10px;font-size:12px;font-weight:600;border-radius:10px;background:rgba(255,255,255,.1);color:#eee;border:1px solid rgba(255,255,255,.12)}
 #tpad-bar button.on{background:#7c4dff;border-color:#9e7bff;color:#fff}
@@ -58,7 +60,11 @@ button.g{background:#333}
 <div id="tpad" class="hide">
  <div id="tpad-top">
   <div id="tpad-surf">Trackpad: Slide = move cursor &bull; Tap = click + zoom &bull; 2-finger slide = scroll</div>
-  <div id="tpad-scrl" title="Scroll">&#8693;</div>
+  <div id="tpad-scrl" title="Scroll">
+   <button id="tp-up" type="button">&#9650;</button>
+   <span>&#8693;</span>
+   <button id="tp-dn" type="button">&#9660;</button>
+  </div>
  </div>
  <div id="tpad-bar">
   <button id="tp-clk" type="button">Click</button>
@@ -308,7 +314,7 @@ function syncModeUI(){
  $('#scrwrap').classList.toggle('hide',!isAuto);
  $('#rs').classList.toggle('hide',!isAuto);
  $('#hint').textContent=rm==='trackpad'
-  ?'Trackpad Mouse: Niche wale pad pe finger chalao -> screen pe mouse chalega (no text select, no finger block). Tap = zoom + click. Right strip = scroll. Top-left double-tap = stop.'
+  ?'Trackpad Mouse: Niche wale pad pe finger chalao -> screen pe mouse chalega (no text select, no finger block). Tap = zoom + click. Right strip (▲/▼/drag) = scroll. Top-left double-tap = stop.'
   :rm==='manual'
   ?'Direct Touch: Screen pe finger = cursor, Tap = zoom + click, 2-finger tap = zoom-out. Top-left double-tap = stop.'
   :'Pehle recorder start karo, phir Start dabao. Rukne ke liye top-left corner pe double-tap.\nActions: wait, auto, zoom, move, click, hover, type, scroll, hold, mark, cut.';
@@ -348,9 +354,9 @@ function moveTo(x,y,ms){const x0=cur.x,y0=cur.y,dx=x-x0,dy=y-y0,cx=x0+dx/2-dy*.1
   cur.x=q*q*x0+2*q*p*cx+p*p*x;cur.y=q*q*y0+2*q*p*cy+p*p*y;drawCur();p<1?requestAnimationFrame(f):res()})(t0)})}
 function scrollTo(y,ms,el){const w=el||Wn(),y0=el?el.scrollTop:w.scrollY;return new Promise(res=>{const t0=performance.now();(function f(n){if(abort)return res();
  const p=ease(Math.min(1,(n-t0)/ms)),v=y0+(y-y0)*p;el?el.scrollTop=v:w.scrollTo(0,v);p<1?requestAnimationFrame(f):res()})(t0)})}
-function scroller(e){for(let n=e.parentElement;n;n=n.parentElement){const o=Wn().getComputedStyle(n).overflowY;if((o==='auto'||o==='scroll')&&n.scrollHeight>n.clientHeight+4)return n}return null}
-function hscroller(e){for(let n=e;n&&n!==D().body;n=n.parentElement){const o=Wn().getComputedStyle(n).overflowX;if((o==='auto'||o==='scroll')&&n.scrollWidth>n.clientWidth+4)return n}return null}
-async function reveal(e){const r=e.getBoundingClientRect(),s0=scroller(e),sc=s0&&s0!==D().body&&s0!==D().documentElement?s0:null;
+function scroller(e){for(let n=e;n&&n!==D().body&&n!==D().documentElement;n=n.parentElement){const o=Wn().getComputedStyle(n).overflowY;if((o==='auto'||o==='scroll'||o==='overlay')&&n.scrollHeight>n.clientHeight+4)return n}return null}
+function hscroller(e){for(let n=e;n&&n!==D().body;n=n.parentElement){const o=Wn().getComputedStyle(n).overflowX;if((o==='auto'||o==='scroll'||o==='overlay')&&n.scrollWidth>n.clientWidth+4)return n}return null}
+async function reveal(e){const r=e.getBoundingClientRect(),s0=scroller(e.parentElement||e),sc=s0&&s0!==D().body&&s0!==D().documentElement?s0:null;
  const vh=sc?sc.clientHeight:H,top=sc?sc.getBoundingClientRect().top:0,rt=r.top-top,rb=r.bottom-top;
  if(rt<70||rb>vh-70){const g=r.height>vh-140?rt-70:rt+r.height/2-vh/2;sc?await scrollTo(sc.scrollTop+g,1100,sc):await scrollTo(Wn().scrollY+g,1200)}}
 function ripple(){const r=document.createElement('div');r.className='rip';r.style.left=cur.x+'px';r.style.top=cur.y+'px';camEl.appendChild(r);setTimeout(r.remove.bind(r),800);
@@ -438,16 +444,27 @@ function dispatchHover(){
   if(el){try{el.dispatchEvent(new w.PointerEvent('pointermove',{bubbles:true,pointerType:'mouse',clientX:cur.x,clientY:cur.y}));el.dispatchEvent(new w.MouseEvent('mousemove',{bubbles:true,clientX:cur.x,clientY:cur.y}))}catch(e){}}
  }catch(e){}
 }
+function getVScroller(){
+ const d=D();if(!d)return null;
+ const el=d.elementFromPoint(cur.x,cur.y);
+ const vs=el?scroller(el):null;
+ if(vs)return vs;
+ const m=d.querySelector('#modal');
+ if(m&&m.scrollHeight>m.clientHeight+4&&Wn().getComputedStyle(m).display!=='none')return m;
+ return d.scrollingElement||d.documentElement||d.body;
+}
 function scrollAtCursor(dx,dy){
  try{const d=D(),w=Wn();if(!d||!w)return;
   const el=d.elementFromPoint(cur.x,cur.y);
   if(Math.abs(dx)>Math.abs(dy)*1.2&&el){
-   const hs=hscroller(el);if(hs){hs.scrollLeft-=dx*2;return}
+   const hs=hscroller(el);if(hs){hs.scrollLeft-=dx*2.2;return}
   }
-  const vs=el?scroller(el):null;
-  if(vs&&vs!==d.body&&vs!==d.documentElement)vs.scrollTop-=dy*2;
-  else w.scrollBy(0,-dy*2);
+  const vs=getVScroller();
+  if(vs)vs.scrollTop-=dy*2.4;
  }catch(e){}
+}
+function smoothScrollStep(by){
+ try{const vs=getVScroller();if(vs)scrollTo(vs.scrollTop+by,340,vs)}catch(e){}
 }
 function clickAtCursor(){
  ripple();
@@ -462,7 +479,7 @@ function clickAtCursor(){
 
 function bindTrackpad(){
  curEl.classList.add('on');drawCur();
- const surf=$('#tpad-surf'),scrl=$('#tpad-scrl'),bClk=$('#tp-clk'),bHold=$('#tp-hold'),bOut=$('#tp-out');
+ const surf=$('#tpad-surf'),scrl=$('#tpad-scrl'),bClk=$('#tp-clk'),bHold=$('#tp-hold'),bOut=$('#tp-out'),bUp=$('#tp-up'),bDn=$('#tp-dn');
  let lx=0,ly=0,sx=0,sy=0,st=0,moved=false,twoFinger=false;
  const sens=()=>+$('#msens').value||2.3;
  surf.ontouchstart=e=>{
@@ -507,12 +524,21 @@ function bindTrackpad(){
   }
   if(!moved&&(performance.now()-st)<320)clickAtCursor();
  };
- let slx=0,sly=0;
- scrl.ontouchstart=e=>{if(!trackOn||!e.touches.length)return;e.preventDefault();slx=e.touches[0].clientX;sly=e.touches[0].clientY};
- scrl.ontouchmove=e=>{if(!trackOn||!e.touches.length)return;e.preventDefault();
-  const cx=e.touches[0].clientX,cy=e.touches[0].clientY;
-  scrollAtCursor(cx-slx,(cy-sly)*1.4);slx=cx;sly=cy;
+ let slx=0,sly=0,ssy=0,sst=0,smoved=false;
+ scrl.ontouchstart=e=>{
+  if(!trackOn||!e.touches.length)return;
+  if(e.target===bUp||e.target===bDn)return;
+  e.preventDefault();slx=e.touches[0].clientX;sly=ssy=e.touches[0].clientY;sst=performance.now();smoved=false;
  };
+ scrl.ontouchmove=e=>{
+  if(!trackOn||!e.touches.length)return;
+  e.preventDefault();
+  const cx=e.touches[0].clientX,cy=e.touches[0].clientY;
+  if(Math.abs(cy-ssy)>6)smoved=true;
+  scrollAtCursor(cx-slx,(cy-sly)*1.6);slx=cx;sly=cy;
+ };
+ bUp.onclick=()=>{if(trackOn)smoothScrollStep(-340)};
+ bDn.onclick=()=>{if(trackOn)smoothScrollStep(340)};
  bClk.onclick=()=>{if(trackOn)clickAtCursor()};
  bHold.onclick=()=>{
   if(!trackOn)return;
