@@ -58,19 +58,27 @@
     };
   }
 
-  let ctx = null, eng = null, mode = localStorage.getItem(KEY) || "off", ambo = null; const MODES = ["off", "fx", "amb"], NAMES = { off: "Off", fx: "Effects", amb: "Effects + ambience" };
-  const ensure = () => { if (!ctx) { const C = window.AudioContext || window.webkitAudioContext; if (!C) return null; ctx = new C(); eng = engine(ctx, ctx.destination) } if (ctx.state === "suspended") ctx.resume(); return ctx };
+  // default is now "Effects + ambience"; one-time reset so older saved "off" values from the old default do not keep it silent
+  try { if (localStorage.getItem("cv_snd_v") !== "2") { localStorage.removeItem(KEY); localStorage.setItem("cv_snd_v", "2") } } catch (e) {}
+  let ctx = null, eng = null, mode = localStorage.getItem(KEY) || "amb", ambo = null, kicked = false; const MODES = ["off", "fx", "amb"], NAMES = { off: "Off", fx: "Effects", amb: "Effects + ambience" };
+  const ensure = () => { if (!ctx) { const C = window.AudioContext || window.webkitAudioContext; if (!C) return null; ctx = new C(); ctx.onstatechange = () => kick(); eng = engine(ctx, ctx.destination) } if (ctx.state === "suspended") ctx.resume(); return ctx };
   const live = force => (force || mode !== "off") && ensure();
   const startAmb = () => { if (!ambo && live()) ambo = eng.score(ctx.currentTime, 1e9, true) }, stopAmb = () => { if (ambo) { ambo.stop(); ambo = null } };
   const hueOf = () => { const v = (getComputedStyle(document.documentElement).getPropertyValue("--accent") || "").trim(); let r, g, b, m; if ((m = v.match(/^#([0-9a-f]{6})$/i))) { r = parseInt(m[1].slice(0, 2), 16); g = parseInt(m[1].slice(2, 4), 16); b = parseInt(m[1].slice(4), 16) } else if ((m = v.match(/(\d+)\D+(\d+)\D+(\d+)/))) { r = +m[1]; g = +m[2]; b = +m[3] } else return 30; const mx = Math.max(r, g, b), mn = Math.min(r, g, b), d = mx - mn; if (!d) return 30; let h = mx === r ? ((g - b) / d) % 6 : mx === g ? (b - r) / d + 2 : (r - g) / d + 4; return (h * 60 + 360) % 360 };
   const api = {
     label: () => NAMES[mode],
-    cycle() { mode = MODES[(MODES.indexOf(mode) + 1) % 3]; localStorage.setItem(KEY, mode); if (mode === "off") { stopAmb(); return } if (!live()) return; if (mode === "fx") { stopAmb(); eng.awaken() } else { eng.awaken(); startAmb() } },
+    cycle() { kicked = true; mode = MODES[(MODES.indexOf(mode) + 1) % 3]; localStorage.setItem(KEY, mode); if (mode === "off") { stopAmb(); return } if (!live()) return; if (mode === "fx") { stopAmb(); eng.awaken() } else { eng.awaken(); startAmb() } },
     open(f) { if (live(f)) eng.open(hueOf()) }, add(f) { if (live(f)) eng.add() }, remove(f) { if (live(f)) eng.remove() }, swipe(f) { if (live(f)) eng.swipe() }, shutter(f) { if (live(f)) eng.shutter() }, awaken(f) { if (live(f)) eng.awaken() },
     ambience(on) { if (on) { if (live(true)) startAmb() } else stopAmb() }, P, _engine: engine, _apply: () => eng && eng.apply()
   };
   window.CVSound = api;
-  document.addEventListener("pointerdown", () => { if (mode !== "off" && ensure() && mode === "amb") startAmb() }, { once: true, capture: true });
+  // Browsers keep audio locked until the first real tap/key. Try at once, and finish the moment the browser allows it:
+  // then the opening sound + ambience start by themselves. (pointerdown + once was the old, unreliable unlock on touch phones.)
+  const EV = ["pointerup", "touchend", "click", "keydown"];
+  const unlock = () => { if (mode === "off") return; ensure(); kick() };
+  const kick = () => { if (kicked || mode === "off" || !ctx || ctx.state !== "running") return; kicked = true; EV.forEach(e => document.removeEventListener(e, unlock, true)); try { eng.awaken() } catch (e) {} if (mode === "amb") startAmb() };
+  EV.forEach(e => document.addEventListener(e, unlock, { capture: true, passive: true }));
+  setTimeout(() => { if (mode !== "off") ensure() }, 0);
   document.addEventListener("visibilitychange", () => { if (!ctx) return; document.hidden ? ctx.suspend() : (mode !== "off" && ctx.resume()) });
   document.addEventListener("click", e => { const b = e.target.closest("#bkm"); if (!b || mode === "off") return; const before = b.textContent; setTimeout(() => { const now = b.textContent; (/remove|in list|added|saved|✓/i.test(now) && now !== before) || b.classList.contains("on") ? api.add() : api.remove() }, 80) }, true);
 

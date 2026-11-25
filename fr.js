@@ -38,7 +38,9 @@ async function frWikiRetry(q){try{return await frWiki(q)}catch{await new Promise
 async function frSiblings(name,add){const STOP=new Set(["the","and","of","collection","saga","trilogy","franchise","series"]),toks=s=>nrm(s).split(" ").filter(w=>w.length>2&&!STOP.has(w)),T=toks(name);if(!T.length)return;
  for(const q of[...new Set([name,T.join(" ")])]){let r;try{r=await api("/search/collection",{query:q})}catch{continue}
   for(const c of(r.results||[]).slice(0,6)){const ct=toks(c.name);if(!(T.length>=2?T.every(w=>ct.includes(w)):(ct.length===1&&ct[0]===T[0])))continue;try{const cc=await api("/collection/"+c.id);(cc.parts||[]).forEach(p=>add("movie",p.id,p.release_date))}catch{}}}}
-async function frGraph(fk){const ck="cv_frg2_"+fk,c=frGet(ck);if(c&&c.g&&c.g.items&&Date.now()-c.t<432e5)return c.g;
+// TMDB keeps these as separate collections but they are one world: if a franchise contains any title of a group, the whole group joins it
+const FR_MERGE=[[[120,"2001-12-18"],[121,"2002-12-18"],[122,"2003-12-17"],[49051,"2012-12-12"],[57158,"2013-12-11"],[122917,"2014-12-10"]]]; // Lord of the Rings trilogy + The Hobbit trilogy
+async function frGraph(fk){const ck="cv_frg3_"+fk,c=frGet(ck);if(c&&c.g&&c.g.items&&Date.now()-c.t<432e5)return c.g;
  const m0=FRMEM.get(fk);if(m0&&Date.now()-m0.t<9e4)return m0.g;
  const t=fk[0]==="t"?"tv":"movie",id=+fk.slice(1),d=await api(`/${t}/${id}`,{append_to_response:"external_ids"});
  const mem=new Map(),add=(t2,id2,date)=>{const k=t2+id2,o=mem.get(k);if(!o)mem.set(k,{t:t2,id:id2,d:date||""});else if(date&&!o.d)o.d=date};
@@ -46,6 +48,7 @@ async function frGraph(fk){const ck="cv_frg2_"+fk,c=frGet(ck);if(c&&c.g&&c.g.ite
  const col=d.belongs_to_collection;if(col&&col.id){colName=frClean(col.name);jobs.push(api("/collection/"+col.id).then(cc=>{(cc.parts||[]).forEach(p=>add("movie",p.id,p.release_date))}).catch(()=>{full=false}))}
  const q=d.external_ids&&d.external_ids.wikidata_id;if(q)jobs.push(frWikiRetry(q).then(r=>{wl=frClean(r.label);r.items.forEach(x=>add(x.t,x.id,x.d))}).catch(()=>{full=false}));
  await Promise.all(jobs);
+ for(const grp of FR_MERGE)if(grp.some(([i])=>mem.has("movie"+i)))grp.forEach(([i,dt])=>add("movie",i,dt));
  if(t==="movie"){const nm=colName||frStem(d.title||d.name);if(nm.length>=4)try{await frSiblings(nm,add)}catch{}}
  if(mem.size<3){const stem=frStem(d.title||d.name),lang=d.original_language;if(stem.length>=5){for(const kind of["movie","tv"]){try{const r=await api("/search/"+kind,{query:stem});(r.results||[]).filter(x=>x.original_language===lang&&nrm(x.title||x.name).startsWith(nrm(stem))).forEach(x=>add(kind,x.id,x.release_date||x.first_air_date))}catch{}}}colName=colName||frStem(d.title||d.name)}
  let items=[...mem.values()].sort(frDate);if(items.length>220){const me=mem.get(t+id);items=[me,...items.filter(x=>x!==me).slice(0,219)].sort(frDate)}
