@@ -42,7 +42,7 @@ button.g{background:#333}
  <label>Site path <input type="text" id="path" value="/index.html"></label>
  <label>Countdown (sec) <input type="number" id="cdn" value="5" min="1" max="15" style="width:70px"></label><br>
  <label>Screen <select id="mode"><option value="fit">Fit 1440x900 (premium frame)</option><option value="wide">Wide - poori screen bhare</option></select></label><br>
- <label>Pace <select id="pace"><option value="1">Normal</option><option value="1.25" selected>Slower</option><option value="1.5">Cinematic</option></select></label><br>
+ <label>Pace <select id="pace"><option value="0.9">Fast</option><option value="1" selected>Normal</option><option value="1.2">Slower</option></select></label><br>
  <label><input type="checkbox" id="fr" checked> Frame + gradient</label>
  <label><input type="checkbox" id="bl"> Motion blur</label>
  <label><input type="checkbox" id="lite" checked> Lite effects (smooth video)</label>
@@ -57,85 +57,180 @@ const $=s=>document.querySelector(s),sleep=ms=>new Promise(r=>setTimeout(r,ms));
 let W=1440,H=900;
 let ifr=$('#ifr');const camEl=$('#cam'),win=$('#win'),curEl=$('#cur'),fade=$('#fade');
 const DEF=[
-{"a":"mark","n":"01 intro+hero"},
-{"a":"hold","on":true},
-{"a":"wait","ms":6600},
-{"a":"auto","z":0,"out":1500},
-{"a":"move","to":"#htitle","z":1.5,"out":1800},
-{"a":"wait","ms":2800},
+{"a":"mark","n":"01 intro+hero+next-up"},
+{"a":"waitfor","gone":"#intro","max":9000,"after":300},
+{"a":"auto","z":1.4,"out":150},
+{"a":"wait","ms":900},
+{"a":"click","to":"#nxt","z":1.5,"out":150},
+{"a":"waitfor","imgs":true,"max":3000,"after":900},
+{"a":"wait","ms":1300},
+{"a":"click","to":"#nxt","z":1.5,"out":150},
+{"a":"waitfor","imgs":true,"max":3000,"after":900},
+{"a":"wait","ms":1300},
+{"a":"click","to":"#nxt","z":1.5,"out":150},
+{"a":"waitfor","imgs":true,"max":3000,"after":900},
+{"a":"wait","ms":1300},
 {"a":"cut"},
 {"a":"mark","n":"02 menu"},
 {"a":"hold","on":true},
-{"a":"wait","ms":900},
-{"a":"click","to":"#mnu","nozoom":true},
-{"a":"wait","ms":2000},
-{"a":"hover","to":".cvn-l button@Movies","nozoom":true,"hold":1100},
-{"a":"hover","to":".cvn-l button@Series","nozoom":true,"hold":1100},
-{"a":"hover","to":".cvn-l button@Anime","nozoom":true,"hold":1100},
-{"a":"hover","to":".cvn-l button@Browse","nozoom":true,"hold":1100},
+{"a":"wait","ms":700},
+{"a":"click","to":"#mnu","z":1.6,"out":150},
+{"a":"wait","ms":1700},
+{"a":"hover","to":".cvn-l button@Movies","nozoom":true,"hold":800},
+{"a":"hover","to":".cvn-l button@Series","nozoom":true,"hold":800},
+{"a":"hover","to":".cvn-l button@Anime","nozoom":true,"hold":800},
 {"a":"click","to":".cvn-x","nozoom":true},
-{"a":"wait","ms":1000},
-{"a":"cut","pre":[{"a":"tap","to":"#hmore"},{"a":"wait","ms":2400},{"a":"tap","to":"#mx"},{"a":"wait","ms":900}]},
-{"a":"mark","n":"03 detail+parallax"},
-{"a":"hold","on":true},
 {"a":"wait","ms":600},
-{"a":"click","to":"#hmore","nozoom":true},
-{"a":"wait","ms":2500},
-{"a":"scroll","in":"#modal","by":700,"ms":3200},
-{"a":"wait","ms":800},
-{"a":"scroll","in":"#modal","y":0,"ms":2200},
-{"a":"wait","ms":400},
-{"a":"cut","reload":false},
-{"a":"mark","n":"04 mood+colour card"},
-{"a":"click","to":"[data-cvt=mood]","nozoom":true},
+{"a":"cut","pre":[{"a":"tap","to":"#hmore"},{"a":"waitfor","sel":"[data-cvt=mood]","max":6000,"after":300},{"a":"tap","to":"#mx"},{"a":"wait","ms":500}]},
+{"a":"mark","n":"03 details+where-to-watch"},
+{"a":"hold","on":true},
+{"a":"wait","ms":500},
+{"a":"click","to":"#hmore","z":1.5,"out":150},
 {"a":"wait","ms":2400},
-{"a":"scroll","in":"#modal","to":"#mpal","off":230,"ms":1600},
+{"a":"scroll","in":"#modal","to":"#rg","center":true,"ms":2200},
 {"a":"wait","ms":900},
-{"a":"click","to":"#mpal [data-h]","nozoom":true},
-{"a":"wait","ms":2200},
-{"a":"click","to":".mcardbtn","nozoom":true},
-{"a":"wait","ms":4500},
+{"a":"select","to":"#rg","value":"US","z":1.6,"out":150},
+{"a":"waitfor","imgs":true,"max":4000,"after":1500},
+{"a":"cut","pre":[{"a":"tap","to":"#hmore"},{"a":"waitfor","sel":"[data-cvt=mood]","max":6000,"after":300},{"a":"tap","to":"[data-cvt=details]"},{"a":"wait","ms":600}]},
+{"a":"mark","n":"04 director"},
+{"a":"wait","ms":700},
+{"a":"click","to":".cw i[data-p]","z":1.5,"out":150},
+{"a":"waitfor","imgs":true,"max":4500,"after":900},
+{"a":"scroll","in":"#modal","by":450,"ms":2200},
+{"a":"wait","ms":600},
+{"a":"click","to":"#modal .card:not(.sk)","idx":2,"z":1.4,"out":150},
+{"a":"wait","ms":1800},
+{"a":"click","to":"#mx","nozoom":true},
+{"a":"wait","ms":500},
+{"a":"cut","pre":[{"a":"tap","to":"#hmore"},{"a":"waitfor","sel":"[data-cvt=mood]","max":6000,"after":300},{"a":"tap","to":"[data-cvt=details]"},{"a":"wait","ms":600}]},
+{"a":"mark","n":"05 part-of collection"},
+{"a":"wait","ms":600},
+{"a":"scroll","in":"#modal","to":".fr-b","center":true,"ms":1600},
+{"a":"wait","ms":700},
+{"a":"click","to":".fr-t","z":1.45,"out":150},
+{"a":"waitfor","imgs":true,"max":5000,"after":1000},
+{"a":"click","to":"button@All","z":1.4,"out":150},
+{"a":"wait","ms":1500},
+{"a":"scroll","in":"#modal","by":600,"ms":2200},
+{"a":"wait","ms":800},
+{"a":"cut","pre":[{"a":"tap","to":"#hmore"},{"a":"waitfor","sel":"[data-cvt=mood]","max":6000,"after":300},{"a":"tap","to":"[data-cvt=cast]"},{"a":"wait","ms":600}]},
+{"a":"mark","n":"06 cast+actor"},
+{"a":"wait","ms":900},
+{"a":"click","to":["[data-p]@Ryan Gosling","#modal [data-p]"],"z":1.5,"out":150},
+{"a":"waitfor","imgs":true,"max":4500,"after":900},
+{"a":"scroll","in":"#modal","by":600,"ms":2600},
+{"a":"wait","ms":700},
+{"a":"click","to":"*@Directing","z":1.3,"out":150},
+{"a":"wait","ms":1400},
+{"a":"cut","pre":[{"a":"tap","to":"#hmore"},{"a":"waitfor","sel":"[data-cvt=mood]","max":6000,"after":300},{"a":"tap","to":"[data-cvt=mood]"},{"a":"wait","ms":600}]},
+{"a":"mark","n":"07 mood+colour card"},
+{"a":"wait","ms":800},
+{"a":"scroll","in":"#modal","to":".mstills","center":true,"ms":1400},
+{"a":"wait","ms":500},
+{"a":"hscroll","to":".mstills button","by":600,"ms":1800},
+{"a":"wait","ms":400},
+{"a":"click","to":".mstills button","idx":1,"z":1.4,"out":150},
+{"a":"wait","ms":1600},
+{"a":"key","k":"Escape"},
+{"a":"wait","ms":900},
+{"a":"scroll","in":"#modal","to":"#mpal","center":true,"ms":1400},
+{"a":"wait","ms":500},
+{"a":"click","to":"#mpal [data-h]","idx":2,"z":1.7,"out":150},
+{"a":"wait","ms":1500},
+{"a":"click","to":".mcardbtn","z":1.5,"out":150},
+{"a":"waitfor","sel":".cdi","max":5000,"after":3200},
 {"a":"click","to":"[data-a=x]","nozoom":true},
+{"a":"wait","ms":600},
+{"a":"cut","pre":[{"a":"tap","to":"#hmore"},{"a":"waitfor","sel":"[data-cvt=mood]","max":6000,"after":300},{"a":"tap","to":"[data-cvt=more]"},{"a":"wait","ms":600}]},
+{"a":"mark","n":"08 more-like-this"},
+{"a":"wait","ms":800},
+{"a":"hscroll","to":"#rec .card","by":700,"ms":2600},
+{"a":"wait","ms":500},
+{"a":"hscroll","to":"#rec .card","by":700,"ms":2400},
+{"a":"wait","ms":500},
+{"a":"click","to":".rtk-s","z":1.6,"out":150},
 {"a":"wait","ms":900},
+{"a":"click","to":"*@Worldwide","z":1.4,"out":150},
+{"a":"waitfor","imgs":true,"max":4000,"after":1400},
 {"a":"cut"},
-{"a":"mark","n":"05 spotlight"},
-{"a":"wait","ms":700},
-{"a":"scroll","to":"#cvspot","off":90,"ms":2400},
-{"a":"wait","ms":900},
-{"a":"click","to":".sp-th [data-t='2']","nozoom":true},
-{"a":"wait","ms":2800},
-{"a":"click","to":".sp-th [data-t='3']","nozoom":true},
-{"a":"wait","ms":2800},
+{"a":"mark","n":"09 search Lord of the Rings"},
+{"a":"wait","ms":600},
+{"a":"click","to":"#q","z":1.5,"out":150},
+{"a":"type","to":"#q","text":"Lord of the Rings","gap":75,"clear":true},
+{"a":"waitfor","sel":".fcard","max":7000,"after":900},
+{"a":"click","to":".fcard","z":1.4,"out":150},
+{"a":"waitfor","imgs":true,"max":5000,"after":1000},
+{"a":"scroll","by":700,"ms":2600},
+{"a":"wait","ms":800},
 {"a":"cut"},
-{"a":"mark","n":"06 browse"},
-{"a":"wait","ms":700},
-{"a":"click","to":"nav [data-v=browse]","nozoom":true},
-{"a":"wait","ms":2200},
-{"a":"click","to":"button@Hidden gems","nozoom":true},
-{"a":"wait","ms":2600},
-{"a":"click","to":"button@Mind-bending","nozoom":true},
-{"a":"wait","ms":2600},
-{"a":"click","to":"[data-c=Crimson]","nozoom":true},
-{"a":"wait","ms":2600},
-{"a":"click","to":"[data-c=Violet]","nozoom":true},
-{"a":"wait","ms":2600},
+{"a":"mark","n":"10 search Hera Pheri"},
+{"a":"wait","ms":600},
+{"a":"click","to":"#q","z":1.5,"out":150},
+{"a":"type","to":"#q","text":"Hera Pheri","gap":75,"clear":true},
+{"a":"waitfor","sel":".fcard","max":7000,"after":900},
+{"a":"click","to":".fcard","z":1.4,"out":150},
+{"a":"waitfor","imgs":true,"max":5000,"after":1000},
+{"a":"scroll","by":300,"ms":2600},
+{"a":"wait","ms":800},
 {"a":"cut"},
-{"a":"mark","n":"07 tonight"},
+{"a":"mark","n":"11 series invincible"},
 {"a":"hold","on":true},
 {"a":"wait","ms":800},
-{"a":"click","to":"#mnu","nozoom":true},
-{"a":"wait","ms":1900},
-{"a":"click","to":".cvn-l button@Tonight","nozoom":true},
+{"a":"click","to":"#nxt","z":1.5,"out":150},
+{"a":"waitfor","imgs":true,"max":3000,"after":1100},
+{"a":"click","to":"#hmore","z":1.5,"out":150},
+{"a":"wait","ms":2600},
+{"a":"select","to":"#ssn","value":"4","z":1.6,"out":150},
+{"a":"waitfor","imgs":true,"max":4000,"after":1200},
+{"a":"scroll","in":"#modal","by":650,"ms":3000},
+{"a":"wait","ms":800},
+{"a":"click","to":"#epw img","idx":1,"z":1.4,"out":150},
+{"a":"wait","ms":2200},
+{"a":"click","to":"#epw img","idx":2,"z":1.4,"out":150},
 {"a":"wait","ms":1800},
-{"a":"click","to":".tn .opts button@Regular","nozoom":true},
+{"a":"click","to":"button@Back to show","z":1.4,"out":150},
+{"a":"wait","ms":900},
+{"a":"cut"},
+{"a":"mark","n":"12 spotlight"},
+{"a":"wait","ms":500},
+{"a":"scroll","to":".sp-frame","center":true,"ms":2200},
+{"a":"waitfor","imgs":true,"max":4000,"after":700},
+{"a":"click","to":".sp-th [data-t='2']","z":1.35,"out":150},
+{"a":"waitfor","imgs":true,"max":4000,"after":1700},
+{"a":"click","to":".sp-th [data-t='3']","z":1.35,"out":150},
+{"a":"waitfor","imgs":true,"max":4000,"after":1700},
+{"a":"cut"},
+{"a":"mark","n":"13 browse colour"},
+{"a":"wait","ms":400},
+{"a":"click","to":"nav [data-v=browse]","nozoom":true},
+{"a":"waitfor","gone":".sk","imgs":true,"max":7000,"after":900},
+{"a":"click","to":"button@Hidden gems","z":1.35,"out":150},
+{"a":"waitfor","gone":".sk","imgs":true,"max":7000,"after":1100},
+{"a":"click","to":"button@Mind-bending","z":1.35,"out":150},
+{"a":"waitfor","gone":".sk","imgs":true,"max":7000,"after":1100},
+{"a":"click","to":"[data-c=Crimson]","z":1.35,"out":150},
+{"a":"waitfor","gone":".sk","imgs":true,"max":7000,"after":1100},
+{"a":"click","to":"[data-c=Violet]","z":1.35,"out":150},
+{"a":"waitfor","gone":".sk","imgs":true,"max":7000,"after":1100},
+{"a":"cut"},
+{"a":"mark","n":"14 tonight"},
+{"a":"hold","on":true},
+{"a":"wait","ms":500},
+{"a":"click","to":"#mnu","z":1.6,"out":150},
+{"a":"wait","ms":1700},
+{"a":"click","to":".cvn-l button@Tonight","nozoom":true},
 {"a":"wait","ms":1500},
-{"a":"click","to":".tn .opts button@Mind-bending","nozoom":true},
-{"a":"wait","ms":1500},
-{"a":"click","to":".tn .opts button@English","nozoom":true},
-{"a":"wait","ms":4500}
+{"a":"click","to":".tn .opts button@Regular","z":1.3,"out":150},
+{"a":"wait","ms":900},
+{"a":"click","to":".tn .opts button@Mind-bending","z":1.3,"out":150},
+{"a":"wait","ms":900},
+{"a":"click","to":".tn .opts button@English","z":1.3,"out":150},
+{"a":"wait","ms":900},
+{"a":"waitfor","sel":".tn .res","max":14000,"after":900},
+{"a":"wait","ms":2600}
 ];
 const cam={z:1,x:W/2,y:H/2,tw:null,follow:false},cur={x:W*.8,y:H*.85},auto={z:0,out:1500};
-let pace=1.25;const T=ms=>ms*pace,ZD=.65;
+let pace=1;const T=ms=>ms*pace,ZD=.7,ZO=.8;
 let k=1,ww=0,wh=0,abort=false,running=false,blurOn=false,outT=0,marks=[],T0=0,wc=0,lastMove=0,last=performance.now();
 const isApp=()=>matchMedia('(display-mode: fullscreen)').matches||matchMedia('(display-mode: standalone)').matches;
 function layout(){
@@ -166,11 +261,13 @@ function tick(t){const dt=Math.min(.05,(t-last)/1000);last=t;const pz=cam.z,px=c
  camEl.style.filter=blurOn?`blur(${Math.min(1.5,mv/Math.max(dt,.001)*.0004).toFixed(2)}px)`:'';
  requestAnimationFrame(tick)}
 const D=()=>ifr.contentDocument,Wn=()=>ifr.contentWindow;
-function find(sel){let e;
- if(sel.includes('@')){const[i,t]=sel.split('@'),q=t.trim().toLowerCase();
-  e=[...D().querySelectorAll(i||'*')].filter(x=>x.getClientRects().length&&x.textContent.trim().toLowerCase().startsWith(q)).sort((a,b)=>a.textContent.length-b.textContent.length)[0]}
- else e=D().querySelector(sel);
- if(!e)throw Error('nahi mila: '+sel);return e}
+function find(sel,idx){
+ if(Array.isArray(sel)){for(const s of sel){try{return find(s,idx)}catch(e){}}throw Error('nahi mila: '+sel[0])}
+ let list;
+ if(sel.includes('@')){const[i,x]=sel.split('@'),q=x.trim().toLowerCase();
+  list=[...D().querySelectorAll(i||'*')].filter(n=>n.getClientRects().length&&n.textContent.trim().toLowerCase().startsWith(q)).sort((p,r)=>p.textContent.length-r.textContent.length)}
+ else{const all=[...D().querySelectorAll(sel)],vis=all.filter(n=>n.getClientRects().length);list=vis.length?vis:all}
+ const e=list[idx||0];if(!e)throw Error('nahi mila: '+sel);return e}
 const ctr=e=>{const r=e.getBoundingClientRect();return{x:r.left+r.width/2,y:r.top+r.height/2}};
 const ease=p=>p<.5?4*p*p*p:1-Math.pow(-2*p+2,3)/2;
 function moveTo(x,y,ms){const x0=cur.x,y0=cur.y,dx=x-x0,dy=y-y0,cx=x0+dx/2-dy*.1,cy=y0+dy/2+dx*.1;curEl.classList.add('on');
@@ -179,8 +276,9 @@ function moveTo(x,y,ms){const x0=cur.x,y0=cur.y,dx=x-x0,dy=y-y0,cx=x0+dx/2-dy*.1
 function scrollTo(y,ms,el){const w=el||Wn(),y0=el?el.scrollTop:w.scrollY;return new Promise(res=>{const t0=performance.now();(function f(n){if(abort)return res();
  const p=ease(Math.min(1,(n-t0)/ms)),v=y0+(y-y0)*p;el?el.scrollTop=v:w.scrollTo(0,v);p<1?requestAnimationFrame(f):res()})(t0)})}
 function scroller(e){for(let n=e.parentElement;n;n=n.parentElement){const o=Wn().getComputedStyle(n).overflowY;if((o==='auto'||o==='scroll')&&n.scrollHeight>n.clientHeight+4)return n}return null}
-async function reveal(e){const r=e.getBoundingClientRect();if(r.top<90||r.bottom>H-90){const sc=scroller(e);
- if(sc&&sc!==D().body&&sc!==D().documentElement)await scrollTo(sc.scrollTop+r.top-sc.getBoundingClientRect().top-H/3,1100,sc);else await scrollTo(Wn().scrollY+r.top-H/3,1200)}}
+async function reveal(e){const r=e.getBoundingClientRect(),s0=scroller(e),sc=s0&&s0!==D().body&&s0!==D().documentElement?s0:null;
+ const vh=sc?sc.clientHeight:H,top=sc?sc.getBoundingClientRect().top:0,rt=r.top-top,rb=r.bottom-top;
+ if(rt<70||rb>vh-70){const g=r.height>vh-140?rt-70:rt+r.height/2-vh/2;sc?await scrollTo(sc.scrollTop+g,1100,sc):await scrollTo(Wn().scrollY+g,1200)}}
 function ripple(){const r=document.createElement('div');r.className='rip';r.style.left=cur.x+'px';r.style.top=cur.y+'px';camEl.appendChild(r);setTimeout(r.remove.bind(r),800);
  curEl.classList.add('dn');setTimeout(()=>curEl.classList.remove('dn'),160)}
 function tapEl(t){const w=Wn();let n=t;while(n&&typeof n.click!=='function')n=n.parentElement;n=n||t;
@@ -196,30 +294,44 @@ async function approach(e,s){clearTimeout(outT);await reveal(e);let c=ctr(e);con
  if(Math.hypot(c2.x-c.x,c2.y-c.y)>10){await moveTo(c2.x,c2.y,260);if(z>1)camTo(z,c2.x,c2.y,.4);c=c2}
  if(z>1)setTimeout(()=>{cam.follow=true},700);return c}
 function armOut(s){clearTimeout(outT);const o=s.out!==undefined?s.out:auto.out;
- if(o>0&&curZ()>1.02)outT=setTimeout(()=>{cam.follow=false;camTo(1,W/2,H/2,ZD)},T(o))}
+ if(o>0&&curZ()>1.02)outT=setTimeout(()=>{cam.follow=false;camTo(1,W/2,H/2,ZO)},T(o))}
 const A={
  wait:s=>sleep(T(s.ms||500)),
  auto:s=>{auto.z=s.z||0;auto.out=s.out===undefined?1500:s.out},
  async zoom(s){clearTimeout(outT);const z=s.z||1;
-  if(s.to){const e=find(s.to);if(s.nocursor){await reveal(e);const c=ctr(e);cam.follow=false;camTo(z,c.x,c.y,ZD)}else await approach(e,{z})}
+  if(s.to){const e=find(s.to,s.idx);if(s.nocursor){await reveal(e);const c=ctr(e);cam.follow=false;camTo(z,c.x,c.y,ZD)}else await approach(e,{z})}
   else{cam.follow=z>1;camTo(z,z>1?cur.x:W/2,z>1?cur.y:H/2,ZD)}
   await sleep(T(s.ms||900))},
- async move(s){const e=find(s.to);await approach(e,s);armOut(s)},
- async click(s){const e=find(s.to);const c=await approach(e,s);await sleep(110);ripple();
+ async move(s){const e=find(s.to,s.idx);await approach(e,s);armOut(s)},
+ async click(s){const e=find(s.to,s.idx);const c=await approach(e,s);await sleep(110);ripple();
   tapEl(D().elementFromPoint(c.x,c.y)||e);await sleep(T(s.after||250));armOut(s)},
- async type(s){const e=find(s.to);e.focus();for(const ch of s.text){if(abort)return;e.value+=ch;
+ async type(s){const e=find(s.to,s.idx);e.focus();if(s.clear)e.value='';for(const ch of s.text){if(abort)return;e.value+=ch;
   e.dispatchEvent(new Event('input',{bubbles:true}));await sleep(s.gap||85)}},
  async scroll(s){const el=s.in?find(s.in):null,base=el?el.scrollTop:Wn().scrollY;
-  const y=s.to?base+find(s.to).getBoundingClientRect().top-(el?el.getBoundingClientRect().top:0)-(s.off??120):s.by!=null?base+s.by:s.y;await scrollTo(y,T(s.ms||1800),el)},
- async hover(s){const e=find(s.to);await approach(e,s);
+  const rr=s.to?find(s.to,s.idx).getBoundingClientRect():null,ot=el?el.getBoundingClientRect().top:0,vh=el?el.clientHeight:H;const y=s.to?(s.center?base+rr.top-ot+rr.height/2-vh/2:base+rr.top-ot-(s.off??120)):s.by!=null?base+s.by:s.y;await scrollTo(y,T(s.ms||1800),el)},
+ async hover(s){const e=find(s.to,s.idx);await approach(e,s);
   for(const t of['pointerover','pointerenter'])e.dispatchEvent(new(Wn().PointerEvent)(t,{bubbles:true,pointerType:'mouse'}));await sleep(T(s.hold||1000));armOut(s)},
  hold:s=>{try{const d=D();s.on?Object.defineProperty(d,'hidden',{get:()=>true,configurable:true}):delete d.hidden}catch(e){}},
  mark:s=>{marks.push([s.n,(performance.now()-T0)/1000])},
- async tap(s){tapEl(find(s.to))},
- async cut(s){fade.style.transition='opacity .35s';fade.style.opacity=1;await sleep(450);curEl.classList.remove('on');resetCam();
-  if(s.reload!==false)await loadSite($('#path').value,false,true);
+ async tap(s){tapEl(find(s.to,s.idx))},
+ async select(s){const e=find(s.to,s.idx);const c=await approach(e,s);await sleep(120);ripple();
+  e.value=s.value;e.dispatchEvent(new Event('input',{bubbles:true}));e.dispatchEvent(new Event('change',{bubbles:true}));await sleep(T(s.after||300));armOut(s)},
+ key:s=>{for(const x of[D(),Wn()])x.dispatchEvent(new(Wn().KeyboardEvent)('keydown',{key:s.k||'Escape',bubbles:true}))},
+ async hscroll(s){const e=find(s.to,s.idx);let n=e.parentElement;
+  while(n){const o=Wn().getComputedStyle(n).overflowX;if((o==='auto'||o==='scroll')&&n.scrollWidth>n.clientWidth+4)break;n=n.parentElement}
+  if(!n)throw Error('hscroll: row nahi mili');const x0=n.scrollLeft,x1=x0+(s.by||600),ms=T(s.ms||2200);
+  await new Promise(res=>{const t0=performance.now();(function f(q){const p=ease(Math.min(1,(q-t0)/ms));n.scrollLeft=x0+(x1-x0)*p;p<1&&!abort?requestAnimationFrame(f):res()})(t0)})},
+ async waitfor(s){const t0=Date.now(),max=s.max||6000;
+  while(Date.now()-t0<max&&!abort){let ok=true;try{const d=D();
+   if(s.sel)ok=ok&&[...d.querySelectorAll(s.sel)].some(e=>e.getClientRects().length);
+   if(s.gone)ok=ok&&!d.querySelector(s.gone);
+   if(s.imgs)ok=ok&&![...d.images].some(i=>{const r=i.getBoundingClientRect();return!i.complete&&r.bottom>0&&r.top<H&&r.width>0})}catch(e){ok=false}
+   if(ok)break;await sleep(100)}
+  if(s.after)await sleep(s.after)},
+ async cut(s){fade.style.transition='opacity .22s';fade.style.opacity=1;await sleep(300);curEl.classList.remove('on');resetCam();
+  if(s.reload!==false){await loadSite($('#path').value,false,true);await A.waitfor({gone:'.sk',imgs:true,max:3500})}
   if(s.pre)for(const p of s.pre){try{await A[p.a](p)}catch(e){}}
-  resetCam();await sleep(T(s.hold||(s.reload===false?600:1300)));fade.style.transition='opacity .4s';fade.style.opacity=0;await sleep(450)}
+  resetCam();await sleep(T(s.hold||(s.reload===false?250:200)));fade.style.transition='opacity .25s';fade.style.opacity=0;await sleep(300)}
 };
 async function run(steps){const bad=[];for(const s of steps){if(abort)break;try{await A[s.a](s)}catch(e){bad.push(s.a+': '+e.message)}}return bad}
 function patchDoc(){try{const C=Wn().Clipboard.prototype;C.writeText=()=>Promise.resolve();C.write=()=>Promise.resolve()}catch(e){}}
@@ -237,7 +349,7 @@ const fmt=t=>Math.floor(t/60)+':'+String(Math.floor(t%60)).padStart(2,'0');
 async function start(){if(running)return;let steps;
  try{steps=JSON.parse($('#scr').value)}catch(e){$('#msg').textContent='Script JSON galat hai: '+e.message;return}
  try{localStorage.setItem('stg_scr',$('#scr').value)}catch(e){}
- running=true;abort=false;blurOn=$('#bl').checked;pace=+$('#pace').value||1.25;$('#msg').textContent='';marks=[];T0=performance.now();let wl;
+ running=true;abort=false;blurOn=$('#bl').checked;pace=+$('#pace').value||1;$('#msg').textContent='';marks=[];T0=performance.now();let wl;
  if($('#fs').checked&&!document.fullscreenElement&&!isApp())try{await document.documentElement.requestFullscreen();await sleep(900)}catch(e){}
  try{wl=await navigator.wakeLock.request('screen')}catch(e){}
  layout();$('#panel').classList.add('h');curEl.classList.remove('on');resetCam();auto.z=0;
@@ -249,13 +361,14 @@ async function start(){if(running)return;let steps;
  if(!abort)await loadSite($('#path').value,true);
  const bad=abort?[]:await run(steps);
  marks.push(['END',(performance.now()-T0)/1000]);
- running=false;clearTimeout(outT);curEl.classList.remove('on');fade.style.transition='opacity .3s';fade.style.opacity=0;$('#panel').classList.remove('h');try{wl&&wl.release()}catch(e){}
+ running=false;clearTimeout(outT);curEl.classList.remove('on');try{wl&&wl.release()}catch(e){}
+ if(abort){fade.style.opacity=0;$('#panel').classList.remove('h')}else{fade.style.transition='opacity .8s';fade.style.opacity=1}
  const lst=marks.map((m,i)=>m[0]==='END'?'':m[0]+'  '+fmt(m[1])+' - '+fmt(marks[i+1][1])).filter(Boolean).join('\n');
- $('#msg').textContent=(abort?'Rok diya.':'Done - ab recorder stop karo.')+'\nCut list (Start dabane ke time se):\n'+lst+(bad.length?'\nSkip hue:\n'+bad.join('\n'):'')}
-let tap=0;$('#stop').onclick=()=>{const n=Date.now();if(n-tap<500){abort=true;$('#cd').style.display='none'}tap=n};
+ $('#msg').textContent=(abort?'Rok diya.':'Done - recorder stop karo, phir top-left corner pe double-tap karke panel kholo.')+'\nCut list (Start dabane ke time se):\n'+lst+(bad.length?'\nSkip hue:\n'+bad.join('\n'):'')}
+let tap=0;$('#stop').onclick=()=>{const n=Date.now();if(n-tap<500){if(running){abort=true;$('#cd').style.display='none'}else{fade.style.opacity=0;$('#panel').classList.remove('h')}}tap=n};
 $('#go').onclick=start;
 $('#rs').onclick=()=>{$('#scr').value=JSON.stringify(DEF,null,1)};
-try{if(localStorage.getItem('stg_ver')==='7')$('#scr').value=localStorage.getItem('stg_scr')||'';localStorage.setItem('stg_ver','7')}catch(e){}
+try{if(localStorage.getItem('stg_ver')==='9')$('#scr').value=localStorage.getItem('stg_scr')||'';localStorage.setItem('stg_ver','9')}catch(e){}
 if(!$('#scr').value)$('#rs').click();
 $('#info').textContent=isApp()?'App mode ON (fullscreen app) - recording ke liye best.':'Tip: Chrome menu > Install app, phir "Parda Stage" icon se kholo. Isse fullscreen + landscape bina black screen ke milta hai.';
 layout();drawCur();requestAnimationFrame(tick);
