@@ -29,7 +29,7 @@
   document.head.appendChild(css);
 
   let data = null, sec = null, idx = 0, timer = 0, paused = 0, visible = false, colours = [];
-  const D = 7000, kind = it => it.title ? "movie" : "tv";
+  const bu = (it, z) => (window.cvOvr && cvOvr(it, "spot")) || IMG + z + it.backdrop_path, D = 7000, kind = it => it.title ? "movie" : "tv";
   async function load() {
     if (data) return data;
     let hero = []; try { hero = (0, eval)("hero").map(h => h.id) } catch (e) {}
@@ -41,12 +41,12 @@
     const anchor = rows.querySelectorAll(":scope > section")[3]; if (!anchor) return;
     sec = document.createElement("section"); sec.id = "cvspot"; sec.className = "spot"; sec.setAttribute("aria-label", "Spotlight");
     const n = data.length, yr = it => (it.release_date || it.first_air_date || "").slice(0, 4);
-    sec.innerHTML = `<div class="sp-k">SPOTLIGHT</div><div class="sp-stage">${data.map((it, i) => `<div class="sp-amb${i ? "" : " on"}" style="background-image:url(${IMG}w300${it.backdrop_path})"></div>`).join("")}
-<div class="sp-frame" role="group" aria-roledescription="carousel">${data.map((it, i) => `<div class="sp-sl${i ? "" : " on"}" aria-hidden="${i ? "true" : "false"}"><div class="sp-img" style="background-image:url(${IMG}${innerWidth > 900 ? "w1280" : "w780"}${it.backdrop_path})"></div><div class="sp-info"><div class="sp-meta">${kind(it) === "tv" ? "Series" : "Film"} · ${esc(yr(it))} · ★ ${(it.vote_average || 0).toFixed(1)}</div><h3>${esc(it.title || it.name)}</h3><p>${esc(it.overview)}</p><button class="sp-go" type="button" data-i="${i}">Details</button></div></div>`).join("")}
+    sec.innerHTML = `<div class="sp-k">SPOTLIGHT</div><div class="sp-stage">${data.map((it, i) => `<div class="sp-amb${i ? "" : " on"}" style="background-image:url(${bu(it,"w300")})"></div>`).join("")}
+<div class="sp-frame" role="group" aria-roledescription="carousel">${data.map((it, i) => `<div class="sp-sl${i ? "" : " on"}" aria-hidden="${i ? "true" : "false"}"><div class="sp-img" style="background-image:url(${bu(it,innerWidth > 900 ? "w1280" : "w780")})"></div><div class="sp-info"><div class="sp-meta">${kind(it) === "tv" ? "Series" : "Film"} · ${esc(yr(it))} · ★ ${(it.vote_average || 0).toFixed(1)}</div><h3>${esc(it.title || it.name)}</h3><p>${esc(it.overview)}</p><button class="sp-go" type="button" data-i="${i}">Details</button></div></div>`).join("")}
 <div class="sp-top"><span id="spn">01 / 0${n}</span><span>Now trending</span></div><div class="sp-prog">${data.map(() => "<i></i>").join("")}</div><div class="sp-lb t"></div><div class="sp-lb b"></div></div>
-<div class="sp-th">${data.map((it, i) => `<button type="button" data-t="${i}" aria-label="Show ${esc(it.title || it.name)}" style="background-image:url(${IMG}w300${it.backdrop_path})"></button>`).join("")}</div></div>`;
+<div class="sp-th">${data.map((it, i) => `<button type="button" data-t="${i}" aria-label="Show ${esc(it.title || it.name)}" style="background-image:url(${bu(it,"w300")})"></button>`).join("")}</div></div>`;
     anchor.after(sec); wire(); go(0, true);
-    if (window.CVPal) data.forEach((it, i) => { const im = new Image(); im.crossOrigin = "anonymous"; im.onload = () => { try { const c = CVPal.palette([im]).sort((a, b) => sat(b) - sat(a))[0]; if (c) { colours[i] = CVPal.hex(c.r, c.g, c.b); if (i === idx) sec.style.setProperty("--sc", colours[i]) } } catch (e) {} }; im.src = IMG + "w300" + it.backdrop_path });
+    if (window.CVPal) data.forEach((it, i) => { const im = new Image(); im.crossOrigin = "anonymous"; im.onload = () => { try { const c = CVPal.palette([im]).sort((a, b) => sat(b) - sat(a))[0]; if (c) { colours[i] = CVPal.hex(c.r, c.g, c.b); if (i === idx) sec.style.setProperty("--sc", colours[i]) } } catch (e) {} }; im.src = bu(it, "w300") });
   }
   const sat = c => { const mx = Math.max(c.r, c.g, c.b), mn = Math.min(c.r, c.g, c.b); return mx ? (mx - mn) / mx * (mx / 255) : 0 };
   function go(i, first) {

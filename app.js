@@ -1,3 +1,4 @@
+window.cvOvr=(it,k)=>/avengers:?\s*doomsday/i.test((it&&(it.title||it.name))||"")?"/art/doomsday-"+k+".jpg":"";
 const DIRECT="https://api.themoviedb.org/3",DIMG="https://image.tmdb.org/t/p/";
 // On hosted sites, go through our own domain (vercel.json rewrites) so ISP blocks on TMDB domains don't matter
 const PX=location.protocol.startsWith("http")&&!/^(localhost|127\.|192\.168\.|10\.)/.test(location.hostname),IMG=PX?"/timg/":DIMG;
@@ -382,7 +383,7 @@ async function openDetail(t,id,bk){$("#simp").hidden=$("#sheet").hidden=true;nav
  const stt=t==="tv"?(nx?`Ongoing · next ep ${when(nx.air_date)}`:/Ended|Canceled/.test(d.status)?"Ended":"Returning"):(!d.release_date?"Upcoming":d.release_date>day(0)?`Releases ${fd(d.release_date)}`:"Released");
  const m={id,type:t,title:title(d),poster:d.poster_path,lang:d.original_language,genres:(d.genres||[]).map(g=>g.id)};learn(m,1);CUR={d,t,m};
  const cast=d.credits.cast.slice(0,20).map(c=>`<div data-p="${c.id}" data-r="cast">${c.profile_path?`<img loading="lazy" decoding="async" src="${IMG}w185${c.profile_path}" alt="">`:"<i></i>"}<b>${esc(c.name)}</b><small>${esc(c.character||"")}</small></div>`).join("");
- const run=d.runtime?d.runtime+" min":"",bbd=bestBd(d),bk=bbd?IMG+(innerWidth>900?"w1280":"w780")+bbd:(d.poster_path?IMG+"w780"+d.poster_path:""),lg=pick(d.images&&d.images.logos);
+ const run=d.runtime?d.runtime+" min":"",bbd=bestBd(d),bk=cvOvr(d,"det")||(bbd?IMG+(innerWidth>900?"w1280":"w780")+bbd:(d.poster_path?IMG+"w780"+d.poster_path:"")),lg=pick(d.images&&d.images.logos);
  $("#mc").innerHTML=`<div class="tr" style="background-image:url(${bk})"><div class="tbg"></div><div class="tc">${lg?`<img class="tlg" src="${lg}" alt="">`:""}${v?'<button class="btn play" id="pl">Play trailer</button>':'<p class="notr">No trailer available</p>'}</div></div>
  <div class="mi"><div class="mw"><img class="dp" alt="" src="${d.poster_path?IMG+"w342"+d.poster_path:""}"><div class="mx">
  <div class="chips"><i class="c1">${cat(d,t)}</i><i>${(d.release_date||d.first_air_date||"").slice(0,4)||"TBA"}</i><i>${STAR}${(d.vote_average||0).toFixed(1)}</i><i>${stt}</i></div>
