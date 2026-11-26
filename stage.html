@@ -89,9 +89,9 @@ button.g{background:#333}
 <div id="panel">
  <div id="info"></div>
  <label>Control <select id="runmode">
-  <option value="trackpad" selected>Trackpad Mouse (best for mobile)</option>
+  <option value="trackpad">Trackpad Mouse (best for mobile)</option>
   <option value="manual">Direct Touch (finger on screen)</option>
-  <option value="auto">Auto Script (JSON)</option>
+  <option value="auto" selected>Auto Script (JSON)</option>
  </select></label><br>
  <div id="mopts" class="mopts">
   <label>Zoom level <select id="mz">
@@ -140,178 +140,216 @@ button.g{background:#333}
 const $=s=>document.querySelector(s),sleep=ms=>new Promise(r=>setTimeout(r,ms));
 let W=1440,H=900;
 let ifr=$('#ifr');const camEl=$('#cam'),win=$('#win'),curEl=$('#cur'),fade=$('#fade');
-const DEF=[
-{"a":"mark","n":"01 intro+hero+next-up"},
+const DEF=[{"a":"mark","n":"01 intro+hero+next-up"},
 {"a":"waitfor","gone":"#intro","max":9000,"after":300},
-{"a":"auto","z":1.4,"out":150},
-{"a":"wait","ms":900},
+{"a":"auto","z":1.5,"out":150},
+{"a":"wait","ms":600},
+{"a":"move","to":"#htitle","z":1.6,"out":1300},
+{"a":"wait","ms":2300},
 {"a":"click","to":"#nxt","z":1.5,"out":150},
-{"a":"waitfor","imgs":true,"max":3000,"after":900},
-{"a":"wait","ms":1300},
+{"a":"waitfor","imgs":true,"max":3000,"after":400},
+{"a":"wait","ms":1100},
 {"a":"click","to":"#nxt","z":1.5,"out":150},
-{"a":"waitfor","imgs":true,"max":3000,"after":900},
-{"a":"wait","ms":1300},
+{"a":"waitfor","imgs":true,"max":3000,"after":400},
+{"a":"wait","ms":1100},
 {"a":"click","to":"#nxt","z":1.5,"out":150},
-{"a":"waitfor","imgs":true,"max":3000,"after":900},
-{"a":"wait","ms":1300},
+{"a":"waitfor","imgs":true,"max":3000,"after":400},
+{"a":"wait","ms":1100},
 {"a":"cut"},
-{"a":"mark","n":"02 menu"},
-{"a":"hold","on":true},
+{"a":"mark","n":"02 home rows"},
+{"a":"wait","ms":500},
+{"a":"scroll","by":760,"ms":2600},
+{"a":"wait","ms":500},
+{"a":"hscroll","to":"#rows .card:not(.sk)","by":700,"ms":2200},
+{"a":"wait","ms":500},
+{"a":"scroll","by":640,"ms":2400},
+{"a":"wait","ms":500},
+{"a":"hscroll","to":"#rows .card:not(.sk)","idx":9,"by":700,"ms":2200},
+{"a":"wait","ms":500},
+{"a":"scroll","by":620,"ms":2400},
 {"a":"wait","ms":700},
+{"a":"cut"},
+{"a":"mark","n":"03 menu"},
+{"a":"wait","ms":500},
 {"a":"click","to":"#mnu","z":1.6,"out":150},
-{"a":"wait","ms":1700},
-{"a":"hover","to":".cvn-l button@Movies","nozoom":true,"hold":800},
-{"a":"hover","to":".cvn-l button@Series","nozoom":true,"hold":800},
-{"a":"hover","to":".cvn-l button@Anime","nozoom":true,"hold":800},
+{"a":"wait","ms":500},
+{"a":"hover","to":".cvn-l button@Movies","nozoom":true,"hold":750},
+{"a":"hover","to":".cvn-l button@Series","nozoom":true,"hold":750},
+{"a":"hover","to":".cvn-l button@Anime","nozoom":true,"hold":750},
+{"a":"hover","to":".cvn-l button@Browse","nozoom":true,"hold":750},
+{"a":"hover","to":".cvn-l button@Tonight","nozoom":true,"hold":750},
 {"a":"click","to":".cvn-x","nozoom":true},
-{"a":"wait","ms":600},
+{"a":"wait","ms":400},
 {"a":"cut","pre":[{"a":"tap","to":"#hmore"},{"a":"waitfor","sel":"[data-cvt=mood]","max":6000,"after":300},{"a":"tap","to":"#mx"},{"a":"wait","ms":500}]},
-{"a":"mark","n":"03 details+where-to-watch"},
-{"a":"hold","on":true},
-{"a":"wait","ms":500},
+{"a":"mark","n":"04 details+where-to-watch"},
+{"a":"wait","ms":400},
 {"a":"click","to":"#hmore","z":1.5,"out":150},
-{"a":"wait","ms":2400},
-{"a":"scroll","in":"#modal","to":"#rg","center":true,"ms":2200},
 {"a":"wait","ms":900},
+{"a":"scroll","in":"#modal","to":"#rg","center":true,"ms":1800},
+{"a":"wait","ms":700},
 {"a":"select","to":"#rg","value":"US","z":1.6,"out":150},
-{"a":"waitfor","imgs":true,"max":4000,"after":1500},
-{"a":"cut","pre":[{"a":"tap","to":"#hmore"},{"a":"waitfor","sel":"[data-cvt=mood]","max":6000,"after":300},{"a":"tap","to":"[data-cvt=details]"},{"a":"wait","ms":600}]},
-{"a":"mark","n":"04 director"},
-{"a":"wait","ms":700},
+{"a":"wait","ms":1200},
+{"a":"cut","pre":[{"a":"tap","to":"#hmore"},{"a":"waitfor","sel":"[data-cvt=mood]","max":6000,"after":300},{"a":"tap","to":"[data-cvt=details]"},{"a":"wait","ms":500}]},
+{"a":"mark","n":"05 director"},
+{"a":"wait","ms":500},
 {"a":"click","to":".cw i[data-p]","z":1.5,"out":150},
-{"a":"waitfor","imgs":true,"max":4500,"after":900},
-{"a":"scroll","in":"#modal","by":450,"ms":2200},
+{"a":"waitfor","imgs":true,"max":4500,"after":600},
+{"a":"wait","ms":700},
+{"a":"scroll","in":"#modal","by":520,"ms":2400},
 {"a":"wait","ms":600},
-{"a":"click","to":"#modal .card:not(.sk)","idx":2,"z":1.4,"out":150},
-{"a":"wait","ms":1800},
-{"a":"click","to":"#mx","nozoom":true},
+{"a":"click","to":["#modal .card:not(.sk)","#modal [data-id]"],"idx":2,"z":1.4,"out":150},
+{"a":"wait","ms":1200},
+{"a":"back"},
 {"a":"wait","ms":500},
-{"a":"cut","pre":[{"a":"tap","to":"#hmore"},{"a":"waitfor","sel":"[data-cvt=mood]","max":6000,"after":300},{"a":"tap","to":"[data-cvt=details]"},{"a":"wait","ms":600}]},
-{"a":"mark","n":"05 part-of collection"},
-{"a":"wait","ms":600},
+{"a":"cut","pre":[{"a":"tap","to":"#hmore"},{"a":"waitfor","sel":"[data-cvt=mood]","max":6000,"after":300},{"a":"tap","to":"[data-cvt=details]"},{"a":"wait","ms":500}]},
+{"a":"mark","n":"06 part-of collection"},
+{"a":"wait","ms":500},
 {"a":"scroll","in":"#modal","to":".fr-b","center":true,"ms":1600},
-{"a":"wait","ms":700},
+{"a":"wait","ms":600},
 {"a":"click","to":".fr-t","z":1.45,"out":150},
-{"a":"waitfor","imgs":true,"max":5000,"after":1000},
+{"a":"waitfor","imgs":true,"max":5000,"after":700},
+{"a":"wait","ms":600},
 {"a":"click","to":"button@All","z":1.4,"out":150},
-{"a":"wait","ms":1500},
-{"a":"scroll","in":"#modal","by":600,"ms":2200},
-{"a":"wait","ms":800},
-{"a":"cut","pre":[{"a":"tap","to":"#hmore"},{"a":"waitfor","sel":"[data-cvt=mood]","max":6000,"after":300},{"a":"tap","to":"[data-cvt=cast]"},{"a":"wait","ms":600}]},
-{"a":"mark","n":"06 cast+actor"},
-{"a":"wait","ms":900},
-{"a":"click","to":["[data-p]@Ryan Gosling","#modal [data-p]"],"z":1.5,"out":150},
-{"a":"waitfor","imgs":true,"max":4500,"after":900},
-{"a":"scroll","in":"#modal","by":600,"ms":2600},
 {"a":"wait","ms":700},
-{"a":"click","to":"*@Directing","z":1.3,"out":150},
-{"a":"wait","ms":1400},
-{"a":"cut","pre":[{"a":"tap","to":"#hmore"},{"a":"waitfor","sel":"[data-cvt=mood]","max":6000,"after":300},{"a":"tap","to":"[data-cvt=mood]"},{"a":"wait","ms":600}]},
-{"a":"mark","n":"07 mood+colour card"},
-{"a":"wait","ms":800},
+{"a":"scroll","in":"#modal","by":560,"ms":2300},
+{"a":"wait","ms":600},
+{"a":"click","to":"button@Groups","z":1.4,"out":150},
+{"a":"wait","ms":1100},
+{"a":"cut","pre":[{"a":"tap","to":"#hmore"},{"a":"waitfor","sel":"[data-cvt=mood]","max":6000,"after":300},{"a":"tap","to":"[data-cvt=cast]"},{"a":"wait","ms":500}]},
+{"a":"mark","n":"07 cast+actor"},
+{"a":"wait","ms":700},
+{"a":"click","to":["div[data-r=cast]@Ryan Gosling","div[data-r=cast]"],"z":1.5,"out":150},
+{"a":"waitfor","imgs":true,"max":4500,"after":700},
+{"a":"wait","ms":600},
+{"a":"scroll","in":"#modal","by":600,"ms":2600},
+{"a":"wait","ms":600},
+{"a":"click","to":"button@Directing","z":1.3,"out":150},
+{"a":"wait","ms":1200},
+{"a":"cut","pre":[{"a":"tap","to":"#hmore"},{"a":"waitfor","sel":"[data-cvt=mood]","max":6000,"after":300},{"a":"tap","to":"[data-cvt=mood]"},{"a":"wait","ms":500}]},
+{"a":"mark","n":"08 mood+colour card"},
+{"a":"wait","ms":600},
 {"a":"scroll","in":"#modal","to":".mstills","center":true,"ms":1400},
-{"a":"wait","ms":500},
-{"a":"hscroll","to":".mstills button","by":600,"ms":1800},
+{"a":"wait","ms":400},
+{"a":"hscroll","to":".mstills button","by":520,"ms":1900},
 {"a":"wait","ms":400},
 {"a":"click","to":".mstills button","idx":1,"z":1.4,"out":150},
-{"a":"wait","ms":1600},
+{"a":"wait","ms":1200},
 {"a":"key","k":"Escape"},
-{"a":"wait","ms":900},
+{"a":"quiet"},
+{"a":"wait","ms":500},
 {"a":"scroll","in":"#modal","to":"#mpal","center":true,"ms":1400},
-{"a":"wait","ms":500},
+{"a":"wait","ms":400},
 {"a":"click","to":"#mpal [data-h]","idx":2,"z":1.7,"out":150},
-{"a":"wait","ms":1500},
+{"a":"wait","ms":1000},
 {"a":"click","to":".mcardbtn","z":1.5,"out":150},
-{"a":"waitfor","sel":".cdi","max":5000,"after":3200},
+{"a":"waitfor","sel":".cdi","max":5000,"after":2200},
+{"a":"quiet","max":3000},
+{"a":"click","to":"[data-s=square]","z":1.3,"out":150},
+{"a":"wait","ms":1500},
+{"a":"click","to":"[data-s=wide]","z":1.3,"out":150},
+{"a":"wait","ms":1500},
+{"a":"click","to":"[data-s=story]","z":1.3,"out":150},
+{"a":"wait","ms":1500},
 {"a":"click","to":"[data-a=x]","nozoom":true},
+{"a":"wait","ms":500},
+{"a":"cut","pre":[{"a":"tap","to":"#hmore"},{"a":"waitfor","sel":"[data-cvt=mood]","max":6000,"after":300},{"a":"tap","to":"[data-cvt=more]"},{"a":"wait","ms":500}]},
+{"a":"mark","n":"09 more-like-this"},
 {"a":"wait","ms":600},
-{"a":"cut","pre":[{"a":"tap","to":"#hmore"},{"a":"waitfor","sel":"[data-cvt=mood]","max":6000,"after":300},{"a":"tap","to":"[data-cvt=more]"},{"a":"wait","ms":600}]},
-{"a":"mark","n":"08 more-like-this"},
-{"a":"wait","ms":800},
-{"a":"hscroll","to":"#rec .card","by":700,"ms":2600},
-{"a":"wait","ms":500},
-{"a":"hscroll","to":"#rec .card","by":700,"ms":2400},
-{"a":"wait","ms":500},
+{"a":"hscroll","to":"#rec .card","by":650,"ms":2400},
+{"a":"wait","ms":400},
+{"a":"hscroll","to":"#rec .card","by":650,"ms":2300},
+{"a":"wait","ms":400},
 {"a":"click","to":".rtk-s","z":1.6,"out":150},
-{"a":"wait","ms":900},
+{"a":"wait","ms":700},
 {"a":"click","to":"*@Worldwide","z":1.4,"out":150},
-{"a":"waitfor","imgs":true,"max":4000,"after":1400},
+{"a":"waitfor","imgs":true,"max":4000,"after":900},
+{"a":"wait","ms":500},
+{"a":"click","to":"#rec .card","idx":1,"z":1.4,"out":150},
+{"a":"wait","ms":1200},
 {"a":"cut"},
-{"a":"mark","n":"09 search Lord of the Rings"},
-{"a":"wait","ms":600},
+{"a":"mark","n":"10 search Lord of the Rings"},
+{"a":"wait","ms":500},
 {"a":"click","to":"#q","z":1.5,"out":150},
 {"a":"type","to":"#q","text":"Lord of the Rings","gap":75,"clear":true},
-{"a":"waitfor","sel":".fcard","max":7000,"after":900},
+{"a":"waitfor","sel":".fcard","max":7000,"after":600},
 {"a":"click","to":".fcard","z":1.4,"out":150},
-{"a":"waitfor","imgs":true,"max":5000,"after":1000},
-{"a":"scroll","by":700,"ms":2600},
-{"a":"wait","ms":800},
-{"a":"cut"},
-{"a":"mark","n":"10 search Hera Pheri"},
+{"a":"waitfor","imgs":true,"max":5000,"after":700},
+{"a":"wait","ms":500},
+{"a":"scroll","by":420,"ms":2400},
 {"a":"wait","ms":600},
+{"a":"click","to":"button@All","z":1.4,"out":150},
+{"a":"wait","ms":1000},
+{"a":"cut"},
+{"a":"mark","n":"11 search Hera Pheri"},
+{"a":"wait","ms":500},
 {"a":"click","to":"#q","z":1.5,"out":150},
 {"a":"type","to":"#q","text":"Hera Pheri","gap":75,"clear":true},
-{"a":"waitfor","sel":".fcard","max":7000,"after":900},
+{"a":"waitfor","sel":".fcard","max":7000,"after":600},
 {"a":"click","to":".fcard","z":1.4,"out":150},
-{"a":"waitfor","imgs":true,"max":5000,"after":1000},
-{"a":"scroll","by":300,"ms":2600},
-{"a":"wait","ms":800},
+{"a":"waitfor","imgs":true,"max":5000,"after":700},
+{"a":"wait","ms":500},
+{"a":"scroll","by":200,"ms":2400},
+{"a":"wait","ms":600},
 {"a":"cut"},
-{"a":"mark","n":"11 series invincible"},
-{"a":"hold","on":true},
-{"a":"wait","ms":800},
+{"a":"mark","n":"12 series invincible"},
+{"a":"wait","ms":500},
 {"a":"click","to":"#nxt","z":1.5,"out":150},
-{"a":"waitfor","imgs":true,"max":3000,"after":1100},
+{"a":"waitfor","imgs":true,"max":3000,"after":600},
+{"a":"wait","ms":700},
 {"a":"click","to":"#hmore","z":1.5,"out":150},
-{"a":"wait","ms":2600},
-{"a":"select","to":"#ssn","value":"4","z":1.6,"out":150},
-{"a":"waitfor","imgs":true,"max":4000,"after":1200},
-{"a":"scroll","in":"#modal","by":650,"ms":3000},
 {"a":"wait","ms":800},
-{"a":"click","to":"#epw img","idx":1,"z":1.4,"out":150},
-{"a":"wait","ms":2200},
-{"a":"click","to":"#epw img","idx":2,"z":1.4,"out":150},
-{"a":"wait","ms":1800},
+{"a":"select","to":"#ssn","value":"4","z":1.6,"out":150},
+{"a":"waitfor","imgs":true,"max":4000,"after":900},
+{"a":"wait","ms":500},
+{"a":"scroll","in":"#modal","by":600,"ms":2800},
+{"a":"wait","ms":600},
+{"a":"click","to":".ep","idx":3,"z":1.4,"out":150},
+{"a":"wait","ms":1600},
+{"a":"click","to":".ep","idx":4,"z":1.4,"out":150},
+{"a":"wait","ms":1600},
 {"a":"click","to":"button@Back to show","z":1.4,"out":150},
+{"a":"wait","ms":700},
+{"a":"cut"},
+{"a":"mark","n":"13 spotlight"},
+{"a":"wait","ms":400},
+{"a":"scroll","to":".sp-frame","center":true,"ms":2400},
+{"a":"waitfor","imgs":true,"max":4000,"after":600},
+{"a":"wait","ms":700},
+{"a":"click","to":".sp-th [data-t='2']","z":1.35,"out":150},
+{"a":"waitfor","imgs":true,"max":4000,"after":900},
+{"a":"wait","ms":900},
+{"a":"click","to":".sp-th [data-t='3']","z":1.35,"out":150},
+{"a":"waitfor","imgs":true,"max":4000,"after":900},
 {"a":"wait","ms":900},
 {"a":"cut"},
-{"a":"mark","n":"12 spotlight"},
-{"a":"wait","ms":500},
-{"a":"scroll","to":".sp-frame","center":true,"ms":2200},
-{"a":"waitfor","imgs":true,"max":4000,"after":700},
-{"a":"click","to":".sp-th [data-t='2']","z":1.35,"out":150},
-{"a":"waitfor","imgs":true,"max":4000,"after":1700},
-{"a":"click","to":".sp-th [data-t='3']","z":1.35,"out":150},
-{"a":"waitfor","imgs":true,"max":4000,"after":1700},
-{"a":"cut"},
-{"a":"mark","n":"13 browse colour"},
+{"a":"mark","n":"14 browse colour"},
 {"a":"wait","ms":400},
 {"a":"click","to":"nav [data-v=browse]","nozoom":true},
-{"a":"waitfor","gone":".sk","imgs":true,"max":7000,"after":900},
+{"a":"wait","ms":500},
 {"a":"click","to":"button@Hidden gems","z":1.35,"out":150},
-{"a":"waitfor","gone":".sk","imgs":true,"max":7000,"after":1100},
+{"a":"wait","ms":900},
 {"a":"click","to":"button@Mind-bending","z":1.35,"out":150},
-{"a":"waitfor","gone":".sk","imgs":true,"max":7000,"after":1100},
+{"a":"wait","ms":900},
 {"a":"click","to":"[data-c=Crimson]","z":1.35,"out":150},
-{"a":"waitfor","gone":".sk","imgs":true,"max":7000,"after":1100},
+{"a":"wait","ms":900},
 {"a":"click","to":"[data-c=Violet]","z":1.35,"out":150},
-{"a":"waitfor","gone":".sk","imgs":true,"max":7000,"after":1100},
+{"a":"wait","ms":900},
 {"a":"cut"},
-{"a":"mark","n":"14 tonight"},
-{"a":"hold","on":true},
+{"a":"mark","n":"15 tonight"},
 {"a":"wait","ms":500},
 {"a":"click","to":"#mnu","z":1.6,"out":150},
-{"a":"wait","ms":1700},
+{"a":"wait","ms":500},
 {"a":"click","to":".cvn-l button@Tonight","nozoom":true},
-{"a":"wait","ms":1500},
+{"a":"wait","ms":800},
 {"a":"click","to":".tn .opts button@Regular","z":1.3,"out":150},
-{"a":"wait","ms":900},
+{"a":"wait","ms":600},
 {"a":"click","to":".tn .opts button@Mind-bending","z":1.3,"out":150},
-{"a":"wait","ms":900},
+{"a":"wait","ms":600},
 {"a":"click","to":".tn .opts button@English","z":1.3,"out":150},
-{"a":"wait","ms":900},
-{"a":"waitfor","sel":".tn .res","max":14000,"after":900},
-{"a":"wait","ms":2600}
+{"a":"wait","ms":600},
+{"a":"waitfor","sel":".tn .res","max":14000,"after":700},
+{"a":"quiet","max":3000},
+{"a":"wait","ms":2400}
 ];
 const cam={z:1,x:W/2,y:H/2,tw:null,follow:false},cur={x:W*.8,y:H*.85},auto={z:0,out:1500};
 let pace=1;const T=ms=>ms*pace,ZD=.7,ZO=.8;
@@ -370,7 +408,7 @@ function find(sel,idx){
  if(Array.isArray(sel)){for(const s of sel){try{return find(s,idx)}catch(e){}}throw Error('nahi mila: '+sel[0])}
  let list;
  if(sel.includes('@')){const[i,x]=sel.split('@'),q=x.trim().toLowerCase();
-  list=[...D().querySelectorAll(i||'*')].filter(n=>n.getClientRects().length&&n.textContent.trim().toLowerCase().startsWith(q)).sort((p,r)=>p.textContent.length-p.textContent.length)}
+  list=[...D().querySelectorAll(i||'*')].filter(n=>n.getClientRects().length&&n.textContent.trim().toLowerCase().startsWith(q)).sort((p,r)=>p.textContent.length-r.textContent.length)}
  else{const all=[...D().querySelectorAll(sel)],vis=all.filter(n=>n.getClientRects().length);list=vis.length?vis:all}
  const e=list[idx||0];if(!e)throw Error('nahi mila: '+sel);return e}
 const ctr=e=>{const r=e.getBoundingClientRect();return{x:r.left+r.width/2,y:r.top+r.height/2}};
@@ -405,6 +443,13 @@ async function approach(e,s){clearTimeout(outT);await reveal(e);let c=ctr(e);con
  if(z>1)setTimeout(()=>{cam.follow=true},700);return c}
 function armOut(s){clearTimeout(outT);const o=s.out!==undefined?s.out:auto.out;
  if(o>0&&curZ()>1.02)outT=setTimeout(()=>{cam.follow=false;camTo(1,W/2,H/2,ZO)},T(o))}
+async function quiet(max=3000,min=300){const t0=Date.now();await sleep(min);
+ while(Date.now()-t0<max&&!abort){let ok=true;try{const d=D();
+  const an=d.getAnimations?d.getAnimations():[];
+  ok=!an.some(a=>{let t=null;try{t=a.effect.getComputedTiming()}catch(e){}return a.playState==='running'&&t&&isFinite(t.endTime)&&t.endTime>0&&t.endTime<=2600});
+  if(ok)ok=!d.querySelector('.sk');
+  if(ok)ok=![...d.images].some(i=>{const r=i.getBoundingClientRect();return!i.complete&&r.width>0&&r.bottom>0&&r.top<H})}catch(e){}
+  if(ok)break;await sleep(120)}}
 const A={
  wait:s=>sleep(T(s.ms||500)),
  auto:s=>{auto.z=s.z||0;auto.out=s.out===undefined?1500:s.out},
@@ -414,7 +459,10 @@ const A={
   await sleep(T(s.ms||900))},
  async move(s){const e=find(s.to,s.idx);await approach(e,s);armOut(s)},
  async click(s){const e=find(s.to,s.idx);const c=await approach(e,s);await sleep(110);ripple();
-  tapEl(D().elementFromPoint(c.x,c.y)||e);await sleep(T(s.after||250));armOut(s)},
+  tapEl(D().elementFromPoint(c.x,c.y)||e);armOut(s);
+  if(s.quiet!==false)await quiet(s.q||3200,s.qmin||350);await sleep(T(s.after||0))},
+ async back(s){goBackInFrame();await quiet(3000,350);await sleep(T(s.after||0))},
+ async quiet(s){await quiet(s.max||3000,s.min||300)},
  async type(s){const e=find(s.to,s.idx);e.focus();if(s.clear)e.value='';for(const ch of s.text){if(abort)return;e.value+=ch;
   e.dispatchEvent(new Event('input',{bubbles:true}));await sleep(s.gap||85)}},
  async scroll(s){const el=s.in?find(s.in):null,base=el?el.scrollTop:Wn().scrollY;
@@ -425,12 +473,12 @@ const A={
  mark:s=>{marks.push([s.n,(performance.now()-T0)/1000])},
  async tap(s){tapEl(find(s.to,s.idx))},
  async select(s){const e=find(s.to,s.idx);const c=await approach(e,s);await sleep(120);ripple();
-  e.value=s.value;e.dispatchEvent(new Event('input',{bubbles:true}));e.dispatchEvent(new Event('change',{bubbles:true}));await sleep(T(s.after||300));armOut(s)},
+  e.value=s.value;e.dispatchEvent(new Event('input',{bubbles:true}));e.dispatchEvent(new Event('change',{bubbles:true}));armOut(s);await quiet(3000,350);await sleep(T(s.after||0))},
  key:s=>{for(const x of[D(),Wn()])x.dispatchEvent(new(Wn().KeyboardEvent)('keydown',{key:s.k||'Escape',bubbles:true}))},
  async hscroll(s){const e=find(s.to,s.idx);let n=e.parentElement;
   while(n){const o=Wn().getComputedStyle(n).overflowX;if((o==='auto'||o==='scroll')&&n.scrollWidth>n.clientWidth+4)break;n=n.parentElement}
   if(!n)throw Error('hscroll: row nahi mili');const x0=n.scrollLeft,x1=x0+(s.by||600),ms=T(s.ms||2200);
-  await new Promise(res=>{const t0=performance.now();(function f(q){const p=ease(Math.min(1,(q-t0)/ms));n.scrollLeft=x0+(x1-x0)*p;p<1&&!abort?requestAnimationFrame(f):res()})(t0)})},
+  await new Promise(res=>{const t0=performance.now();(function f(q){const p=ease(Math.min(1,(q-t0)/ms));markScroll();n.scrollLeft=x0+(x1-x0)*p;p<1&&!abort?requestAnimationFrame(f):res()})(t0)})},
  async waitfor(s){const t0=Date.now(),max=s.max||6000;
   while(Date.now()-t0<max&&!abort){let ok=true;try{const d=D();
    if(s.sel)ok=ok&&[...d.querySelectorAll(s.sel)].some(e=>e.getClientRects().length);
@@ -439,9 +487,9 @@ const A={
    if(ok)break;await sleep(100)}
   if(s.after)await sleep(s.after)},
  async cut(s){fade.style.transition='opacity .22s';fade.style.opacity=1;await sleep(300);curEl.classList.remove('on');resetCam();
-  if(s.reload!==false){await loadSite($('#path').value,false,true);await A.waitfor({gone:'.sk',imgs:true,max:3500})}
+  if(s.reload!==false){await loadSite($('#path').value,false,true);await A.waitfor({gone:'.sk',imgs:true,max:3500});await quiet(2200,250)}
   if(s.pre)for(const p of s.pre){try{await A[p.a](p)}catch(e){}}
-  resetCam();await sleep(T(s.hold||(s.reload===false?250:200)));fade.style.transition='opacity .25s';fade.style.opacity=0;await sleep(300)}
+  resetCam();await quiet(1800,150);await sleep(T(s.hold||(s.reload===false?200:150)));fade.style.transition='opacity .25s';fade.style.opacity=0;await sleep(300)}
 };
 async function run(steps){const bad=[];for(const s of steps){if(abort)break;try{await A[s.a](s)}catch(e){bad.push(s.a+': '+e.message)}}return bad}
 function patchDoc(){try{const C=Wn().Clipboard.prototype;C.writeText=()=>Promise.resolve();C.write=()=>Promise.resolve()}catch(e){}}
@@ -745,7 +793,7 @@ function loadSite(path,intro=true,keep=false,instant=false){
   setTimeout(()=>{ifr.src=path+(path.includes('?')?'&':'?')+'stage='+Date.now();const t0=Date.now();
    let done=false;
    const finish=()=>{if(done)return;done=true;clearInterval(iv);patchDoc();liteCss();try{initHref=Wn().location.href}catch(e){}if(manualOn)bindManual();
-    if(keep||instant){fade.style.opacity=0;return res()}
+    if(keep)return res();if(instant){fade.style.opacity=0;return res()}
     setTimeout(()=>{fade.style.transition='opacity .3s';fade.style.opacity=0;res()},intro?100:500)};
    const iv=setInterval(()=>{let ok=0;try{const d=ifr.contentDocument;ok=d&&d.body&&d.readyState!=='loading'&&d.location.href.indexOf('about:blank')<0}catch(e){}
     if(ok||Date.now()-t0>6000)finish()},30);
@@ -793,7 +841,7 @@ async function start(){if(running)return;
 let tap=0;$('#stop').onclick=()=>{const n=Date.now();if(n-tap<500){if(running){abort=true;$('#cd').style.display='none'}else{fade.style.opacity=0;$('#panel').classList.remove('h')}}tap=n};
 $('#go').onclick=start;
 $('#rs').onclick=()=>{$('#scr').value=JSON.stringify(DEF,null,1)};
-try{if(localStorage.getItem('stg_ver')==='9')$('#scr').value=localStorage.getItem('stg_scr')||'';localStorage.setItem('stg_ver','9')}catch(e){}
+try{if(localStorage.getItem('stg_ver')==='10')$('#scr').value=localStorage.getItem('stg_scr')||'';localStorage.setItem('stg_ver','10')}catch(e){}
 if(!$('#scr').value)$('#rs').click();
 $('#info').textContent=isApp()?'App mode ON (fullscreen app) - recording ke liye best.':'Tip: Chrome menu > Install app, phir "Parda Stage" icon se kholo. Isse fullscreen + landscape bina black screen ke milta hai.';
 syncModeUI();layout();drawCur();requestAnimationFrame(tick);
