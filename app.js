@@ -142,7 +142,9 @@ function setHero(n,dir){const len=hero.length;if(!len)return;n=((n%len)+len)%len
  p.then(s=>{clearTimeout(bt);if(id!==hq)return;hbusy=0;if(s)swapBg(i,s,id);
   const L=hero.length;if(L>1){hload(hsrc(hero[(n+1)%L]));0}})}
 // autoplay never advances while a picture is still coming, off-screen, or in a background tab
-const auto=()=>{clearInterval(ht);ht=setInterval(()=>{if(document.hidden||!hvis||hbusy||hero.length<2||$("#hx").hidden||!$("#modal").hidden)return;setHero(hi+1,1)},8000)};
+// hero on screen? measured live (not only from the observer flag, which can get stuck at false after a fast scroll or a view switch)
+const heroOn=()=>{const H=$("#hx");if(!H||H.hidden)return 0;const r=H.getBoundingClientRect();return r.height>0&&r.bottom>innerHeight*.04&&r.top<innerHeight*.96};
+const auto=()=>{clearInterval(ht);ht=setInterval(()=>{if(document.hidden||!heroOn()||hbusy||hero.length<2||$("#hx").hidden||!$("#modal").hidden)return;setHero(hi+1,1)},8000)};
 function growDots(){const d=$("#dots");for(let k=d.children.length;k<hero.length;k++){const e=document.createElement("i");e.dataset.k=k;e.onclick=()=>step(k-hi);d.append(e)}$("#ct").textContent="/"+String(hero.length).padStart(2,"0")}
 function growHero(){growDots();if(matchMedia("(min-width:900px)").matches){const nx=hero[(hi+1)%hero.length];if(nx){$("#ni").src=cvOvr(nx,"hero")||IMG+"w300"+hbd(nx);$("#nt").textContent=title(nx)}}}
 function startHero(){growDots();setHero(0,1);auto();bindHero()}
@@ -152,7 +154,7 @@ function bindHero(){if(hbound)return;hbound=1;const H=$("#hx");let x0=0,y0=0,t0=
  H.addEventListener("touchend",e=>{if(!tr)return;tr=0;const t=e.changedTouches[0],dx=t.clientX-x0,dy=t.clientY-y0;if(Math.abs(dx)>46&&Math.abs(dx)>Math.abs(dy)*1.3&&Date.now()-t0<1000)step(dx<0?1:-1,1)},{passive:true});
  H.addEventListener("touchcancel",()=>{tr=0},{passive:true});
  addEventListener("keydown",e=>{if(e.key!=="ArrowRight"&&e.key!=="ArrowLeft")return;if(!hvis||!$("#modal").hidden||$("#hx").hidden||/INPUT|SELECT|TEXTAREA/.test((document.activeElement||{}).tagName))return;step(e.key==="ArrowRight"?1:-1,1)});
- if("IntersectionObserver"in window)new IntersectionObserver(es=>{hvis=es[0].isIntersecting;H.classList.toggle("off",!hvis)},{threshold:.04}).observe(H)}
+ if("IntersectionObserver"in window)new IntersectionObserver(es=>{hvis=es[es.length-1].isIntersecting;H.classList.toggle("off",!hvis)},{threshold:.04}).observe(H)}
 const step=(d,clamp)=>{if(hero.length<2||!d||(clamp&&hi+d<0))return;setHero(hi+d,d);auto()};
 $("#hu").onclick=()=>step(-1);$("#hd").onclick=()=>step(1);$("#nxt").onclick=()=>step(1);
 if(!M)$("#hx").addEventListener("mousemove",e=>{tx=(e.clientX/innerWidth-.5)*-30;ty=(e.clientY/innerHeight-.5)*-20;if(!pq)pq=requestAnimationFrame(()=>{pq=0;upd()})},{passive:true});

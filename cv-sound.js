@@ -59,8 +59,8 @@
   }
 
   // default is now "Effects + ambience"; one-time reset so older saved "off" values from the old default do not keep it silent
-  try { if (localStorage.getItem("cv_snd_v") !== "2") { localStorage.removeItem(KEY); localStorage.setItem("cv_snd_v", "2") } } catch (e) {}
-  let ctx = null, eng = null, mode = localStorage.getItem(KEY) || "amb", ambo = null, kicked = false; const MODES = ["off", "fx", "amb"], NAMES = { off: "Off", fx: "Effects", amb: "Effects + ambience" };
+  try { if (localStorage.getItem("cv_snd_v") !== "3") { localStorage.removeItem(KEY); localStorage.setItem("cv_snd_v", "3") } } catch (e) {}
+  let ctx = null, eng = null, mode = localStorage.getItem(KEY) || "off", ambo = null, kicked = false; const MODES = ["off", "fx", "amb"], NAMES = { off: "Off", fx: "Effects", amb: "Effects + ambience" };
   const ensure = () => { if (!ctx) { const C = window.AudioContext || window.webkitAudioContext; if (!C) return null; ctx = new C(); ctx.onstatechange = () => kick(); eng = engine(ctx, ctx.destination) } if (ctx.state === "suspended") ctx.resume(); return ctx };
   const live = force => (force || mode !== "off") && ensure();
   const startAmb = () => { if (!ambo && live()) ambo = eng.score(ctx.currentTime, 1e9, true) }, stopAmb = () => { if (ambo) { ambo.stop(); ambo = null } };
