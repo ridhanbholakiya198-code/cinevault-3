@@ -1,0 +1,8 @@
+{
+  "rewrites": [
+    {
+      "source": "/timg/:path*",
+      "destination": "https://image.tmdb.org/t/p/:path*"
+    }
+  ]
+}
