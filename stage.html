@@ -155,7 +155,7 @@ const DEF=[
 {"a": "click", "to": "#hd", "quiet": false, "nozoom": true, "hold": 0},
 {"a": "wait", "ms": 2000},
 {"a": "cursor", "x": 720, "y": 700, "ms": 1100},
-{"a": "spotin", "to": "#cvspot", "n": 3, "by": 560, "ms": 900, "pauses": [350, 300, 400], "settle": 500, "fast": 1900, "after": 3200},
+{"a": "spotin", "to": "#cvspot", "n": 3, "by": 560, "ms": 900, "pauses": [350, 300, 400], "settle": 500, "fast": 1900, "min": 1500, "max": 8000, "after": 1500},
 {"a": "click", "to": ".sp-th [data-t]", "idx": 1, "quiet": false, "nozoom": true, "hold": 0},
 {"a": "wait", "ms": 2000},
 {"a": "click", "to": ".sp-th [data-t]", "idx": 2, "quiet": false, "nozoom": true, "hold": 0},
@@ -312,7 +312,16 @@ const A={
    const step=Math.sign(rem)*Math.min(ad,v*dt);
    markScroll();Wn().scrollTo(0,Wn().scrollY+step);
    requestAnimationFrame(f)})(t)});
-  await sleep(T(s.after||3200))},
+  /* PHASE 3: spotlight animation poora khatam hone tak ruko (page ki animations + DOM changes dono dekhta hai), phir hi aage badho */
+  await new Promise(res=>{const mn=s.min||1500,mx=s.max||8000,q=s.quiet||700,t0=performance.now();let last=t0,mo=null;
+   try{mo=new (Wn().MutationObserver)(()=>{last=performance.now()});mo.observe(e,{subtree:true,attributes:true,childList:true,characterData:true})}catch(x){}
+   (function f(){if(abort){try{mo&&mo.disconnect()}catch(x){}return res()}
+    const n=performance.now();let busy=false;
+    try{busy=e.getAnimations({subtree:true}).some(a=>{let t=null;try{t=a.effect.getComputedTiming()}catch(x){}return a.playState==='running'&&t&&isFinite(t.endTime)&&t.endTime>0&&t.endTime<=8000})}catch(x){}
+    if(busy)last=n;
+    if(n-t0>=mx||(n-t0>=mn&&!busy&&n-last>=q)){try{mo&&mo.disconnect()}catch(x){}return res()}
+    setTimeout(f,100)})()});
+  await sleep(T(s.after||1500))},
  async ensure(s){let ok=false;try{const m=D().querySelector('#modal');ok=!!m&&!m.hidden&&(m.textContent||'').toLowerCase().includes(s.text)}catch(e){}
   if(!ok)for(const p of(s.else||[])){try{await A[p.a](p)}catch(e){}}},
  async type(s){const e=find(s.to,s.idx);e.focus();if(s.clear)e.value='';for(const ch of s.text){if(abort)return;e.value+=ch;
@@ -693,9 +702,9 @@ async function start(){if(running)return;
 let tap=0;$('#stop').onclick=()=>{const n=Date.now();if(n-tap<500){if(running){abort=true;$('#cd').style.display='none'}else{fade.style.opacity=0;$('#panel').classList.remove('h')}}tap=n};
 $('#go').onclick=start;
 $('#rs').onclick=()=>{$('#scr').value=JSON.stringify(DEF,null,1)};
-/* BUILD clip1-v3: script ab kabhi browser memory se restore nahi hoti - hamesha is file ka DEF load hota hai */
+/* BUILD clip1-v4: script ab kabhi browser memory se restore nahi hoti - hamesha is file ka DEF load hota hai */
 try{localStorage.removeItem('stg_scr')}catch(e){}
 $('#rs').click();
-$('#info').textContent='[BUILD clip1-v3] '+(isApp()?'App mode ON (fullscreen app) - recording ke liye best.':'Tip: Chrome menu > Install app, phir "Parda Stage" icon se kholo. Isse fullscreen + landscape bina black screen ke milta hai.');
+$('#info').textContent='[BUILD clip1-v4] '+(isApp()?'App mode ON (fullscreen app) - recording ke liye best.':'Tip: Chrome menu > Install app, phir "Parda Stage" icon se kholo. Isse fullscreen + landscape bina black screen ke milta hai.');
 syncModeUI();layout();drawCur();requestAnimationFrame(tick);
 </script></body></html>
