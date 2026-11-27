@@ -443,6 +443,10 @@ const CLIPS={
 "after": 500
 },
 {
+"a": "herofind",
+"title": "blade runner 2049"
+},
+{
 "a": "click",
 "to": "#hmore",
 "z": 1.5,
@@ -875,6 +879,10 @@ const CLIPS={
 "gone": "#intro",
 "max": 9000,
 "after": 500
+},
+{
+"a": "herofind",
+"title": "blade runner 2049"
 },
 {
 "a": "click",
@@ -1495,6 +1503,10 @@ const CLIPS={
 "n": "03 blade-runner-2049"
 },
 {
+"a": "herofind",
+"title": "blade runner 2049"
+},
+{
 "a": "click",
 "to": "#hmore",
 "z": 1.5,
@@ -1922,6 +1934,10 @@ const CLIPS={
 {
 "a": "mark",
 "n": "04 invincible"
+},
+{
+"a": "herofind",
+"title": "blade runner 2049"
 },
 {
 "a": "click",
@@ -2372,6 +2388,7 @@ const A={
   tapEl(D().elementFromPoint(c.x,c.y)||e);armOut(s);
   if(s.quiet!==false)await quiet(s.q||3200,s.qmin||350);await sleep(T(s.after||0))},
  async back(s){goBackInFrame();await quiet(3000,350);await sleep(T(s.after||0))},
+ async herofind(s){const want=(s.title||'').toLowerCase();const gt=()=>{const el=D().querySelector('#htitle');if(!el)return'';const im=el.querySelector('img');return((im?im.alt:el.textContent)||'').toLowerCase()};if(gt().includes(want))return;for(let i=0;i<8&&!abort;i++){const hd=D().querySelector('#hd');if(hd)tapEl(hd);await sleep(650);if(gt().includes(want)){await quiet(2500,300);return}}},
  async quiet(s){await quiet(s.max||3000,s.min||300)},
  async cursor(s){await moveTo(s.x,s.y,s.ms||1000)},
  async stepscroll(s){const el=s.in?find(s.in):null,ps=s.pauses||[1000,1300,900,1200,1100],n=s.n||3,by=s.by||380,ms=s.ms||1700;
@@ -2829,9 +2846,9 @@ async function start(){if(running)return;
 let tap=0;$('#stop').onclick=()=>{const n=Date.now();if(n-tap<500){if(running){abort=true;$('#cd').style.display='none'}else{fade.style.opacity=0;$('#panel').classList.remove('h')}}tap=n};
 $('#go').onclick=start;
 const loadClip=()=>{$('#scr').value=JSON.stringify(CLIPS[$('#clip').value]||CLIPS.clip1,null,1)};$('#clip').onchange=loadClip;$('#rs').onclick=loadClip;
-/* BUILD clips-v11: script ab kabhi browser memory se restore nahi hoti - hamesha is file ka DEF load hota hai */
+/* BUILD clips-v12: script ab kabhi browser memory se restore nahi hoti - hamesha is file ka DEF load hota hai */
 try{localStorage.removeItem('stg_scr')}catch(e){}
 $('#rs').click();
-$('#info').textContent='[BUILD clips-v11] '+(isApp()?'App mode ON (fullscreen app) - recording ke liye best.':'Tip: Chrome menu > Install app, phir "Parda Stage" icon se kholo. Isse fullscreen + landscape bina black screen ke milta hai.');
+$('#info').textContent='[BUILD clips-v12] '+(isApp()?'App mode ON (fullscreen app) - recording ke liye best.':'Tip: Chrome menu > Install app, phir "Parda Stage" icon se kholo. Isse fullscreen + landscape bina black screen ke milta hai.');
 syncModeUI();layout();drawCur();requestAnimationFrame(tick);
 </script></body></html>
