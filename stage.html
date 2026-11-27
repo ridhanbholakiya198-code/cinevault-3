@@ -57,6 +57,11 @@ button.g{background:#333}
 #selbox{width:100%;max-width:340px;max-height:65vh;overflow:auto;background:#161424;border:1px solid #ffffff26;border-radius:16px;padding:10px;box-shadow:0 20px 50px #000b}
 #selbox button{display:block;width:100%;text-align:left;margin:4px 0;padding:11px 14px;border-radius:10px;background:#ffffff0d;color:#eee;font:500 14px system-ui}
 #selbox button.cur{background:#7c4dff;color:#fff;font-weight:600}
+#go{display:block;width:100%;margin:6px 0 10px;padding:20px 26px;font-size:22px;border-radius:16px;background:linear-gradient(135deg,#ff3d57,#ff7a3d);box-shadow:0 10px 30px #ff3d5755}
+#howto{margin:0 0 6px;padding:10px 14px;border-radius:12px;background:#ffffff0d;font-size:13px;line-height:1.55;color:#ddd}
+#howto b{color:#fff}
+#adv{margin-top:10px;border-top:1px solid #fff2;padding-top:10px}#adv summary{cursor:pointer;opacity:.75;padding:6px 0}
+#cd .sub{font:600 20px system-ui;margin-top:16px;opacity:.7;cursor:pointer;text-align:center;padding:0 20px}
 </style></head><body>
 <div id="bg"><div id="win"><div id="cam">
  <iframe id="ifr" src="about:blank"></iframe>
@@ -87,7 +92,14 @@ button.g{background:#333}
  </div>
 </div>
 <div id="panel">
+ <div id="howto"><b>Kaise karna hai (sirf 2 step):</b><br>
+  1. Neeche <b>START RECORDING</b> dabao &rarr; popup me <b>&ldquo;This Tab&rdquo; (Is tab)</b> chuno &rarr; <b>Share / Allow</b>.<br>
+  2. Bas. Fullscreen, countdown, All Clips (1&ndash;6), 1080p 60fps recording &mdash; sab apne aap. Khatam hote hi video <b>Downloads</b> me save ho jayegi aur ye panel wapas aa jayega.<br>
+  <span style="opacity:.7">Beech me rokna ho: screen ke top-left corner pe double-click / double-tap.</span></div>
+ <button id="go">&#9679; START RECORDING &nbsp;(All Clips &middot; 1080p &middot; 60fps)</button>
+ <div id="msg"></div>
  <div id="info"></div>
+ <details id="adv"><summary>&#9881; Settings (default sahi hain &mdash; chedna zaroori nahi)</summary>
  <label>Control <select id="runmode">
   <option value="trackpad">Trackpad Mouse (best for mobile)</option>
   <option value="manual">Direct Touch (finger on screen)</option>
@@ -138,12 +150,13 @@ button.g{background:#333}
  <label><input type="checkbox" id="bl"> Motion blur</label>
  <label><input type="checkbox" id="lite" checked> Lite effects (smooth video)</label>
  <label><input type="checkbox" id="fs" checked> Fullscreen API (laptop auto fullscreen)</label>
+ <label><input type="checkbox" id="rec" checked> &#9679; Record 1080p &middot; 60fps (permission pehle, end par auto-download)</label>
  <div id="scrwrap" class="hide">
   <textarea id="scr" spellcheck="false"></textarea>
  </div>
- <button id="go">&#9654; Start (countdown)</button><button class="g" id="rs">Reset script</button>
+ <button class="g" id="rs">Reset script</button>
  <div id="hint" style="margin-top:8px;opacity:.7;font-size:12px"></div>
- <div id="msg"></div>
+ </details>
 </div>
 <script>
 const $=s=>document.querySelector(s),sleep=ms=>new Promise(r=>setTimeout(r,ms));
@@ -2268,11 +2281,12 @@ const CLIPS={
 };
 const cam={z:1,x:W/2,y:H/2,tw:null,follow:false},cur={x:W*.8,y:H*.85},auto={z:0,out:1500};
 let spSeen=new Set();const dbg=[];let pace=1;const T=ms=>ms*pace,ZD=.85,ZO=.9;
-let k=1,ww=0,wh=0,abort=false,running=false,manualOn=false,trackOn=false,holdZoom=false,tapZoomOn=true,dwellOn=false,dwellZoomed=false,blurOn=false,outT=0,dwellT=0,marks=[],T0=0,last=performance.now(),unsubManual=null,lastHoverEl=null,lastTf='',lastBlur='',initHref='',wc=0,lastMove=0;
+let recLock=false,k=1,ww=0,wh=0,abort=false,running=false,manualOn=false,trackOn=false,holdZoom=false,tapZoomOn=true,dwellOn=false,dwellZoomed=false,blurOn=false,outT=0,dwellT=0,marks=[],T0=0,last=performance.now(),unsubManual=null,lastHoverEl=null,lastTf='',lastBlur='',initHref='',wc=0,lastMove=0;
 const isApp=()=>matchMedia('(display-mode: fullscreen)').matches||matchMedia('(display-mode: standalone)').matches;
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 function layout(){
  const md=$('#mode').value,isMob=matchMedia('(pointer:coarse)').matches&&Math.min(innerWidth,innerHeight)<700;if(md==='auto'){if(isMob){W=1600;H=900}else{W=Math.max(1280,innerWidth);H=Math.max(720,Math.round(W*innerHeight/innerWidth))}}else if(md==='max'){const dpr=Math.min(window.devicePixelRatio||1,2);W=Math.max(1920,Math.round(innerWidth*dpr));H=Math.max(900,Math.round(W*innerHeight/innerWidth))}else if(md==='wide'){W=Math.max(1280,Math.min(1600,Math.round(900*innerWidth/innerHeight)));H=Math.max(560,Math.round(W*innerHeight/innerWidth))}else{W=1440;H=900}
+ if(recLock){W=1920;H=1080}
  camEl.style.width=ifr.style.width=W+'px';camEl.style.height=ifr.style.height=H+'px';
  const flat=!$('#fr').checked;document.body.classList.toggle('flat',flat);
  const padOpen=trackOn&&running;
@@ -2293,10 +2307,10 @@ function syncModeUI(){
   ?'Trackpad: Slide = mouse, Tap = click, Left/Right/Up/Down = scroll, Back = piche jao, TapZoom = har click pe zoom ON/OFF, Dwell = cursor rukne par auto-zoom -> click ke turant baad normal.'
   :rm==='manual'
   ?'Direct Touch: Screen pe finger = cursor, Tap = zoom + click, 2-finger tap = zoom-out. Top-left double-tap = stop.'
-  :'Pehle recorder start karo, phir Start dabao. Rukne ke liye top-left corner pe double-tap.\nActions: wait, auto, zoom, move, click, hover, type, scroll, hold, mark, cut.';
+  :($('#rec').checked?'Start dabao -> screen-share popup me "This Tab" chuno -> countdown (F11 dabake fullscreen) -> poori script ek hi 1080p/60fps video me record -> end par apne aap Downloads me save. Rukne ke liye top-left corner pe double-tap.':'Pehle recorder start karo, phir Start dabao. Rukne ke liye top-left corner pe double-tap.')+'\nActions: wait, auto, zoom, move, click, hover, type, scroll, hold, mark, cut.';
  $('#msg').textContent='';
 }
-$('#runmode').onchange=syncModeUI;
+$('#runmode').onchange=syncModeUI;$('#rec').onchange=syncModeUI;
 function drawCur(){curEl.style.transform=`translate3d(${(cur.x-3).toFixed(1)}px,${(cur.y-2).toFixed(1)}px,0)`}
 /* camera: reference-style fast ease-out (about 0.5s), cursor-follow with dead zone */
 function camTo(z,x,y,dur=ZD,delay=0){cam.tw={t0:performance.now()+delay,dur:dur*1000,a:{z:cam.z,x:cam.x,y:cam.y},b:{z,x,y}}}
@@ -2357,6 +2371,12 @@ function tapEl(t){const w=Wn();let n=t;while(n&&typeof n.click!=='function')n=n.
  const o={bubbles:true,cancelable:true,view:w,pointerType:'mouse',button:0,clientX:cur.x,clientY:cur.y};
  for(const ty of['pointerdown','mousedown','pointerup','mouseup']){try{n.dispatchEvent(new(ty[0]=='p'?w.PointerEvent:w.MouseEvent)(ty,o))}catch(e){}}
  typeof n.click==='function'?n.click():n.dispatchEvent(new w.MouseEvent('click',o))}
+/* site menu: the site's own roomy Season / country menu opens on mousedown, so the tap is visible in the recording.
+   (A real <select> popup can never be opened by script events - that is why the dropdown "did nothing" before.) */
+async function openSiteMenu(sel){try{const w=Wn(),d=D();
+ const o={bubbles:true,cancelable:true,view:w,pointerType:'mouse',button:0,clientX:cur.x,clientY:cur.y};
+ for(const ty of['pointerdown','mousedown','pointerup','mouseup']){sel.dispatchEvent(new(ty[0]=='p'?w.PointerEvent:w.MouseEvent)(ty,o))}
+ await sleep(260);return d.querySelector('.cvdd')||null}catch(e){return null}}
 /* anticipation: camera starts zooming while the cursor is still travelling, so it lands zoomed before the click */
 const zl=s=>s.nozoom?0:(s.z!==undefined?s.z:auto.z);
 async function approach(e,s){clearTimeout(outT);await reveal(e);let c=ctr(e);const z=zl(s);
@@ -2478,7 +2498,12 @@ const A={
   await sleep(220);const dd=d.querySelector('.cvdd');
   if(dd){const idx=[...e.options].findIndex(o=>o.value===s.value||o.text===s.value);const ob=idx>=0?dd.querySelector('[data-i="'+idx+'"]'):null;
    if(ob){const oc=await approach(ob,{nozoom:true,mv:650});await sleep(120);ripple();tapEl(d.elementFromPoint(oc.x,oc.y)||ob);armOut(s);await quiet(3000,350);await sleep(T(s.after||0));return}}
-  e.value=s.value;e.dispatchEvent(new Event('input',{bubbles:true}));e.dispatchEvent(new Event('change',{bubbles:true}));armOut(s);await quiet(3000,350);await sleep(T(s.after||0))},
+  let done=0;const menu=await openSiteMenu(e);
+  if(menu){await sleep(T(600));const i=[...e.options].findIndex(o=>o.value===String(s.value)),bt=i>=0?menu.querySelector('button[data-i="'+i+'"]'):null;
+   if(bt){await approach(bt,{...s,z:1,nozoom:1,mv:650});await sleep(T(300));ripple();tapEl(bt);done=1;await sleep(T(250))}
+   else{try{D().dispatchEvent(new(Wn().KeyboardEvent)('keydown',{key:'Escape',bubbles:true}))}catch(x){}}}
+  if(!done){e.value=s.value;e.dispatchEvent(new Event('input',{bubbles:true}));e.dispatchEvent(new Event('change',{bubbles:true}))}
+  armOut(s);await quiet(3000,350);await sleep(T(s.after||0))},
  key:s=>{for(const x of[D(),Wn()])x.dispatchEvent(new(Wn().KeyboardEvent)('keydown',{key:s.k||'Escape',bubbles:true}))},
  async hscroll(s){const e=find(s.to,s.idx);let n=e.parentElement;
   while(n){const o=Wn().getComputedStyle(n).overflowX;if((o==='auto'||o==='scroll')&&n.scrollWidth>n.clientWidth+4)break;n=n.parentElement}
@@ -2630,7 +2655,7 @@ function clickAtCursor(){
  dwellZoomed=false;
  try{const d=D(),el=d&&d.elementFromPoint(cur.x,cur.y);
   const sel=el?(el.tagName==='SELECT'?el:el.closest('select')):null;
-  if(sel){openSelectPicker(sel);return}
+  if(sel){openSiteMenu(sel).then(m=>{if(!m)openSelectPicker(sel)});return}
   if(el){
    if(el.tagName==='INPUT'||el.tagName==='TEXTAREA')el.focus();
    tapEl(el);
@@ -2805,6 +2830,51 @@ function loadSite(path,intro=true,keep=false,instant=false){
    ifr.addEventListener('load',()=>{if(Date.now()-t0>150)finish()},{once:true});
   },60)})}
 const fmt=t=>Math.floor(t/60)+':'+String(Math.floor(t%60)).padStart(2,'0');
+/* ===== v21 RECORDER: hamesha EXACT 1920x1080 @ 60fps. Na 720p, na 1440p/4K - canvas size hardcoded hai. =====
+   Flow: Start -> screen-share permission (This Tab) -> countdown -> poori script ek hi video -> end par auto-download. */
+const REC_W=1920,REC_H=1080,REC_FPS=60,REC_BPS=12e6;
+const recSupported=()=>!!(navigator.mediaDevices&&navigator.mediaDevices.getDisplayMedia&&window.MediaRecorder&&HTMLCanvasElement.prototype.captureStream);
+let rec=null;
+if(!recSupported()){const c=$('#rec');c.checked=false;c.disabled=true;c.parentElement.append(' (is browser/device par support nahi - laptop Chrome/Edge use karo)')}
+async function recArm(){
+ const stream=await navigator.mediaDevices.getDisplayMedia({video:{frameRate:{ideal:REC_FPS,max:REC_FPS},cursor:'never'},audio:false,preferCurrentTab:true,selfBrowserSurface:'include',surfaceSwitching:'exclude'});
+ const tr=stream.getVideoTracks()[0],st=tr.getSettings?tr.getSettings():{};
+ const v=document.createElement('video');v.muted=true;v.playsInline=true;v.srcObject=stream;
+ await v.play();for(let i=0;i<100&&!v.videoWidth;i++)await sleep(50);
+ const cv=document.createElement('canvas');cv.width=REC_W;cv.height=REC_H;
+ const ctx=cv.getContext('2d',{alpha:false});ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';
+ ctx.fillStyle='#000';ctx.fillRect(0,0,REC_W,REC_H);
+ const out=cv.captureStream(REC_FPS);
+ const cands=['video/mp4;codecs=avc1.64002A','video/mp4;codecs=avc1.4D002A','video/mp4;codecs=avc1','video/webm;codecs=vp9','video/webm;codecs=vp8','video/webm'];
+ const mime=cands.find(m=>{try{return MediaRecorder.isTypeSupported(m)}catch(e){return false}})||'';
+ const mr=new MediaRecorder(out,mime?{mimeType:mime,videoBitsPerSecond:REC_BPS}:{videoBitsPerSecond:REC_BPS});
+ rec={stream,tr,v,cv,ctx,mr,mime:mr.mimeType||mime,surface:st.displaySurface||'',chunks:[],frames:0,t0:0,raf:0,stopping:false,done:null};
+ tr.addEventListener('ended',()=>{if(rec&&!rec.stopping){abort=true;$('#cd').style.display='none'}});
+ return rec}
+function recFrame(){
+ const r=rec;if(!r||r.stopping)return;r.raf=requestAnimationFrame(recFrame);
+ const v=r.v,vw=v.videoWidth,vh=v.videoHeight;if(!vw||!vh||v.readyState<2)return;
+ let sx=0,sy=0,sw=vw,sh=vh;
+ if(r.surface==='browser'||r.surface===''){const kx=vw/innerWidth,ky=vh/innerHeight,q=$('#fr').checked?{left:0,top:0,width:innerWidth,height:innerHeight}:win.getBoundingClientRect();
+  sx=q.left*kx;sy=q.top*ky;sw=q.width*kx;sh=q.height*ky}
+ sx=Math.max(0,Math.round(sx));sy=Math.max(0,Math.round(sy));sw=Math.max(2,Math.min(vw-sx,Math.round(sw)));sh=Math.max(2,Math.min(vh-sy,Math.round(sh)));
+ const a=sw/sh,t=REC_W/REC_H;let dx=0,dy=0,dw=REC_W,dh=REC_H;
+ if(Math.abs(a-t)>.012){r.ctx.fillStyle='#000';r.ctx.fillRect(0,0,REC_W,REC_H);if(a>t){dh=Math.round(REC_W/a);dy=(REC_H-dh)>>1}else{dw=Math.round(REC_H*a);dx=(REC_W-dw)>>1}}
+ r.ctx.drawImage(v,sx,sy,sw,sh,dx,dy,dw,dh);r.frames++}
+function recBegin(){
+ rec.mr.ondataavailable=e=>{if(e.data&&e.data.size)rec.chunks.push(e.data)};
+ rec.t0=performance.now();rec.mr.start(2000);rec.raf=requestAnimationFrame(recFrame)}
+async function recStop(tag){
+ const r=rec;if(!r)return'';if(r.stopping)return r.done||'';r.stopping=true;cancelAnimationFrame(r.raf);
+ const secs=Math.max(.1,(performance.now()-r.t0)/1000);
+ await new Promise(res=>{r.mr.onstop=res;try{r.mr.state!=='inactive'?r.mr.stop():res()}catch(e){res()}});
+ try{r.stream.getTracks().forEach(t=>t.stop())}catch(e){}
+ rec=null;
+ if(!r.chunks.length)return r.done='Recording me data nahi aaya (permission ya share beech me band hua).';
+ const mp4=(r.mime||'').indexOf('mp4')>=0,blob=new Blob(r.chunks,{type:(r.mime||'video/webm').split(';')[0]});
+ const d=new Date(),p=n=>String(n).padStart(2,'0'),name='Parda_1080p60_'+d.getFullYear()+p(d.getMonth()+1)+p(d.getDate())+'_'+p(d.getHours())+p(d.getMinutes())+p(d.getSeconds())+(tag?'_'+tag:'')+(mp4?'.mp4':'.webm');
+ const a=document.createElement('a'),u=URL.createObjectURL(blob);a.href=u;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),120000);
+ return r.done='Video save: '+name+' (Downloads me)\n'+REC_W+'x'+REC_H+' @ '+REC_FPS+'fps target, avg '+(r.frames/secs).toFixed(1)+' fps, '+(blob.size/1048576).toFixed(1)+' MB, '+(mp4?'MP4 H.264':'WebM')+', '+fmt(secs)+' long.'}
 async function start(){if(running)return;
  const rm=$('#runmode').value,isManual=rm==='manual',isTrack=rm==='trackpad',isInteractive=isManual||isTrack;
  let steps=[];
@@ -2812,15 +2882,24 @@ async function start(){if(running)return;
   try{steps=JSON.parse($('#scr').value)}catch(e){$('#msg').textContent='Script JSON galat hai: '+e.message;return}
   
  }
- running=true;manualOn=isManual;trackOn=isTrack;holdZoom=false;dwellZoomed=false;abort=false;blurOn=$('#bl').checked;pace=+$('#pace').value||1;$('#msg').textContent='';marks=[];dbg.length=0;T0=performance.now();let wl;
+ let recOn=false;
+ if($('#rec').checked&&recSupported()){
+  try{
+   const armP=recArm();  /* getDisplayMedia is called synchronously inside the click */
+   if($('#fs').checked&&!document.fullscreenElement&&!isApp())try{document.documentElement.requestFullscreen().catch(()=>{})}catch(e){}
+   await armP;recOn=true
+  }catch(e){$('#msg').textContent='Recording permission nahi mili ('+(e&&e.name||'error')+'). Start dabake "This Tab / Is tab" chuno aur Allow karo. Bina recording ke chalana ho to "Record" ka tick hata do.';return}
+ }
+ running=true;recLock=recOn;manualOn=isManual;trackOn=isTrack;holdZoom=false;dwellZoomed=false;abort=false;blurOn=$('#bl').checked;pace=+$('#pace').value||1;$('#msg').textContent='';marks=[];dbg.length=0;T0=performance.now();let wl;
  if($('#fs').checked&&!document.fullscreenElement&&!isApp())try{await document.documentElement.requestFullscreen();await sleep(900)}catch(e){}
  try{wl=await navigator.wakeLock.request('screen')}catch(e){}
  layout();$('#panel').classList.add('h');curEl.classList.remove('on');resetCam();auto.z=0;
  fade.style.transition='none';fade.style.opacity=1;
- const n=+$('#cdn').value||5,cd=$('#cd');cd.style.display='flex';
+ const n=Math.max(recOn?6:1,+$('#cdn').value||5),cd=$('#cd');cd.style.display='flex';cd.style.flexDirection='column';
  const pre=isInteractive?Promise.resolve():loadSite($('#path').value,false,true);
- for(let i=n;i>0&&!abort;i--){cd.textContent=i;await sleep(1000)}
- await pre;cd.style.display='none';
+ for(let i=n;i>0&&!abort;i--){const nf=recOn&&!document.fullscreenElement&&!isApp();cd.innerHTML=i+(nf?'<div class="sub">Fullscreen nahi hua - sharp 1080p ke liye is screen par ek baar tap / click karo</div>':'');cd.onclick=nf?()=>{try{document.documentElement.requestFullscreen().catch(()=>{})}catch(e){}}:null;await sleep(1000)}
+ await pre;cd.style.display='none';cd.style.flexDirection='';
+ if(recOn&&!abort){recBegin();T0=performance.now();marks=[]}
  if(!abort)await loadSite($('#path').value,true,false,isInteractive);
  if(isInteractive){
   if(!abort){
@@ -2834,21 +2913,25 @@ async function start(){if(running)return;
   running=false;manualOn=false;trackOn=false;holdZoom=false;dwellZoomed=false;clearTimeout(dwellT);layout();
   clearTimeout(outT);curEl.classList.remove('on');try{wl&&wl.release()}catch(e){}
   fade.style.opacity=0;$('#panel').classList.remove('h');
-  $('#msg').textContent='Session ruk gaya.';
+  let rm2='';if(recOn)rm2=await recStop();recLock=false;layout();
+  $('#msg').textContent='Session ruk gaya.'+(rm2?'\n'+rm2:'');
   return;
  }
  const bad=abort?[]:await run(steps);
  marks.push(['END',(performance.now()-T0)/1000]);
  running=false;clearTimeout(outT);curEl.classList.remove('on');try{wl&&wl.release()}catch(e){}
  if(abort){fade.style.opacity=0;$('#panel').classList.remove('h')}else{fade.style.transition='opacity .8s';fade.style.opacity=1}
+ let recMsg='';if(recOn){if(!abort)await sleep(1300);recMsg=await recStop(abort?'partial':'');recLock=false;
+  fade.style.transition='none';fade.style.opacity=0;$('#cd').style.display='none';$('#panel').classList.remove('h');
+  try{if(document.fullscreenElement)await document.exitFullscreen()}catch(e){}layout()}
  const lst=marks.map((m,i)=>m[0]==='END'?'':m[0]+'  '+fmt(m[1])+' - '+fmt(marks[i+1][1])).filter(Boolean).join('\n');
- $('#msg').textContent=(abort?'Rok diya.':'Done - recorder stop karo, phir top-left corner pe double-tap karke panel kholo.')+'\nCut list (Start dabane ke time se):\n'+lst+(bad.length?'\nSkip hue:\n'+bad.join('\n'):'')+(dbg.length?'\nSpotlight log:\n'+dbg.join('\n'):'')}
+ $('#msg').textContent=(abort?'Rok diya.':(recOn?'DONE - video ready!':'Done - recorder stop karo, phir top-left corner pe double-tap karke panel kholo.'))+(recMsg?'\n'+recMsg:'')+'\nCut list ('+(recOn?'video ke start se':'Start dabane ke time se')+'):\n'+lst+(bad.length?'\nSkip hue:\n'+bad.join('\n'):'')+(dbg.length?'\nSpotlight log:\n'+dbg.join('\n'):'')}
 let tap=0;$('#stop').onclick=()=>{const n=Date.now();if(n-tap<500){if(running){abort=true;$('#cd').style.display='none'}else{fade.style.opacity=0;$('#panel').classList.remove('h')}}tap=n};
 $('#go').onclick=start;
 const loadClip=()=>{$('#scr').value=JSON.stringify(CLIPS[$('#clip').value]||CLIPS.clip1,null,1)};$('#clip').onchange=loadClip;$('#rs').onclick=loadClip;
 /* BUILD clips-v14-auto: script ab kabhi browser memory se restore nahi hoti - hamesha is file ka DEF load hota hai */
 try{localStorage.removeItem('stg_scr')}catch(e){}
 $('#rs').click();
-$('#info').textContent='[BUILD clips-v14-auto] '+(isApp()?'App mode ON (fullscreen app) - recording ke liye best.':'Tip: Chrome menu > Install app, phir "Parda Stage" icon se kholo. Isse fullscreen + landscape bina black screen ke milta hai.');
+$('#info').textContent='[BUILD clips-v16-oneclick] '+(isApp()?'App mode ON (fullscreen app) - recording ke liye best.':'Tip: Chrome menu > Install app, phir "Parda Stage" icon se kholo. Isse fullscreen + landscape bina black screen ke milta hai.');
 syncModeUI();layout();drawCur();requestAnimationFrame(tick);
 </script></body></html>
