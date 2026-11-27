@@ -92,6 +92,10 @@ button.g{background:#333}
   <option value="trackpad">Trackpad Mouse (best for mobile)</option>
   <option value="manual">Direct Touch (finger on screen)</option>
   <option value="auto" selected>Auto Script (JSON)</option>
+ </select></label>
+ <label>Clip <select id="clip">
+  <option value="clip1">Clip 1 (Intro + Hero + Spotlight)</option>
+  <option value="clip2" selected>Clip 2 (Menu + Tonight)</option>
  </select></label><br>
  <div id="mopts" class="mopts">
   <label>Zoom level <select id="mz">
@@ -140,29 +144,241 @@ button.g{background:#333}
 const $=s=>document.querySelector(s),sleep=ms=>new Promise(r=>setTimeout(r,ms));
 let W=1440,H=900;
 let ifr=$('#ifr');const camEl=$('#cam'),win=$('#win'),curEl=$('#cur'),fade=$('#fade');
-const DEF=[
-{"a": "auto", "z": 0, "out": 120, "hold": 0},
-{"a": "mark", "n": "01 intro+hero+spotlight"},
-{"a": "waitfor", "gone": "#intro", "max": 9000, "after": 500},
-{"a": "click", "to": "#hd", "z": 1.5, "hold": 1500, "out": 120},
-{"a": "wait", "ms": 2000},
-{"a": "click", "to": "#hd", "quiet": false, "nozoom": true, "hold": 0},
-{"a": "wait", "ms": 2000},
-{"a": "click", "to": "#hd", "quiet": false, "nozoom": true, "hold": 0},
-{"a": "wait", "ms": 2000},
-{"a": "click", "to": "#hd", "quiet": false, "nozoom": true, "hold": 0},
-{"a": "wait", "ms": 2000},
-{"a": "click", "to": "#hd", "quiet": false, "nozoom": true, "hold": 0},
-{"a": "wait", "ms": 2000},
-{"a": "cursor", "x": 720, "y": 700, "ms": 1100},
-{"a": "spotin", "to": "#cvspot", "n": 3, "by": 560, "ms": 900, "pauses": [350, 300, 400], "settle": 500, "fast": 1900, "min": 1500, "max": 8000, "after": 2800, "pre": 2},
-{"a": "spotgo", "n": 3},
-{"a": "wait", "ms": 2000},
-{"a": "spotgo", "n": 4},
-{"a": "wait", "ms": 2000},
-{"a": "spotgo", "n": "last"},
-{"a": "wait", "ms": 2000}
-];
+const CLIPS={
+"clip1": [
+{
+"a": "auto",
+"z": 0,
+"out": 120,
+"hold": 0
+},
+{
+"a": "mark",
+"n": "01 intro+hero+spotlight"
+},
+{
+"a": "waitfor",
+"gone": "#intro",
+"max": 9000,
+"after": 500
+},
+{
+"a": "click",
+"to": "#hd",
+"z": 1.5,
+"hold": 1500,
+"out": 120
+},
+{
+"a": "wait",
+"ms": 2000
+},
+{
+"a": "click",
+"to": "#hd",
+"quiet": false,
+"nozoom": true,
+"hold": 0
+},
+{
+"a": "wait",
+"ms": 2000
+},
+{
+"a": "click",
+"to": "#hd",
+"quiet": false,
+"nozoom": true,
+"hold": 0
+},
+{
+"a": "wait",
+"ms": 2000
+},
+{
+"a": "click",
+"to": "#hd",
+"quiet": false,
+"nozoom": true,
+"hold": 0
+},
+{
+"a": "wait",
+"ms": 2000
+},
+{
+"a": "click",
+"to": "#hd",
+"quiet": false,
+"nozoom": true,
+"hold": 0
+},
+{
+"a": "wait",
+"ms": 2000
+},
+{
+"a": "cursor",
+"x": 720,
+"y": 700,
+"ms": 1100
+},
+{
+"a": "spotin",
+"to": "#cvspot",
+"n": 3,
+"by": 560,
+"ms": 900,
+"pauses": [
+350,
+300,
+400
+],
+"settle": 500,
+"fast": 1900,
+"min": 1500,
+"max": 8000,
+"after": 2800,
+"pre": 2
+},
+{
+"a": "spotgo",
+"n": 3
+},
+{
+"a": "wait",
+"ms": 2000
+},
+{
+"a": "spotgo",
+"n": 4
+},
+{
+"a": "wait",
+"ms": 2000
+},
+{
+"a": "spotgo",
+"n": "last"
+},
+{
+"a": "wait",
+"ms": 2000
+}
+],
+"clip2": [
+{
+"a": "auto",
+"z": 0,
+"out": 120,
+"hold": 0
+},
+{
+"a": "mark",
+"n": "02 menu+tonight"
+},
+{
+"a": "waitfor",
+"gone": "#intro",
+"max": 9000,
+"after": 500
+},
+{
+"a": "click",
+"to": "#mnu",
+"z": 1.5,
+"hold": 1500,
+"out": 120,
+"mv": 1100,
+"after": 700
+},
+{
+"a": "hover",
+"to": ".cvn-l [data-m=\"0\"]",
+"nozoom": true,
+"mv": 1100,
+"hold": 1500
+},
+{
+"a": "hover",
+"to": ".cvn-l [data-m=\"1\"]",
+"nozoom": true,
+"mv": 950,
+"hold": 1500
+},
+{
+"a": "hover",
+"to": ".cvn-l [data-m=\"2\"]",
+"nozoom": true,
+"mv": 950,
+"hold": 1500
+},
+{
+"a": "hover",
+"to": ".cvn-l [data-m=\"3\"]",
+"nozoom": true,
+"mv": 950,
+"hold": 1500
+},
+{
+"a": "click",
+"to": ".cvn-l [data-m=\"5\"]",
+"z": 1.5,
+"hold": 1500,
+"out": 120,
+"mv": 1200,
+"after": 700
+},
+{
+"a": "waitfor",
+"sel": ".tn .opts [data-i]",
+"max": 5000,
+"after": 400
+},
+{
+"a": "click",
+"to": ".tn .opts [data-i=\"1\"]",
+"nozoom": true,
+"mv": 900,
+"hold": 350,
+"after": 500
+},
+{
+"a": "waitfor",
+"sel": ".tn .opts [data-i]",
+"max": 5000,
+"after": 400
+},
+{
+"a": "click",
+"to": ".tn .opts [data-i=\"2\"]",
+"nozoom": true,
+"mv": 900,
+"hold": 350,
+"after": 500
+},
+{
+"a": "waitfor",
+"sel": ".tn .opts [data-i]",
+"max": 5000,
+"after": 400
+},
+{
+"a": "click",
+"to": ".tn .opts [data-i=\"2\"]",
+"nozoom": true,
+"mv": 900,
+"hold": 350
+},
+{
+"a": "waitfor",
+"sel": ".tn .res",
+"imgs": true,
+"max": 8000,
+"after": 3200
+}
+]
+};
 const cam={z:1,x:W/2,y:H/2,tw:null,follow:false},cur={x:W*.8,y:H*.85},auto={z:0,out:1500};
 let spSeen=new Set();const dbg=[];let pace=1;const T=ms=>ms*pace,ZD=.85,ZO=.9;
 let k=1,ww=0,wh=0,abort=false,running=false,manualOn=false,trackOn=false,holdZoom=false,tapZoomOn=true,dwellOn=false,dwellZoomed=false,blurOn=false,outT=0,dwellT=0,marks=[],T0=0,last=performance.now(),unsubManual=null,lastHoverEl=null,lastTf='',lastBlur='',initHref='',wc=0,lastMove=0;
@@ -737,10 +953,10 @@ async function start(){if(running)return;
  $('#msg').textContent=(abort?'Rok diya.':'Done - recorder stop karo, phir top-left corner pe double-tap karke panel kholo.')+'\nCut list (Start dabane ke time se):\n'+lst+(bad.length?'\nSkip hue:\n'+bad.join('\n'):'')+(dbg.length?'\nSpotlight log:\n'+dbg.join('\n'):'')}
 let tap=0;$('#stop').onclick=()=>{const n=Date.now();if(n-tap<500){if(running){abort=true;$('#cd').style.display='none'}else{fade.style.opacity=0;$('#panel').classList.remove('h')}}tap=n};
 $('#go').onclick=start;
-$('#rs').onclick=()=>{$('#scr').value=JSON.stringify(DEF,null,1)};
-/* BUILD clip1-v9: script ab kabhi browser memory se restore nahi hoti - hamesha is file ka DEF load hota hai */
+const loadClip=()=>{$('#scr').value=JSON.stringify(CLIPS[$('#clip').value]||CLIPS.clip1,null,1)};$('#clip').onchange=loadClip;$('#rs').onclick=loadClip;
+/* BUILD clips-v2: script ab kabhi browser memory se restore nahi hoti - hamesha is file ka DEF load hota hai */
 try{localStorage.removeItem('stg_scr')}catch(e){}
 $('#rs').click();
-$('#info').textContent='[BUILD clip1-v9] '+(isApp()?'App mode ON (fullscreen app) - recording ke liye best.':'Tip: Chrome menu > Install app, phir "Parda Stage" icon se kholo. Isse fullscreen + landscape bina black screen ke milta hai.');
+$('#info').textContent='[BUILD clips-v2] '+(isApp()?'App mode ON (fullscreen app) - recording ke liye best.':'Tip: Chrome menu > Install app, phir "Parda Stage" icon se kholo. Isse fullscreen + landscape bina black screen ke milta hai.');
 syncModeUI();layout();drawCur();requestAnimationFrame(tick);
 </script></body></html>
