@@ -48,7 +48,7 @@ function fpOf(im){const c=document.createElement("canvas");c.width=16;c.height=9
 function bestMatch(list,fp){return Promise.all(list.map(b=>new Promise(res=>{const im=new Image();im.crossOrigin="anonymous";
   im.onload=()=>{try{const d=fpOf(im);let e=0,j=0;for(let k=0;k<d.length;k++){if(k%4===3)continue;e+=(d[k]-fp[j++])**2}res([e,b])}catch{res([Infinity,b])}};im.onerror=()=>res([Infinity,b]);im.src=IMG+"w300"+b.file_path}))).then(r=>{r.sort((a,b)=>a[0]-b[0]);return r[0]&&r[0][0]<Infinity?r[0][1]:null})}
 // ---- build stamp + on-screen diagnostics (visible only when the address ends with ?debug=1)
-const PARDA_BUILD=72,DBG=/[?&]debug\b/.test(location.search);
+const PARDA_BUILD=73,DBG=/[?&]debug\b/.test(location.search);
 const dbg=window.CVDBG=m=>{if(!DBG)return;try{let e=document.getElementById("pdbg");if(!e){e=document.createElement("pre");e.id="pdbg";e.style.cssText="position:fixed;left:8px;right:8px;bottom:96px;z-index:99999;margin:0;padding:8px 10px;background:#000d;color:#8f8;font:11px/1.45 monospace;border-radius:8px;white-space:pre-wrap;pointer-events:none;max-height:40vh;overflow:hidden";document.body.append(e)}e.textContent+=m+"\n"}catch{}};
 // ---- TEMP: pinned hero slots. 1 = Blade Runner 2049 on its first Mood "Still" (the one the Mood tab lists first), 2 = Invincible. The normal mix follows.
 // Set HERO_PIN=false to go back to the usual hero.
@@ -115,7 +115,7 @@ async function heroItems(emit){try{const h=await heroDiscover(emit);if(h.length>
 // Old bug: the slide only changed after its picture finished loading, but `hi` moved on at once and a new request cancelled the last one,
 // so on a slow connection nothing ever showed ("stuck"), and the next swipe/auto-tick landed on a far-away slide ("jumps to last").
 // Now: pictures load once (deduped, decoded off-thread), text/dots follow instantly, a slow picture never blocks the next move.
-let hbusy=0,hdir=1,hvis=1,hpainted=0,hbound=0,pq=0;const HP={},hsleep=ms=>new Promise(r=>setTimeout(r,ms));
+let hlast=0,hbusy=0,hdir=1,hvis=1,hpainted=0,hbound=0,pq=0;const HP={},hsleep=ms=>new Promise(r=>setTimeout(r,ms));
 function hload(src){return HP[src]||(HP[src]=new Promise(res=>{const t=(s,retry)=>{const im=new Image();im.decoding="async";
  im.onload=()=>(im.decode?im.decode().catch(()=>{}):Promise.resolve()).then(()=>res(s));
  im.onerror=()=>{if(retry&&s.startsWith("/timg/"))t(DIMG+s.slice(6),0);else{delete HP[src];res("")}};im.src=s};t(src,1)}))}
@@ -135,7 +135,7 @@ function swapBg(i,s,id){const A=[$("#hbgA"),$("#hbgB")],cu=A[hl],nw=A[1-hl];if(c
  nw.classList.add("on");cu.classList.remove("on");cu.classList.add("out");
  // give the decoded picture back once it has faded out (this is what keeps low-RAM phones from killing the tab)
  cu._f=setTimeout(()=>{if(!cu.classList.contains("on")){cu.style.backgroundImage="none";cu.dataset.s=""}},1700)}
-function setHero(n,dir){const len=hero.length;if(!len)return;n=((n%len)+len)%len;hi=n;hdir=dir||1;
+function setHero(n,dir){const len=hero.length;if(!len)return;n=((n%len)+len)%len;hi=n;hlast=Date.now();hdir=dir||1;
  const i=hero[n],id=++hq,p=hload(hsrc(i));hbusy=1;const bt=setTimeout(()=>{if(id===hq)hbusy=0},6500);
  // text and dots follow at once (a cached picture arrives within the grace time, so both appear together)
  Promise.race([p,hsleep(hpainted?320:900)]).then(()=>{if(id!==hq)return;hpainted=1;paintHero(i,n,id)});
@@ -144,7 +144,13 @@ function setHero(n,dir){const len=hero.length;if(!len)return;n=((n%len)+len)%len
 // autoplay never advances while a picture is still coming, off-screen, or in a background tab
 // hero on screen? measured live (not only from the observer flag, which can get stuck at false after a fast scroll or a view switch)
 const heroOn=()=>{const H=$("#hx");if(!H||H.hidden)return 0;const r=H.getBoundingClientRect();return r.height>0&&r.bottom>innerHeight*.04&&r.top<innerHeight*.96};
-const auto=()=>{clearInterval(ht);ht=setInterval(()=>{if(document.hidden||!heroOn()||hbusy||hero.length<2||$("#hx").hidden||!$("#modal").hidden){if(DBG)dbg("hero skip: hidden="+document.hidden+" on="+heroOn()+" busy="+hbusy+" n="+hero.length+" modal="+!$("#modal").hidden);return}setHero(hi+1,1)},8000)};
+// v72 slide engine: one timer, plus "kicks" (scroll stop, tab back, touch end) that restart it if the hero is on screen and has been still for a while.
+// A stuck "busy" flag can no longer freeze the hero: after 12s it is ignored.
+const hadv=(force)=>{const now=Date.now();if(document.hidden||hero.length<2||$("#hx").hidden||!$("#modal").hidden||!heroOn())return;if(now-hlast<(force?7000:6500))return;if(hbusy&&now-hlast<12000)return;setHero(hi+1,1)};
+const auto=()=>{clearInterval(ht);ht=setInterval(()=>{if(DBG&&(document.hidden||!heroOn()))dbg("hero skip: hidden="+document.hidden+" on="+heroOn());hadv()},8000)};
+const hkick=()=>{if(!ht&&hero.length>1)auto();hadv(1)};let hkt;
+addEventListener("scroll",()=>{clearTimeout(hkt);hkt=setTimeout(hkick,180)},{passive:true});
+["touchend","pointerup","visibilitychange","pageshow","focus","resize"].forEach(e=>addEventListener(e,()=>{clearTimeout(hkt);hkt=setTimeout(hkick,250)},{passive:true}));
 function growDots(){const d=$("#dots");for(let k=d.children.length;k<hero.length;k++){const e=document.createElement("i");e.dataset.k=k;e.onclick=()=>step(k-hi);d.append(e)}$("#ct").textContent="/"+String(hero.length).padStart(2,"0")}
 function growHero(){growDots();if(matchMedia("(min-width:900px)").matches){const nx=hero[(hi+1)%hero.length];if(nx){$("#ni").src=cvOvr(nx,"hero")||IMG+"w300"+hbd(nx);$("#nt").textContent=title(nx)}}}
 function startHero(){growDots();setHero(0,1);auto();bindHero()}
