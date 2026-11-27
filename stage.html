@@ -132,12 +132,12 @@ button.g{background:#333}
  </div>
  <label>Site path <input type="text" id="path" value="/index.html"></label>
  <label>Countdown (sec) <input type="number" id="cdn" value="5" min="1" max="15" style="width:70px"></label><br>
- <label>Screen <select id="mode"><option value="fit">Fit 1440x900 (premium frame)</option><option value="wide">Wide - poori screen bhare</option><option value="max">Max Native (1920p+ sharp)</option></select></label><br>
+ <label>Screen <select id="mode"><option value="auto" selected>Laptop Fullscreen (auto-fit, no crop)</option><option value="fit">Fit 1440x900 (premium frame)</option><option value="wide">Wide - poori screen bhare</option><option value="max">Max Native (1920p+ sharp)</option></select></label><br>
  <label>Pace <select id="pace"><option value="0.9">Fast</option><option value="1" selected>Normal</option><option value="1.2">Slower</option></select></label><br>
- <label><input type="checkbox" id="fr" checked> Frame + gradient</label>
+ <label><input type="checkbox" id="fr"> Frame + gradient</label>
  <label><input type="checkbox" id="bl"> Motion blur</label>
  <label><input type="checkbox" id="lite" checked> Lite effects (smooth video)</label>
- <label><input type="checkbox" id="fs"> Fullscreen API (agar black screen aaye to OFF rakho)</label>
+ <label><input type="checkbox" id="fs" checked> Fullscreen API (laptop auto fullscreen)</label>
  <div id="scrwrap" class="hide">
   <textarea id="scr" spellcheck="false"></textarea>
  </div>
@@ -2272,7 +2272,7 @@ let k=1,ww=0,wh=0,abort=false,running=false,manualOn=false,trackOn=false,holdZoo
 const isApp=()=>matchMedia('(display-mode: fullscreen)').matches||matchMedia('(display-mode: standalone)').matches;
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 function layout(){
- const md=$('#mode').value;if(md==='max'){const dpr=Math.min(window.devicePixelRatio||1,2);W=Math.max(1920,Math.round(innerWidth*dpr));H=Math.max(900,Math.round(W*innerHeight/innerWidth))}else if(md==='wide'){W=Math.max(1280,Math.min(1600,Math.round(900*innerWidth/innerHeight)));H=Math.max(560,Math.round(W*innerHeight/innerWidth))}else{W=1440;H=900}
+ const md=$('#mode').value;if(md==='auto'){W=Math.max(1280,innerWidth);H=Math.max(560,Math.round(W*innerHeight/innerWidth))}else if(md==='max'){const dpr=Math.min(window.devicePixelRatio||1,2);W=Math.max(1920,Math.round(innerWidth*dpr));H=Math.max(900,Math.round(W*innerHeight/innerWidth))}else if(md==='wide'){W=Math.max(1280,Math.min(1600,Math.round(900*innerWidth/innerHeight)));H=Math.max(560,Math.round(W*innerHeight/innerWidth))}else{W=1440;H=900}
  camEl.style.width=ifr.style.width=W+'px';camEl.style.height=ifr.style.height=H+'px';
  const flat=!$('#fr').checked;document.body.classList.toggle('flat',flat);
  const padOpen=trackOn&&running;
@@ -2846,9 +2846,9 @@ async function start(){if(running)return;
 let tap=0;$('#stop').onclick=()=>{const n=Date.now();if(n-tap<500){if(running){abort=true;$('#cd').style.display='none'}else{fade.style.opacity=0;$('#panel').classList.remove('h')}}tap=n};
 $('#go').onclick=start;
 const loadClip=()=>{$('#scr').value=JSON.stringify(CLIPS[$('#clip').value]||CLIPS.clip1,null,1)};$('#clip').onchange=loadClip;$('#rs').onclick=loadClip;
-/* BUILD clips-v12: script ab kabhi browser memory se restore nahi hoti - hamesha is file ka DEF load hota hai */
+/* BUILD clips-v13-laptop: script ab kabhi browser memory se restore nahi hoti - hamesha is file ka DEF load hota hai */
 try{localStorage.removeItem('stg_scr')}catch(e){}
 $('#rs').click();
-$('#info').textContent='[BUILD clips-v12] '+(isApp()?'App mode ON (fullscreen app) - recording ke liye best.':'Tip: Chrome menu > Install app, phir "Parda Stage" icon se kholo. Isse fullscreen + landscape bina black screen ke milta hai.');
+$('#info').textContent='[BUILD clips-v13-laptop] '+(isApp()?'App mode ON (fullscreen app) - recording ke liye best.':'Tip: Chrome menu > Install app, phir "Parda Stage" icon se kholo. Isse fullscreen + landscape bina black screen ke milta hai.');
 syncModeUI();layout();drawCur();requestAnimationFrame(tick);
 </script></body></html>
