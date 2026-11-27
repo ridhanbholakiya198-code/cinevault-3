@@ -156,13 +156,13 @@ const DEF=[
 {"a": "wait", "ms": 2000},
 {"a": "cursor", "x": 720, "y": 700, "ms": 1100},
 {"a": "spotin", "to": "#cvspot", "n": 3, "by": 560, "ms": 900, "pauses": [350, 300, 400], "settle": 500, "fast": 1900, "min": 1500, "max": 8000, "after": 8500},
-{"a": "spotpick", "to": ".sp-th [data-t]", "idx": 1, "quiet": false, "nozoom": true, "hold": 0},
+{"a": "click", "to": ".sp-th [data-t]", "idx": 2, "quiet": false, "nozoom": true, "hold": 0},
 {"a": "wait", "ms": 2000},
-{"a": "spotpick", "to": ".sp-th [data-t]", "idx": 2, "quiet": false, "nozoom": true, "hold": 0},
+{"a": "click", "to": ".sp-th [data-t]", "idx": 3, "quiet": false, "nozoom": true, "hold": 0},
 {"a": "wait", "ms": 2000},
-{"a": "spotpick", "to": ".sp-th [data-t]", "idx": 3, "quiet": false, "nozoom": true, "hold": 0},
+{"a": "click", "to": ".sp-th [data-t]", "idx": 4, "quiet": false, "nozoom": true, "hold": 0},
 {"a": "wait", "ms": 2000},
-{"a": "spotpick", "to": ".sp-th [data-t]", "idx": 4, "quiet": false, "nozoom": true, "hold": 0},
+{"a": "click", "to": ".sp-th [data-t]", "idx": -1, "quiet": false, "nozoom": true, "hold": 0},
 {"a": "wait", "ms": 2000}
 ];
 const cam={z:1,x:W/2,y:H/2,tw:null,follow:false},cur={x:W*.8,y:H*.85},auto={z:0,out:1500};
@@ -224,7 +224,7 @@ function find(sel,idx){
  if(sel.includes('@')){const[i,x]=sel.split('@'),q=x.trim().toLowerCase();
   list=[...D().querySelectorAll(i||'*')].filter(n=>n.getClientRects().length&&n.textContent.trim().toLowerCase().startsWith(q)).sort((p,r)=>p.textContent.length-r.textContent.length)}
  else{const all=[...D().querySelectorAll(sel)],vis=all.filter(n=>n.getClientRects().length);list=vis.length?vis:all}
- const e=list[idx||0];if(!e)throw Error('nahi mila: '+sel);return e}
+ const e=list[idx<0?list.length+idx:(idx||0)];if(!e)throw Error('nahi mila: '+sel);return e}
 const ctr=e=>{const r=e.getBoundingClientRect();return{x:r.left+r.width/2,y:r.top+r.height/2}};
 const ease=p=>p<.5?4*p*p*p:1-Math.pow(-2*p+2,3)/2;
 function moveTo(x,y,ms){const x0=cur.x,y0=cur.y,dx=x-x0,dy=y-y0,cx=x0+dx/2-dy*.1,cy=y0+dy/2+dx*.1;curEl.classList.add('on');
@@ -717,9 +717,9 @@ async function start(){if(running)return;
 let tap=0;$('#stop').onclick=()=>{const n=Date.now();if(n-tap<500){if(running){abort=true;$('#cd').style.display='none'}else{fade.style.opacity=0;$('#panel').classList.remove('h')}}tap=n};
 $('#go').onclick=start;
 $('#rs').onclick=()=>{$('#scr').value=JSON.stringify(DEF,null,1)};
-/* BUILD clip1-v6: script ab kabhi browser memory se restore nahi hoti - hamesha is file ka DEF load hota hai */
+/* BUILD clip1-v7: script ab kabhi browser memory se restore nahi hoti - hamesha is file ka DEF load hota hai */
 try{localStorage.removeItem('stg_scr')}catch(e){}
 $('#rs').click();
-$('#info').textContent='[BUILD clip1-v6] '+(isApp()?'App mode ON (fullscreen app) - recording ke liye best.':'Tip: Chrome menu > Install app, phir "Parda Stage" icon se kholo. Isse fullscreen + landscape bina black screen ke milta hai.');
+$('#info').textContent='[BUILD clip1-v7] '+(isApp()?'App mode ON (fullscreen app) - recording ke liye best.':'Tip: Chrome menu > Install app, phir "Parda Stage" icon se kholo. Isse fullscreen + landscape bina black screen ke milta hai.');
 syncModeUI();layout();drawCur();requestAnimationFrame(tick);
 </script></body></html>
