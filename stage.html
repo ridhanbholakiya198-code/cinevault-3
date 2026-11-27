@@ -154,7 +154,7 @@ const DEF=[{"a":"auto","z":0,"out":120,"hold":0},
 {"a":"click","to":"#hd","quiet":false,"nozoom":true,"hold":0},
 {"a":"wait","ms":2000},
 {"a":"cursor","x":720,"y":700,"ms":1100},
-{"a":"stepscroll","n":10,"by":380,"ms":1700,"until":".sp-frame","center":true,"after":900},
+{"a":"spotin","to":"#cvspot","by":560,"ms":1250,"pauses":[600,500,700],"glide":800,"after":3200},
 {"a":"click","to":".sp-th [data-t]","idx":1,"quiet":false,"nozoom":true,"hold":0},
 {"a":"wait","ms":2000},
 {"a":"click","to":".sp-th [data-t]","idx":2,"quiet":false,"nozoom":true,"hold":0},
@@ -405,6 +405,13 @@ const A={
   for(let i=0;i<(s.n||4)&&!abort;i++){const x0=n.scrollLeft,x1=x0+(s.by||430),ms=s.ms||1600;
    await new Promise(res=>{const t0=performance.now();(function f(q){const p=ease(Math.min(1,(q-t0)/ms));markScroll();n.scrollLeft=x0+(x1-x0)*p;p<1&&!abort?requestAnimationFrame(f):res()})(t0)});
    await sleep(ps[i%ps.length])}},
+ async spotin(s){const e=find(s.to),ps=s.pauses||[600,500,700];let i=0;
+  while(!abort){const r=e.getBoundingClientRect(),dist=r.top-H*.97;if(dist<=4)break;
+   const y0=Wn().scrollY,by=s.by||560,d=Math.min(by,dist);
+   await scrollTo(y0+d,Math.max(650,(s.ms||1250)*d/by));
+   if(Math.abs(Wn().scrollY-y0)<2)break;await sleep(ps[i++%ps.length])}
+  const r=e.getBoundingClientRect();await scrollTo(Wn().scrollY+r.top+r.height/2-H/2,s.glide||800);
+  await sleep(s.after||3200)},
  async ensure(s){let ok=false;try{const m=D().querySelector('#modal');ok=!!m&&!m.hidden&&(m.textContent||'').toLowerCase().includes(s.text)}catch(e){}
   if(!ok)for(const p of(s.else||[])){try{await A[p.a](p)}catch(e){}}},
  async type(s){const e=find(s.to,s.idx);e.focus();if(s.clear)e.value='';for(const ch of s.text){if(abort)return;e.value+=ch;
