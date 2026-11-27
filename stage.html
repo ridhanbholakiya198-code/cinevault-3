@@ -95,7 +95,8 @@ button.g{background:#333}
  </select></label>
  <label>Clip <select id="clip">
   <option value="clip1">Clip 1 (Intro + Hero + Spotlight)</option>
-  <option value="clip2" selected>Clip 2 (Menu + Tonight)</option>
+  <option value="clip2">Clip 2 (Menu + Tonight)</option>
+  <option value="clip3" selected>Clip 3 (Blade Runner 2049 Deep Dive)</option>
  </select></label><br>
  <div id="mopts" class="mopts">
   <label>Zoom level <select id="mz">
@@ -375,7 +376,440 @@ const CLIPS={
 "sel": ".tn .res",
 "imgs": true,
 "max": 8000,
-"after": 3200
+"after": 3600
+},
+{
+"a": "click",
+"to": ".tn .tnr [data-a=\"n\"]",
+"nozoom": true,
+"mv": 700,
+"hold": 0
+},
+{
+"a": "waitfor",
+"sel": ".tn .res",
+"imgs": true,
+"max": 8000,
+"after": 3600
+},
+{
+"a": "click",
+"to": ".tn .tnr [data-a=\"n\"]",
+"nozoom": true,
+"mv": 700,
+"hold": 0
+},
+{
+"a": "waitfor",
+"sel": ".tn .res",
+"imgs": true,
+"max": 8000,
+"after": 3600
+},
+{
+"a": "click",
+"to": ".tn .tnr [data-a=\"n\"]",
+"nozoom": true,
+"mv": 700,
+"hold": 0
+},
+{
+"a": "waitfor",
+"sel": ".tn .res",
+"imgs": true,
+"max": 8000,
+"after": 3600
+}
+],
+"clip3": [
+{
+"a": "auto",
+"z": 0,
+"out": 120,
+"hold": 0
+},
+{
+"a": "mark",
+"n": "03 blade-runner-2049"
+},
+{
+"a": "waitfor",
+"gone": "#intro",
+"max": 9000,
+"after": 500
+},
+{
+"a": "click",
+"to": "#hmore",
+"z": 1.5,
+"hold": 1500,
+"out": 120,
+"mv": 1200
+},
+{
+"a": "waitfor",
+"sel": "#rg",
+"max": 8000,
+"after": 500
+},
+{
+"a": "centerif",
+"in": "#modal",
+"to": "#rg",
+"tol": 0.2,
+"ms": 1200,
+"after": 400
+},
+{
+"a": "select",
+"to": "#rg",
+"value": "US",
+"z": 1.5,
+"hold": 1500,
+"out": 120,
+"mv": 1000,
+"after": 600
+},
+{
+"a": "click",
+"to": "[data-cvt=\"about\"]",
+"z": 1.5,
+"hold": 1500,
+"out": 120,
+"mv": 1000,
+"after": 500
+},
+{
+"a": "click",
+"to": "[data-p][data-r=\"dir\"]",
+"z": 1.5,
+"hold": 1500,
+"out": 120,
+"mv": 1100
+},
+{
+"a": "waitfor",
+"sel": ".pp-h",
+"imgs": true,
+"max": 8000,
+"after": 600
+},
+{
+"a": "stepscroll",
+"in": "#modal",
+"n": 3,
+"by": 420,
+"ms": 1400,
+"pauses": [
+700,
+800,
+700
+]
+},
+{
+"a": "scroll",
+"in": "#modal",
+"by": -420,
+"ms": 1300
+},
+{
+"a": "wait",
+"ms": 500
+},
+{
+"a": "click",
+"to": "#mx",
+"nozoom": true,
+"mv": 900
+},
+{
+"a": "waitfor",
+"sel": "#cvt",
+"max": 8000,
+"after": 500
+},
+{
+"a": "click",
+"to": "[data-cvt=\"about\"]",
+"nozoom": true,
+"mv": 700,
+"after": 400
+},
+{
+"a": "centerif",
+"in": "#modal",
+"to": ".fr-t",
+"tol": 0.18,
+"ms": 1300,
+"after": 400
+},
+{
+"a": "click",
+"to": ".fr-t",
+"z": 1.5,
+"hold": 1500,
+"out": 120,
+"mv": 1100
+},
+{
+"a": "waitfor",
+"sel": "#ftabs button",
+"imgs": true,
+"max": 10000,
+"after": 600
+},
+{
+"a": "click",
+"to": "#ftabs button@All",
+"nozoom": true,
+"mv": 900,
+"hold": 300,
+"after": 500
+},
+{
+"a": "scroll",
+"in": "#modal",
+"by": 420,
+"ms": 1500
+},
+{
+"a": "wait",
+"ms": 1000
+},
+{
+"a": "click",
+"to": "#mx",
+"nozoom": true,
+"mv": 900
+},
+{
+"a": "waitfor",
+"sel": "#cvt",
+"max": 8000,
+"after": 500
+},
+{
+"a": "centerif",
+"in": "#modal",
+"to": "[data-cvt=\"cast\"]",
+"tol": 0.18,
+"ms": 1200,
+"after": 300
+},
+{
+"a": "click",
+"to": "[data-cvt=\"cast\"]",
+"z": 1.5,
+"hold": 1500,
+"out": 120,
+"mv": 1000,
+"after": 500
+},
+{
+"a": "scroll",
+"in": "#modal",
+"by": 360,
+"ms": 1300
+},
+{
+"a": "wait",
+"ms": 1000
+},
+{
+"a": "scroll",
+"in": "#modal",
+"by": -360,
+"ms": 1200
+},
+{
+"a": "wait",
+"ms": 400
+},
+{
+"a": "click",
+"to": "[data-cvpane=\"cast\"] [data-p]@Ryan Gosling",
+"z": 1.5,
+"hold": 1500,
+"out": 120,
+"mv": 1100
+},
+{
+"a": "waitfor",
+"sel": ".pp-h",
+"imgs": true,
+"max": 8000,
+"after": 600
+},
+{
+"a": "stepscroll",
+"in": "#modal",
+"n": 4,
+"by": 400,
+"ms": 1400,
+"pauses": [
+700,
+900,
+750,
+850
+]
+},
+{
+"a": "click",
+"to": "#mx",
+"nozoom": true,
+"mv": 900
+},
+{
+"a": "waitfor",
+"sel": "#cvt",
+"max": 8000,
+"after": 500
+},
+{
+"a": "centerif",
+"in": "#modal",
+"to": "[data-cvt=\"mood\"]",
+"tol": 0.18,
+"ms": 1200,
+"after": 300
+},
+{
+"a": "click",
+"to": "[data-cvt=\"mood\"]",
+"z": 1.5,
+"hold": 1500,
+"out": 120,
+"mv": 1000,
+"after": 600
+},
+{
+"a": "centerif",
+"in": "#modal",
+"to": ".mstills",
+"tol": 0.2,
+"ms": 1200,
+"after": 400
+},
+{
+"a": "hstep",
+"to": ".mstills button",
+"n": 4,
+"by": 360,
+"ms": 1200,
+"pauses": [
+650,
+750,
+650,
+700
+]
+},
+{
+"a": "click",
+"to": ".mstills button",
+"idx": -1,
+"nozoom": true,
+"mv": 900,
+"after": 2000
+},
+{
+"a": "click",
+"to": ".mlb",
+"nozoom": true,
+"mv": 700,
+"after": 500
+},
+{
+"a": "centerif",
+"in": "#modal",
+"to": ".mpal",
+"tol": 0.2,
+"ms": 1200,
+"after": 400
+},
+{
+"a": "click",
+"to": ".mpal button",
+"idx": 2,
+"nozoom": true,
+"mv": 900,
+"hold": 300,
+"after": 700
+},
+{
+"a": "click",
+"to": ".mcardbtn",
+"z": 1.5,
+"hold": 1500,
+"out": 120,
+"mv": 1100
+},
+{
+"a": "waitfor",
+"sel": ".cdov [data-s=\"story\"]",
+"imgs": true,
+"max": 8000,
+"after": 2000
+},
+{
+"a": "click",
+"to": ".cdov [data-s=\"story\"]",
+"nozoom": true,
+"mv": 900,
+"after": 2000
+},
+{
+"a": "click",
+"to": ".cdov [data-a=\"x\"]",
+"nozoom": true,
+"mv": 800,
+"after": 500
+},
+{
+"a": "centerif",
+"in": "#modal",
+"to": "[data-cvt=\"more\"]",
+"tol": 0.2,
+"ms": 1000,
+"after": 300
+},
+{
+"a": "click",
+"to": "[data-cvt=\"more\"]",
+"z": 1.5,
+"hold": 1500,
+"out": 120,
+"mv": 1000,
+"after": 600
+},
+{
+"a": "centerif",
+"in": "#modal",
+"to": "#rec",
+"tol": 0.2,
+"ms": 1200,
+"after": 400
+},
+{
+"a": "hstep",
+"to": "#rec .card",
+"n": 4,
+"by": 400,
+"ms": 1300,
+"pauses": [
+700,
+800,
+700,
+750
+]
+},
+{
+"a": "click",
+"to": ".rtk-s",
+"z": 1.5,
+"hold": 1400,
+"out": 120,
+"mv": 1000,
+"after": 3000
 }
 ]
 };
@@ -954,9 +1388,9 @@ async function start(){if(running)return;
 let tap=0;$('#stop').onclick=()=>{const n=Date.now();if(n-tap<500){if(running){abort=true;$('#cd').style.display='none'}else{fade.style.opacity=0;$('#panel').classList.remove('h')}}tap=n};
 $('#go').onclick=start;
 const loadClip=()=>{$('#scr').value=JSON.stringify(CLIPS[$('#clip').value]||CLIPS.clip1,null,1)};$('#clip').onchange=loadClip;$('#rs').onclick=loadClip;
-/* BUILD clips-v2: script ab kabhi browser memory se restore nahi hoti - hamesha is file ka DEF load hota hai */
+/* BUILD clips-v4: script ab kabhi browser memory se restore nahi hoti - hamesha is file ka DEF load hota hai */
 try{localStorage.removeItem('stg_scr')}catch(e){}
 $('#rs').click();
-$('#info').textContent='[BUILD clips-v2] '+(isApp()?'App mode ON (fullscreen app) - recording ke liye best.':'Tip: Chrome menu > Install app, phir "Parda Stage" icon se kholo. Isse fullscreen + landscape bina black screen ke milta hai.');
+$('#info').textContent='[BUILD clips-v4] '+(isApp()?'App mode ON (fullscreen app) - recording ke liye best.':'Tip: Chrome menu > Install app, phir "Parda Stage" icon se kholo. Isse fullscreen + landscape bina black screen ke milta hai.');
 syncModeUI();layout();drawCur();requestAnimationFrame(tick);
 </script></body></html>
