@@ -155,18 +155,16 @@ const DEF=[
 {"a": "click", "to": "#hd", "quiet": false, "nozoom": true, "hold": 0},
 {"a": "wait", "ms": 2000},
 {"a": "cursor", "x": 720, "y": 700, "ms": 1100},
-{"a": "spotin", "to": "#cvspot", "n": 3, "by": 560, "ms": 900, "pauses": [350, 300, 400], "settle": 500, "fast": 1900, "min": 1500, "max": 8000, "after": 8500},
-{"a": "click", "to": ".sp-th [data-t]", "idx": 2, "quiet": false, "nozoom": true, "hold": 0},
+{"a": "spotin", "to": "#cvspot", "n": 3, "by": 560, "ms": 900, "pauses": [350, 300, 400], "settle": 500, "fast": 1900, "min": 1500, "max": 8000, "after": 8500, "pre": 2},
+{"a": "spotgo", "n": 3},
 {"a": "wait", "ms": 2000},
-{"a": "click", "to": ".sp-th [data-t]", "idx": 3, "quiet": false, "nozoom": true, "hold": 0},
+{"a": "spotgo", "n": 4},
 {"a": "wait", "ms": 2000},
-{"a": "click", "to": ".sp-th [data-t]", "idx": 4, "quiet": false, "nozoom": true, "hold": 0},
-{"a": "wait", "ms": 2000},
-{"a": "click", "to": ".sp-th [data-t]", "idx": -1, "quiet": false, "nozoom": true, "hold": 0},
+{"a": "spotgo", "n": "last"},
 {"a": "wait", "ms": 2000}
 ];
 const cam={z:1,x:W/2,y:H/2,tw:null,follow:false},cur={x:W*.8,y:H*.85},auto={z:0,out:1500};
-let spSeen=new Set();let pace=1;const T=ms=>ms*pace,ZD=.85,ZO=.9;
+let spSeen=new Set();const dbg=[];let pace=1;const T=ms=>ms*pace,ZD=.85,ZO=.9;
 let k=1,ww=0,wh=0,abort=false,running=false,manualOn=false,trackOn=false,holdZoom=false,tapZoomOn=true,dwellOn=false,dwellZoomed=false,blurOn=false,outT=0,dwellT=0,marks=[],T0=0,last=performance.now(),unsubManual=null,lastHoverEl=null,lastTf='',lastBlur='',initHref='',wc=0,lastMove=0;
 const isApp=()=>matchMedia('(display-mode: fullscreen)').matches||matchMedia('(display-mode: standalone)').matches;
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
@@ -241,6 +239,15 @@ function hscroller(e){for(let n=e;n&&n!==D().body;n=n.parentElement){const o=Wn(
 async function reveal(e){const r=e.getBoundingClientRect(),s0=scroller(e.parentElement||e),sc=s0&&s0!==D().body&&s0!==D().documentElement?s0:null;
  const vh=sc?sc.clientHeight:H,top=sc?sc.getBoundingClientRect().top:0,rt=r.top-top,rb=r.bottom-top;
  if(rt<8||rb>vh-8){const g=r.height>vh-140?rt-70:rt+r.height/2-vh/2;sc?await scrollTo(sc.scrollTop+g,1100,sc):await scrollTo(Wn().scrollY+g,1200)}}
+/* ---- spotlight helpers: counter ("02 / 05") se pata chalta hai kaun si film chal rahi hai ---- */
+function spotInfo(){try{const root=D().querySelector('#cvspot');if(!root)return{n:0,total:0};
+ for(const n of root.querySelectorAll('*')){if(n.children.length)continue;const m=(n.textContent||'').trim().match(/^(\d{1,2})\s*\/\s*(\d{1,2})$/);if(m)return{n:+m[1],total:+m[2]}}}catch(e){}return{n:0,total:0}}
+function spotThumbs(){let all=[...D().querySelectorAll('.sp-th [data-t]')].filter(n=>n.getClientRects().length);
+ all=all.filter(n=>!all.some(m=>m!==n&&m.contains(n)));            /* sirf bahar wale thumbs (nested duplicates hata do) */
+ all.sort((a,b)=>a.getBoundingClientRect().left-b.getBoundingClientRect().left);   /* screen par left->right = film 1,2,3.. */
+ const out=[];for(const n of all){const l=n.getBoundingClientRect().left;if(!out.length||Math.abs(out[out.length-1].getBoundingClientRect().left-l)>4)out.push(n)}
+ return out}
+
 function ripple(){const r=document.createElement('div');r.className='rip';r.style.left=cur.x+'px';r.style.top=cur.y+'px';camEl.appendChild(r);setTimeout(r.remove.bind(r),800);
  curEl.classList.add('dn');setTimeout(()=>curEl.classList.remove('dn'),160)}
 function tapEl(t){const w=Wn();let n=t;while(n&&typeof n.click!=='function')n=n.parentElement;n=n||t;
@@ -302,6 +309,8 @@ const A={
    const y0=Wn().scrollY;await scrollTo(y0+by,s.ms||900);
    if(Math.abs(Wn().scrollY-y0)<2)break;await sleep(T(ps[i%ps.length]))}
   await sleep(T(s.settle!==undefined?s.settle:500));
+  /* intro se pehle hi film 2 (Doomsday) select kar do - off-screen, bina cursor ke */
+  try{if(s.pre){const i=spotInfo();if(i.n!==s.pre){const th=spotThumbs(),el=th[s.pre-1];if(el){tapEl(el);dbg.push('pre-select film '+s.pre+' (tha: '+i.n+')')}else dbg.push('pre-select: thumb nahi mila')}else dbg.push('pre-select: film '+s.pre+' pehle se tha')}}catch(x){dbg.push('pre-select error: '+x.message)}
   /* PHASE 2: ONE continuous fast scroll, no stops, until spotlight is centred (target re-measured every frame) */
   const cap=s.fast||1900,acc=s.acc||7000;let v=0,t=performance.now();
   await new Promise(res=>{(function f(now){if(abort)return res();
@@ -337,6 +346,18 @@ const A={
   if(pick<0)pick=start%list.length;
   spSeen.add(key(list[pick]));
   return A.click({...s,a:'click',to:sel,idx:pick})},
+ async spotgo(s){
+  /* film number n (screen par left->right) par click. Agar wo film pehle se chal rahi hai to click NAHI karta. Click ke baad counter check karta hai. */
+  const info0=spotInfo();const want=s.n==='last'?(info0.total||spotThumbs().length):s.n;
+  if(spotInfo().n===want){dbg.push('film '+want+': pehle se chal rahi thi - click nahi kiya');return}
+  for(let t=0;t<3&&!abort;t++){
+   const th=spotThumbs(),el=th[want-1];if(!el)throw Error('spotgo: film '+want+' ka thumb nahi mila (thumbs='+th.length+')');
+   const c=await approach(el,{nozoom:true,quiet:false,hold:0});await sleep(110);ripple();
+   tapEl(D().elementFromPoint(c.x,c.y)||el);
+   const t0=performance.now();while(performance.now()-t0<3500&&!abort&&spotInfo().n!==want)await sleep(100);
+   if(spotInfo().n===want){dbg.push('film '+want+': OK (click '+(t+1)+')');return}
+   dbg.push('film '+want+': click '+(t+1)+' se badla nahi (counter='+spotInfo().n+')')}
+  dbg.push('film '+want+': FAIL')},
  async ensure(s){let ok=false;try{const m=D().querySelector('#modal');ok=!!m&&!m.hidden&&(m.textContent||'').toLowerCase().includes(s.text)}catch(e){}
   if(!ok)for(const p of(s.else||[])){try{await A[p.a](p)}catch(e){}}},
  async type(s){const e=find(s.to,s.idx);e.focus();if(s.clear)e.value='';for(const ch of s.text){if(abort)return;e.value+=ch;
@@ -683,7 +704,7 @@ async function start(){if(running)return;
   try{steps=JSON.parse($('#scr').value)}catch(e){$('#msg').textContent='Script JSON galat hai: '+e.message;return}
   
  }
- running=true;manualOn=isManual;trackOn=isTrack;holdZoom=false;dwellZoomed=false;abort=false;blurOn=$('#bl').checked;pace=+$('#pace').value||1;$('#msg').textContent='';marks=[];T0=performance.now();let wl;
+ running=true;manualOn=isManual;trackOn=isTrack;holdZoom=false;dwellZoomed=false;abort=false;blurOn=$('#bl').checked;pace=+$('#pace').value||1;$('#msg').textContent='';marks=[];dbg.length=0;T0=performance.now();let wl;
  if($('#fs').checked&&!document.fullscreenElement&&!isApp())try{await document.documentElement.requestFullscreen();await sleep(900)}catch(e){}
  try{wl=await navigator.wakeLock.request('screen')}catch(e){}
  layout();$('#panel').classList.add('h');curEl.classList.remove('on');resetCam();auto.z=0;
@@ -713,13 +734,13 @@ async function start(){if(running)return;
  running=false;clearTimeout(outT);curEl.classList.remove('on');try{wl&&wl.release()}catch(e){}
  if(abort){fade.style.opacity=0;$('#panel').classList.remove('h')}else{fade.style.transition='opacity .8s';fade.style.opacity=1}
  const lst=marks.map((m,i)=>m[0]==='END'?'':m[0]+'  '+fmt(m[1])+' - '+fmt(marks[i+1][1])).filter(Boolean).join('\n');
- $('#msg').textContent=(abort?'Rok diya.':'Done - recorder stop karo, phir top-left corner pe double-tap karke panel kholo.')+'\nCut list (Start dabane ke time se):\n'+lst+(bad.length?'\nSkip hue:\n'+bad.join('\n'):'')}
+ $('#msg').textContent=(abort?'Rok diya.':'Done - recorder stop karo, phir top-left corner pe double-tap karke panel kholo.')+'\nCut list (Start dabane ke time se):\n'+lst+(bad.length?'\nSkip hue:\n'+bad.join('\n'):'')+(dbg.length?'\nSpotlight log:\n'+dbg.join('\n'):'')}
 let tap=0;$('#stop').onclick=()=>{const n=Date.now();if(n-tap<500){if(running){abort=true;$('#cd').style.display='none'}else{fade.style.opacity=0;$('#panel').classList.remove('h')}}tap=n};
 $('#go').onclick=start;
 $('#rs').onclick=()=>{$('#scr').value=JSON.stringify(DEF,null,1)};
-/* BUILD clip1-v7: script ab kabhi browser memory se restore nahi hoti - hamesha is file ka DEF load hota hai */
+/* BUILD clip1-v8: script ab kabhi browser memory se restore nahi hoti - hamesha is file ka DEF load hota hai */
 try{localStorage.removeItem('stg_scr')}catch(e){}
 $('#rs').click();
-$('#info').textContent='[BUILD clip1-v7] '+(isApp()?'App mode ON (fullscreen app) - recording ke liye best.':'Tip: Chrome menu > Install app, phir "Parda Stage" icon se kholo. Isse fullscreen + landscape bina black screen ke milta hai.');
+$('#info').textContent='[BUILD clip1-v8] '+(isApp()?'App mode ON (fullscreen app) - recording ke liye best.':'Tip: Chrome menu > Install app, phir "Parda Stage" icon se kholo. Isse fullscreen + landscape bina black screen ke milta hai.');
 syncModeUI();layout();drawCur();requestAnimationFrame(tick);
 </script></body></html>
