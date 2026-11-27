@@ -33,3 +33,23 @@ html{scroll-behavior:auto}
   .mi{padding-bottom:40px!important}
   #foot{padding-bottom:32px}
 }
+
+/* v77: strip side arrows (detail page: More like this, Cast, Mood...) — shown on laptop / tablet widths and wherever a mouse hovers */
+.cvsa{display:none;position:absolute;z-index:4;width:46px;height:46px;border-radius:50%;border:1px solid #ffffff22;background:#000c;color:#fff;cursor:pointer;place-items:center;padding:0;transition:transform .2s,background .2s,opacity .2s;opacity:.92}
+.cvsa[hidden]{display:none!important}
+.cvsa svg{width:22px;height:22px;stroke:#fff;fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+.cvsa:hover{background:var(--accent);transform:scale(1.07);opacity:1}.cvsa:hover svg{stroke:#000}
+.cvsa:active{transform:scale(.94)}
+@media(min-width:700px),(hover:hover){.cvsa:not([hidden]){display:grid}}
+@media(hover:hover) and (pointer:fine){.strip{cursor:grab}.strip.cvdrag{cursor:grabbing;user-select:none}.strip.cvdrag *{pointer-events:none}}
+
+/* v77: roomy picker for Season / country (laptop + tablet) */
+@media(min-width:700px),(hover:hover){select#ssn,select#rg{cursor:pointer;min-height:42px;padding:8px 16px;transition:background .2s,border-color .2s}select#ssn:hover,select#rg:hover,select#ssn:focus-visible,select#rg:focus-visible{background:#ffffff22;border-color:var(--accent);outline:0}}
+.cvdd{position:fixed;z-index:2500;overflow-y:auto;overscroll-behavior:contain;padding:8px;border-radius:18px;border:1px solid #ffffff1f;background:#121214f2;box-shadow:0 24px 60px -12px #000,0 0 0 1px #0008;display:flex;flex-direction:column;gap:2px;animation:cvddin .16s cubic-bezier(.2,.8,.2,1);scrollbar-width:thin;scrollbar-color:#ffffff40 transparent}
+.cvdd.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(104px,1fr));gap:6px}
+.cvdd button{display:flex;align-items:baseline;justify-content:space-between;gap:12px;width:100%;text-align:left;padding:11px 14px;border-radius:12px;border:1px solid transparent;background:none;color:var(--fg,#f6f1e8);font:500 15px "DM Sans",sans-serif;cursor:pointer;white-space:nowrap;transition:background .12s}
+.cvdd.grid button{justify-content:center;text-align:center;border-color:#ffffff12}
+.cvdd button small{color:var(--mute,#8a8a8a);font-size:13px;font-weight:400}
+.cvdd button:hover,.cvdd button:focus-visible{background:#ffffff18;outline:0}
+.cvdd button.on{background:color-mix(in srgb,var(--accent) 22%,#121214);color:var(--accent);border-color:color-mix(in srgb,var(--accent) 45%,transparent)}
+@keyframes cvddin{from{opacity:0;transform:translateY(-6px) scale(.98)}}
