@@ -2523,7 +2523,7 @@ const A={
 };
 async function run(steps){const bad=[];for(const s of steps){if(abort)break;try{await A[s.a](s)}catch(e){bad.push(s.a+': '+e.message)}}return bad}
 function patchDoc(){try{const C=Wn().Clipboard.prototype;C.writeText=()=>Promise.resolve();C.write=()=>Promise.resolve()}catch(e){}}
-function newFrame(){const n=document.createElement('iframe');n.id='ifr';n.style.width=W+'px';n.style.height=H+'px';ifr.replaceWith(n);ifr=n}
+function newFrame(){const n=document.createElement('iframe');n.id='ifr';n.style.cssText=`position:absolute;inset:0;width:${W}px;height:${H}px;border:0;background:#000`;ifr.replaceWith(n);ifr=n}
 function liteCss(){try{const d=D(),s=d.createElement('style');
  let css='*{ -webkit-tap-highlight-color:transparent }html,body,*{scroll-behavior:auto!important}';
  if($('#lite').checked)css+='*,*::before,*::after{backdrop-filter:none!important;-webkit-backdrop-filter:none!important}.grain{display:none!important}';
@@ -2825,8 +2825,8 @@ function loadSite(path,intro=true,keep=false,instant=false){
    const finish=()=>{if(done)return;done=true;clearInterval(iv);patchDoc();liteCss();try{initHref=Wn().location.href}catch(e){}if(manualOn)bindManual();
     if(keep)return res();if(instant){fade.style.opacity=0;return res()}
     setTimeout(()=>{fade.style.transition='opacity .3s';fade.style.opacity=0;res()},intro?100:500)};
-   const iv=setInterval(()=>{let ok=0;try{const d=ifr.contentDocument;ok=d&&d.body&&d.readyState!=='loading'&&d.location.href.indexOf('about:blank')<0}catch(e){}
-    if(ok||Date.now()-t0>6000)finish()},30);
+   const iv=setInterval(()=>{let ok=0;try{const d=ifr.contentDocument;ok=d&&d.body&&d.readyState==='complete'&&d.body.children.length>0&&d.location.href.indexOf('about:blank')<0}catch(e){}
+    if(ok||Date.now()-t0>7000)finish()},40);
    ifr.addEventListener('load',()=>{if(Date.now()-t0>150)finish()},{once:true});
   },60)})}
 const fmt=t=>Math.floor(t/60)+':'+String(Math.floor(t%60)).padStart(2,'0');
@@ -2896,7 +2896,7 @@ async function start(){if(running)return;
  layout();$('#panel').classList.add('h');curEl.classList.remove('on');resetCam();auto.z=0;
  fade.style.transition='none';fade.style.opacity=1;
  const n=Math.max(recOn?6:1,+$('#cdn').value||5),cd=$('#cd');cd.style.display='flex';cd.style.flexDirection='column';
- const pre=isInteractive?Promise.resolve():loadSite($('#path').value,false,true);
+ const pre=Promise.resolve();
  for(let i=n;i>0&&!abort;i--){const nf=recOn&&!document.fullscreenElement&&!isApp();cd.innerHTML=i+(nf?'<div class="sub">Fullscreen nahi hua - sharp 1080p ke liye is screen par ek baar tap / click karo</div>':'');cd.onclick=nf?()=>{try{document.documentElement.requestFullscreen().catch(()=>{})}catch(e){}}:null;await sleep(1000)}
  await pre;cd.style.display='none';cd.style.flexDirection='';
  if(recOn&&!abort){recBegin();T0=performance.now();marks=[]}
@@ -2917,13 +2917,16 @@ async function start(){if(running)return;
   $('#msg').textContent='Session ruk gaya.'+(rm2?'\n'+rm2:'');
   return;
  }
+ const maxSec=($('#clip').value==='all'?285:$('#clip').value==='clip3'?125:65)*pace;
+ const wd=setTimeout(()=>{if(running){abort=true;dbg.push('Auto-stop: max session time ('+Math.round(maxSec)+'s) reached')}},maxSec*1000);
  const bad=abort?[]:await run(steps);
+ clearTimeout(wd);
  marks.push(['END',(performance.now()-T0)/1000]);
  running=false;clearTimeout(outT);curEl.classList.remove('on');try{wl&&wl.release()}catch(e){}
- if(abort){fade.style.opacity=0;$('#panel').classList.remove('h')}else{fade.style.transition='opacity .8s';fade.style.opacity=1}
- let recMsg='';if(recOn){if(!abort)await sleep(1300);recMsg=await recStop(abort?'partial':'');recLock=false;
-  fade.style.transition='none';fade.style.opacity=0;$('#cd').style.display='none';$('#panel').classList.remove('h');
-  try{if(document.fullscreenElement)await document.exitFullscreen()}catch(e){}layout()}
+ if(!abort){fade.style.transition='opacity .35s';fade.style.opacity=1;await sleep(380)}
+ let recMsg='';if(recOn){recMsg=await recStop(abort?'partial':'');recLock=false}
+ fade.style.transition='none';fade.style.opacity=0;$('#cd').style.display='none';$('#panel').classList.remove('h');
+ try{if(document.fullscreenElement)await document.exitFullscreen()}catch(e){}layout();
  const lst=marks.map((m,i)=>m[0]==='END'?'':m[0]+'  '+fmt(m[1])+' - '+fmt(marks[i+1][1])).filter(Boolean).join('\n');
  $('#msg').textContent=(abort?'Rok diya.':(recOn?'DONE - video ready!':'Done - recorder stop karo, phir top-left corner pe double-tap karke panel kholo.'))+(recMsg?'\n'+recMsg:'')+'\nCut list ('+(recOn?'video ke start se':'Start dabane ke time se')+'):\n'+lst+(bad.length?'\nSkip hue:\n'+bad.join('\n'):'')+(dbg.length?'\nSpotlight log:\n'+dbg.join('\n'):'')}
 let tap=0;$('#stop').onclick=()=>{const n=Date.now();if(n-tap<500){if(running){abort=true;$('#cd').style.display='none'}else{fade.style.opacity=0;$('#panel').classList.remove('h')}}tap=n};
@@ -2932,6 +2935,6 @@ const loadClip=()=>{$('#scr').value=JSON.stringify(CLIPS[$('#clip').value]||CLIP
 /* BUILD clips-v14-auto: script ab kabhi browser memory se restore nahi hoti - hamesha is file ka DEF load hota hai */
 try{localStorage.removeItem('stg_scr')}catch(e){}
 $('#rs').click();
-$('#info').textContent='[BUILD clips-v16-oneclick] '+(isApp()?'App mode ON (fullscreen app) - recording ke liye best.':'Tip: Chrome menu > Install app, phir "Parda Stage" icon se kholo. Isse fullscreen + landscape bina black screen ke milta hai.');
+$('#info').textContent='[BUILD clips-v22-fix] '+(isApp()?'App mode ON (fullscreen app) - recording ke liye best.':'Tip: Chrome menu > Install app, phir "Parda Stage" icon se kholo. Isse fullscreen + landscape bina black screen ke milta hai.');
 syncModeUI();layout();drawCur();requestAnimationFrame(tick);
 </script></body></html>
