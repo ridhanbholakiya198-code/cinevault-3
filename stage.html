@@ -155,18 +155,18 @@ const DEF=[
 {"a": "click", "to": "#hd", "quiet": false, "nozoom": true, "hold": 0},
 {"a": "wait", "ms": 2000},
 {"a": "cursor", "x": 720, "y": 700, "ms": 1100},
-{"a": "spotin", "to": "#cvspot", "n": 3, "by": 560, "ms": 900, "pauses": [350, 300, 400], "settle": 500, "fast": 1900, "min": 1500, "max": 8000, "after": 5500},
-{"a": "click", "to": ".sp-th [data-t]", "idx": 1, "quiet": false, "nozoom": true, "hold": 0},
+{"a": "spotin", "to": "#cvspot", "n": 3, "by": 560, "ms": 900, "pauses": [350, 300, 400], "settle": 500, "fast": 1900, "min": 1500, "max": 8000, "after": 8500},
+{"a": "spotpick", "to": ".sp-th [data-t]", "idx": 1, "quiet": false, "nozoom": true, "hold": 0},
 {"a": "wait", "ms": 2000},
-{"a": "click", "to": ".sp-th [data-t]", "idx": 2, "quiet": false, "nozoom": true, "hold": 0},
+{"a": "spotpick", "to": ".sp-th [data-t]", "idx": 2, "quiet": false, "nozoom": true, "hold": 0},
 {"a": "wait", "ms": 2000},
-{"a": "click", "to": ".sp-th [data-t]", "idx": 3, "quiet": false, "nozoom": true, "hold": 0},
+{"a": "spotpick", "to": ".sp-th [data-t]", "idx": 3, "quiet": false, "nozoom": true, "hold": 0},
 {"a": "wait", "ms": 2000},
-{"a": "click", "to": ".sp-th [data-t]", "idx": 4, "quiet": false, "nozoom": true, "hold": 0},
+{"a": "spotpick", "to": ".sp-th [data-t]", "idx": 4, "quiet": false, "nozoom": true, "hold": 0},
 {"a": "wait", "ms": 2000}
 ];
 const cam={z:1,x:W/2,y:H/2,tw:null,follow:false},cur={x:W*.8,y:H*.85},auto={z:0,out:1500};
-let pace=1;const T=ms=>ms*pace,ZD=.85,ZO=.9;
+let spSeen=new Set();let pace=1;const T=ms=>ms*pace,ZD=.85,ZO=.9;
 let k=1,ww=0,wh=0,abort=false,running=false,manualOn=false,trackOn=false,holdZoom=false,tapZoomOn=true,dwellOn=false,dwellZoomed=false,blurOn=false,outT=0,dwellT=0,marks=[],T0=0,last=performance.now(),unsubManual=null,lastHoverEl=null,lastTf='',lastBlur='',initHref='',wc=0,lastMove=0;
 const isApp=()=>matchMedia('(display-mode: fullscreen)').matches||matchMedia('(display-mode: standalone)').matches;
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
@@ -295,7 +295,7 @@ const A={
   for(let i=0;i<(s.n||4)&&!abort;i++){const x0=n.scrollLeft,x1=x0+(s.by||430),ms=s.ms||1600;
    await new Promise(res=>{const t0=performance.now();(function f(q){const p=ease(Math.min(1,(q-t0)/ms));markScroll();n.scrollLeft=x0+(x1-x0)*p;p<1&&!abort?requestAnimationFrame(f):res()})(t0)});
    await sleep(ps[i%ps.length])}},
- async spotin(s){const e=find(s.to),ps=s.pauses||[350,300,400],n=s.n||3,by=s.by||560;
+ async spotin(s){spSeen=new Set();const e=find(s.to),ps=s.pauses||[350,300,400],n=s.n||3,by=s.by||560;
   const entered=()=>e.getBoundingClientRect().top<=H*.97;
   /* PHASE 1: n normal slow scrolls (stops early only if spotlight already entered view) */
   for(let i=0;i<n&&!abort;i++){if(entered())break;
@@ -322,6 +322,21 @@ const A={
     if(n-t0>=mx||(n-t0>=mn&&!busy&&n-last>=q)){try{mo&&mo.disconnect()}catch(x){}return res()}
     setTimeout(f,100)})()});
   await sleep(T(s.after||1500))},
+ async spotpick(s){
+  /* spotlight strip se agli film chuno: jo film abhi screen par chal rahi hai (active) ya pehle click ho chuki hai, use dobara click NAHI karta */
+  const sel=s.to||'.sp-th [data-t]',w=Wn();
+  const all=[...D().querySelectorAll(sel)],vis=all.filter(n=>n.getClientRects().length),list=vis.length?vis:all;
+  if(!list.length)throw Error('nahi mila: '+sel);
+  const sig=n=>{const c=w.getComputedStyle(n);return n.className+'|'+c.opacity+'|'+c.borderTopColor+'|'+c.transform+'|'+c.outlineColor};
+  const key=n=>n.getAttribute('data-t')||n.textContent.trim()||String(list.indexOf(n));
+  const sigs=list.map(sig),cnt={};sigs.forEach(x=>cnt[x]=(cnt[x]||0)+1);
+  const isActive=(n,i)=>n.matches('[aria-current="true"],[aria-selected="true"],.on,.active,.act')||(list.length>=3&&cnt[sigs[i]]===1);
+  list.forEach((n,i)=>{if(isActive(n,i))spSeen.add(key(n))});
+  const start=s.idx||0;let pick=-1;
+  for(let k=0;k<list.length;k++){const i=(start+k)%list.length;if(!spSeen.has(key(list[i]))){pick=i;break}}
+  if(pick<0)pick=start%list.length;
+  spSeen.add(key(list[pick]));
+  return A.click({...s,a:'click',to:sel,idx:pick})},
  async ensure(s){let ok=false;try{const m=D().querySelector('#modal');ok=!!m&&!m.hidden&&(m.textContent||'').toLowerCase().includes(s.text)}catch(e){}
   if(!ok)for(const p of(s.else||[])){try{await A[p.a](p)}catch(e){}}},
  async type(s){const e=find(s.to,s.idx);e.focus();if(s.clear)e.value='';for(const ch of s.text){if(abort)return;e.value+=ch;
@@ -702,9 +717,9 @@ async function start(){if(running)return;
 let tap=0;$('#stop').onclick=()=>{const n=Date.now();if(n-tap<500){if(running){abort=true;$('#cd').style.display='none'}else{fade.style.opacity=0;$('#panel').classList.remove('h')}}tap=n};
 $('#go').onclick=start;
 $('#rs').onclick=()=>{$('#scr').value=JSON.stringify(DEF,null,1)};
-/* BUILD clip1-v5: script ab kabhi browser memory se restore nahi hoti - hamesha is file ka DEF load hota hai */
+/* BUILD clip1-v6: script ab kabhi browser memory se restore nahi hoti - hamesha is file ka DEF load hota hai */
 try{localStorage.removeItem('stg_scr')}catch(e){}
 $('#rs').click();
-$('#info').textContent='[BUILD clip1-v5] '+(isApp()?'App mode ON (fullscreen app) - recording ke liye best.':'Tip: Chrome menu > Install app, phir "Parda Stage" icon se kholo. Isse fullscreen + landscape bina black screen ke milta hai.');
+$('#info').textContent='[BUILD clip1-v6] '+(isApp()?'App mode ON (fullscreen app) - recording ke liye best.':'Tip: Chrome menu > Install app, phir "Parda Stage" icon se kholo. Isse fullscreen + landscape bina black screen ke milta hai.');
 syncModeUI();layout();drawCur();requestAnimationFrame(tick);
 </script></body></html>
