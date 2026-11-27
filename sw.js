@@ -1,5 +1,5 @@
 /* Parda service worker: images cache-first; app files network-first BUT if the network is slow (2.5s) the saved copy is used and refreshed in the background; API/auth untouched */
-const V="cv-app-v19",IM="cv-img-v1",MAX=260,WAIT=20000;
+const V="cv-app-v18",IM="cv-img-v1",MAX=260,WAIT=20000;
 self.addEventListener("install",()=>self.skipWaiting());
 self.addEventListener("activate",e=>e.waitUntil((async()=>{for(const k of await caches.keys())if(k!==V&&k!==IM)await caches.delete(k);await self.clients.claim()})()));
 self.addEventListener("fetch",e=>{const r=e.request,u=new URL(r.url);

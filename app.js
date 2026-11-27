@@ -48,7 +48,7 @@ function fpOf(im){const c=document.createElement("canvas");c.width=16;c.height=9
 function bestMatch(list,fp){return Promise.all(list.map(b=>new Promise(res=>{const im=new Image();im.crossOrigin="anonymous";
   im.onload=()=>{try{const d=fpOf(im);let e=0,j=0;for(let k=0;k<d.length;k++){if(k%4===3)continue;e+=(d[k]-fp[j++])**2}res([e,b])}catch{res([Infinity,b])}};im.onerror=()=>res([Infinity,b]);im.src=IMG+"w300"+b.file_path}))).then(r=>{r.sort((a,b)=>a[0]-b[0]);return r[0]&&r[0][0]<Infinity?r[0][1]:null})}
 // ---- build stamp + on-screen diagnostics (visible only when the address ends with ?debug=1)
-const PARDA_BUILD=76,DBG=/[?&]debug\b/.test(location.search);
+const PARDA_BUILD=75,DBG=/[?&]debug\b/.test(location.search);
 const dbg=window.CVDBG=m=>{if(!DBG)return;try{let e=document.getElementById("pdbg");if(!e){e=document.createElement("pre");e.id="pdbg";e.style.cssText="position:fixed;left:8px;right:8px;bottom:96px;z-index:99999;margin:0;padding:8px 10px;background:#000d;color:#8f8;font:11px/1.45 monospace;border-radius:8px;white-space:pre-wrap;pointer-events:none;max-height:40vh;overflow:hidden";document.body.append(e)}e.textContent+=m+"\n"}catch{}};
 // ---- TEMP: pinned hero slots. 1 = Blade Runner 2049 on its first Mood "Still" (the one the Mood tab lists first), 2 = Invincible. The normal mix follows.
 // Set HERO_PIN=false to go back to the usual hero.
@@ -115,7 +115,7 @@ async function heroItems(emit){try{const h=await heroDiscover(emit);if(h.length>
 // Old bug: the slide only changed after its picture finished loading, but `hi` moved on at once and a new request cancelled the last one,
 // so on a slow connection nothing ever showed ("stuck"), and the next swipe/auto-tick landed on a far-away slide ("jumps to last").
 // Now: pictures load once (deduped, decoded off-thread), text/dots follow instantly, a slow picture never blocks the next move.
-let hAcc="",hlast=0,hbusy=0,hdir=1,hvis=1,hpainted=0,hbound=0,pq=0;const HP={},hsleep=ms=>new Promise(r=>setTimeout(r,ms));
+let hlast=0,hbusy=0,hdir=1,hvis=1,hpainted=0,hbound=0,pq=0;const HP={},hsleep=ms=>new Promise(r=>setTimeout(r,ms));
 function hload(src){return HP[src]||(HP[src]=new Promise(res=>{const t=(s,retry)=>{const im=new Image();im.decoding="async";
  im.onload=()=>(im.decode?im.decode().catch(()=>{}):Promise.resolve()).then(()=>res(s));
  im.onerror=()=>{if(retry&&s.startsWith("/timg/"))t(DIMG+s.slice(6),0);else{delete HP[src];res("")}};im.src=s};t(src,1)}))}
@@ -128,8 +128,7 @@ function paintHero(i,n,id){HGO&&HGO();const c=$(".hcont");c.style.setProperty("-
  document.querySelectorAll(".hdots i").forEach((d,k)=>d.classList.toggle("on",k===n));
  $("#cn").textContent=String(n+1).padStart(2,"0");$("#ct").textContent="/"+String(hero.length).padStart(2,"0");
  if(matchMedia("(min-width:900px)").matches){const nx=hero[(n+1)%hero.length];$("#ni").src=cvOvr(nx,"hero")||IMG+"w300"+hbd(nx);$("#nt").textContent=title(nx)}
- // the slide colour is remembered, but only painted when no detail page / menu is open (those keep their own title colour)
- dominant(i.poster_path).then(c=>{if(id!==hq)return;hAcc=c;if($("#modal").hidden&&!document.querySelector(".cva"))root.style.setProperty("--accent",c)})}
+ dominant(i.poster_path).then(c=>{if(id===hq)root.style.setProperty("--accent",c)})}
 function swapBg(i,s,id){const A=[$("#hbgA"),$("#hbgB")],cu=A[hl],nw=A[1-hl];if(cu.classList.contains("on")&&cu.dataset.s===s)return;
  hl=1-hl;clearTimeout(nw._f);nw.className="hbg";void nw.offsetWidth;nw.style.backgroundImage=`url(${s})`;nw.style.backgroundPosition=(i.fx||"50%")+" 50%";nw.dataset.s=s;
  if(STRONG&&M&&i.pref&&!cvOvr(i,"hero"))hload(IMG+"original"+hbd(i)).then(h=>{if(h&&id===hq&&nw.classList.contains("on"))nw.style.backgroundImage=`url(${h})`});
@@ -436,7 +435,7 @@ $("#hr").onclick=()=>upd2(c=>c.fav=!c.fav);$("#trb").onclick=()=>{if(CUR.v)openT
 $("#sh").onclick=()=>{const v=VIEW,nm=CUR.m?CUR.m.title:$("#tt").textContent;if(!v||!nm)return;if(v.k==="l")return;const k=v.k==="p"?"person":v.k==="f"?"franchise":v.k==="c"?"collection":v.t,u=shareURL(k,v.k==="f"?v.key:v.id),x={title:nm+" on Parda",url:u};
  if(navigator.share)navigator.share(x).catch(()=>{});else if(navigator.clipboard)navigator.clipboard.writeText(u).then(()=>toast("Link copied")).catch(()=>toast(u));else toast(u)};
 $("#simp").onclick=e=>{if(e.target.id==="simp")$("#simp").hidden=true};
-function hideModal(){tok++;NAV=[];VIEW=null;closeTr(1);$("#modal").classList.remove("pp","nosh");$("#simp").hidden=$("#sheet").hidden=$("#lsheet").hidden=true;$("#modal").hidden=true;$("#mc").innerHTML="";document.body.style.overflow="";if(hAcc)root.style.setProperty("--accent",hAcc);if(!$("#list").hidden)renderList()}
+function hideModal(){tok++;NAV=[];VIEW=null;closeTr(1);$("#modal").classList.remove("pp","nosh");$("#simp").hidden=$("#sheet").hidden=$("#lsheet").hidden=true;$("#modal").hidden=true;$("#mc").innerHTML="";document.body.style.overflow="";if(!$("#list").hidden)renderList()}
 const close=()=>history.state&&history.state.m?history.back():hideModal();
 $("#mx").onclick=()=>{if(!navBack())close()};$("#modal").onclick=e=>{if(e.target.id==="modal")close()};addEventListener("keydown",e=>{if(e.key!=="Escape")return;if(!$("#sheet").hidden||!$("#simp").hidden){closeSheet();$("#simp").hidden=true}else if(!$("#modal").hidden)close()});
 // ---- My list ----
