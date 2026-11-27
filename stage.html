@@ -529,52 +529,77 @@ const CLIPS={
 "after": 500
 },
 {
+"a": "centerif",
+"in": "#modal",
+"to": "[data-cvt=\"about\"]",
+"tol": 0.18,
+"ms": 1200,
+"after": 300
+},
+{
 "a": "click",
 "to": "[data-cvt=\"about\"]",
 "nozoom": true,
-"mv": 700,
+"mv": 900,
+"after": 400
+},
+{
+"a": "scroll",
+"in": "#modal",
+"by": 280,
+"ms": 1100
+},
+{
+"a": "waitfor",
+"sel": ".fr-t",
+"max": 15000,
 "after": 400
 },
 {
 "a": "centerif",
 "in": "#modal",
 "to": ".fr-t",
-"tol": 0.18,
-"ms": 1300,
-"after": 400
+"tol": 0.2,
+"ms": 1100,
+"after": 300
 },
 {
 "a": "click",
 "to": ".fr-t",
 "z": 1.5,
-"hold": 1500,
+"hold": 1000,
 "out": 120,
-"mv": 1100
+"mv": 1000
 },
 {
 "a": "waitfor",
 "sel": "#ftabs button",
 "imgs": true,
-"max": 10000,
-"after": 600
+"max": 12000,
+"after": 1000
 },
 {
 "a": "click",
 "to": "#ftabs button@All",
 "nozoom": true,
 "mv": 900,
-"hold": 300,
+"hold": 200,
 "after": 500
 },
 {
-"a": "scroll",
+"a": "stepscroll",
 "in": "#modal",
-"by": 420,
-"ms": 1500
+"n": 2,
+"by": 380,
+"ms": 1400,
+"pauses": [
+700,
+800
+]
 },
 {
 "a": "wait",
-"ms": 1000
+"ms": 600
 },
 {
 "a": "click",
@@ -719,6 +744,12 @@ const CLIPS={
 "after": 500
 },
 {
+"a": "waitfor",
+"sel": ".mpal button",
+"max": 10000,
+"after": 300
+},
+{
 "a": "centerif",
 "in": "#modal",
 "to": ".mpal",
@@ -734,6 +765,12 @@ const CLIPS={
 "mv": 900,
 "hold": 300,
 "after": 700
+},
+{
+"a": "waitfor",
+"sel": ".mcardbtn",
+"max": 8000,
+"after": 300
 },
 {
 "a": "click",
@@ -780,6 +817,13 @@ const CLIPS={
 "out": 120,
 "mv": 1000,
 "after": 600
+},
+{
+"a": "waitfor",
+"sel": "#rec .card",
+"imgs": true,
+"max": 10000,
+"after": 300
 },
 {
 "a": "centerif",
@@ -904,12 +948,6 @@ function tapEl(t){const w=Wn();let n=t;while(n&&typeof n.click!=='function')n=n.
  const o={bubbles:true,cancelable:true,view:w,pointerType:'mouse',button:0,clientX:cur.x,clientY:cur.y};
  for(const ty of['pointerdown','mousedown','pointerup','mouseup']){try{n.dispatchEvent(new(ty[0]=='p'?w.PointerEvent:w.MouseEvent)(ty,o))}catch(e){}}
  typeof n.click==='function'?n.click():n.dispatchEvent(new w.MouseEvent('click',o))}
-/* v77 site menu: the site's own roomy Season / country menu opens on mousedown, so the tap is visible in the recording.
-   (A real <select> popup can never be opened by script events, which is why the dropdown "did nothing" before.) */
-async function openSiteMenu(sel){try{const w=Wn(),d=D();
- const o={bubbles:true,cancelable:true,view:w,pointerType:'mouse',button:0,clientX:cur.x,clientY:cur.y};
- for(const ty of['pointerdown','mousedown','pointerup','mouseup']){sel.dispatchEvent(new(ty[0]=='p'?w.PointerEvent:w.MouseEvent)(ty,o))}
- await sleep(260);return d.querySelector('.cvdd')||null}catch(e){return null}}
 /* anticipation: camera starts zooming while the cursor is still travelling, so it lands zoomed before the click */
 const zl=s=>s.nozoom?0:(s.z!==undefined?s.z:auto.z);
 async function approach(e,s){clearTimeout(outT);await reveal(e);let c=ctr(e);const z=zl(s);
@@ -1026,12 +1064,7 @@ const A={
  mark:s=>{marks.push([s.n,(performance.now()-T0)/1000])},
  async tap(s){tapEl(find(s.to,s.idx))},
  async select(s){const e=find(s.to,s.idx);const c=await approach(e,s);const h=s.hold!==undefined?s.hold:(auto.hold||0);if(h>0)await sleep(h);await sleep(120);ripple();
-  let done=0;const menu=await openSiteMenu(e);
-  if(menu){await sleep(T(600));const i=[...e.options].findIndex(o=>o.value===String(s.value)),bt=i>=0?menu.querySelector('button[data-i="'+i+'"]'):null;
-   if(bt){await approach(bt,{...s,z:1,nozoom:1,mv:650});await sleep(T(300));ripple();tapEl(bt);done=1;await sleep(T(250))}
-   else{try{D().dispatchEvent(new(Wn().KeyboardEvent)('keydown',{key:'Escape',bubbles:true}))}catch(x){}}}
-  if(!done){e.value=s.value;e.dispatchEvent(new Event('input',{bubbles:true}));e.dispatchEvent(new Event('change',{bubbles:true}))}
-  armOut(s);await quiet(3000,350);await sleep(T(s.after||0))},
+  e.value=s.value;e.dispatchEvent(new Event('input',{bubbles:true}));e.dispatchEvent(new Event('change',{bubbles:true}));armOut(s);await quiet(3000,350);await sleep(T(s.after||0))},
  key:s=>{for(const x of[D(),Wn()])x.dispatchEvent(new(Wn().KeyboardEvent)('keydown',{key:s.k||'Escape',bubbles:true}))},
  async hscroll(s){const e=find(s.to,s.idx);let n=e.parentElement;
   while(n){const o=Wn().getComputedStyle(n).overflowX;if((o==='auto'||o==='scroll')&&n.scrollWidth>n.clientWidth+4)break;n=n.parentElement}
@@ -1183,7 +1216,7 @@ function clickAtCursor(){
  dwellZoomed=false;
  try{const d=D(),el=d&&d.elementFromPoint(cur.x,cur.y);
   const sel=el?(el.tagName==='SELECT'?el:el.closest('select')):null;
-  if(sel){openSiteMenu(sel).then(m=>{if(!m)openSelectPicker(sel)});return}
+  if(sel){openSelectPicker(sel);return}
   if(el){
    if(el.tagName==='INPUT'||el.tagName==='TEXTAREA')el.focus();
    tapEl(el);
@@ -1399,9 +1432,9 @@ async function start(){if(running)return;
 let tap=0;$('#stop').onclick=()=>{const n=Date.now();if(n-tap<500){if(running){abort=true;$('#cd').style.display='none'}else{fade.style.opacity=0;$('#panel').classList.remove('h')}}tap=n};
 $('#go').onclick=start;
 const loadClip=()=>{$('#scr').value=JSON.stringify(CLIPS[$('#clip').value]||CLIPS.clip1,null,1)};$('#clip').onchange=loadClip;$('#rs').onclick=loadClip;
-/* BUILD clips-v4: script ab kabhi browser memory se restore nahi hoti - hamesha is file ka DEF load hota hai */
+/* BUILD clips-v5: script ab kabhi browser memory se restore nahi hoti - hamesha is file ka DEF load hota hai */
 try{localStorage.removeItem('stg_scr')}catch(e){}
 $('#rs').click();
-$('#info').textContent='[BUILD clips-v4] '+(isApp()?'App mode ON (fullscreen app) - recording ke liye best.':'Tip: Chrome menu > Install app, phir "Parda Stage" icon se kholo. Isse fullscreen + landscape bina black screen ke milta hai.');
+$('#info').textContent='[BUILD clips-v5] '+(isApp()?'App mode ON (fullscreen app) - recording ke liye best.':'Tip: Chrome menu > Install app, phir "Parda Stage" icon se kholo. Isse fullscreen + landscape bina black screen ke milta hai.');
 syncModeUI();layout();drawCur();requestAnimationFrame(tick);
 </script></body></html>
