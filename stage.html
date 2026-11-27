@@ -463,7 +463,7 @@ const CLIPS={
 {
 "a": "select",
 "to": "#rg",
-"value": "US",
+"value": "IN",
 "z": 1.5,
 "hold": 1500,
 "out": 120,
@@ -836,14 +836,13 @@ const CLIPS={
 {
 "a": "hstep",
 "to": "#rec .card",
-"n": 4,
-"by": 400,
-"ms": 1300,
+"n": 3,
+"by": 280,
+"ms": 1800,
 "pauses": [
-700,
-800,
-700,
-750
+1000,
+1100,
+1000
 ]
 },
 {
@@ -1064,6 +1063,10 @@ const A={
  mark:s=>{marks.push([s.n,(performance.now()-T0)/1000])},
  async tap(s){tapEl(find(s.to,s.idx))},
  async select(s){const e=find(s.to,s.idx);const c=await approach(e,s);const h=s.hold!==undefined?s.hold:(auto.hold||0);if(h>0)await sleep(h);await sleep(120);ripple();
+  const w=Wn(),d=D();try{e.dispatchEvent(new w.MouseEvent('mousedown',{bubbles:true,cancelable:true,view:w,button:0,clientX:c.x,clientY:c.y}))}catch(x){}
+  await sleep(220);const dd=d.querySelector('.cvdd');
+  if(dd){const idx=[...e.options].findIndex(o=>o.value===s.value||o.text===s.value);const ob=idx>=0?dd.querySelector('[data-i="'+idx+'"]'):null;
+   if(ob){const oc=await approach(ob,{nozoom:true,mv:650});await sleep(120);ripple();tapEl(d.elementFromPoint(oc.x,oc.y)||ob);armOut(s);await quiet(3000,350);await sleep(T(s.after||0));return}}
   e.value=s.value;e.dispatchEvent(new Event('input',{bubbles:true}));e.dispatchEvent(new Event('change',{bubbles:true}));armOut(s);await quiet(3000,350);await sleep(T(s.after||0))},
  key:s=>{for(const x of[D(),Wn()])x.dispatchEvent(new(Wn().KeyboardEvent)('keydown',{key:s.k||'Escape',bubbles:true}))},
  async hscroll(s){const e=find(s.to,s.idx);let n=e.parentElement;
@@ -1432,9 +1435,9 @@ async function start(){if(running)return;
 let tap=0;$('#stop').onclick=()=>{const n=Date.now();if(n-tap<500){if(running){abort=true;$('#cd').style.display='none'}else{fade.style.opacity=0;$('#panel').classList.remove('h')}}tap=n};
 $('#go').onclick=start;
 const loadClip=()=>{$('#scr').value=JSON.stringify(CLIPS[$('#clip').value]||CLIPS.clip1,null,1)};$('#clip').onchange=loadClip;$('#rs').onclick=loadClip;
-/* BUILD clips-v5: script ab kabhi browser memory se restore nahi hoti - hamesha is file ka DEF load hota hai */
+/* BUILD clips-v6: script ab kabhi browser memory se restore nahi hoti - hamesha is file ka DEF load hota hai */
 try{localStorage.removeItem('stg_scr')}catch(e){}
 $('#rs').click();
-$('#info').textContent='[BUILD clips-v5] '+(isApp()?'App mode ON (fullscreen app) - recording ke liye best.':'Tip: Chrome menu > Install app, phir "Parda Stage" icon se kholo. Isse fullscreen + landscape bina black screen ke milta hai.');
+$('#info').textContent='[BUILD clips-v6] '+(isApp()?'App mode ON (fullscreen app) - recording ke liye best.':'Tip: Chrome menu > Install app, phir "Parda Stage" icon se kholo. Isse fullscreen + landscape bina black screen ke milta hai.');
 syncModeUI();layout();drawCur();requestAnimationFrame(tick);
 </script></body></html>
