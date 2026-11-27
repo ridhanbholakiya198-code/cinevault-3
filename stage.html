@@ -14,7 +14,7 @@ body.haspad #bg{padding-bottom:250px}
 @media (orientation:landscape){body.haspad #bg{padding-bottom:0}}
 #win{position:relative;overflow:hidden;background:#000;border-radius:14px;box-shadow:0 24px 60px #0009,0 0 0 1px #ffffff26}
 body.flat #bg{background:#000}body.flat #win{border-radius:0;box-shadow:none}
-#cam{position:absolute;left:0;top:0;width:1440px;height:900px;transform-origin:0 0}
+#cam{position:absolute;left:0;top:0;width:1440px;height:900px;transform-origin:0 0;backface-visibility:hidden;will-change:transform}
 #ifr{position:absolute;inset:0;width:1440px;height:900px;border:0;background:#000}
 #cur{position:absolute;left:0;top:0;width:34px;height:34px;pointer-events:none;opacity:0;transition:opacity .3s;z-index:5;filter:drop-shadow(0 3px 5px #0009);will-change:transform}
 #cur.on{opacity:1}#cur svg{width:100%;height:100%;transition:transform .12s}#cur.dn svg{transform:scale(.82)}
@@ -99,7 +99,8 @@ button.g{background:#333}
   <option value="clip3">Clip 3 (Blade Runner 2049 Deep Dive)</option>
   <option value="clip4">Clip 4 (Invincible Seasons &amp; Episodes)</option>
   <option value="clip5">Clip 5 (Search Collections)</option>
-  <option value="clip6" selected>Clip 6 (Browse + Filters + Crimson)</option>
+  <option value="clip6">Clip 6 (Browse + Filters + Crimson)</option>
+  <option value="all" selected>All Clips (1 to 6 Combined - 60fps)</option>
  </select></label><br>
  <div id="mopts" class="mopts">
   <label>Zoom level <select id="mz">
@@ -131,7 +132,7 @@ button.g{background:#333}
  </div>
  <label>Site path <input type="text" id="path" value="/index.html"></label>
  <label>Countdown (sec) <input type="number" id="cdn" value="5" min="1" max="15" style="width:70px"></label><br>
- <label>Screen <select id="mode"><option value="fit">Fit 1440x900 (premium frame)</option><option value="wide">Wide - poori screen bhare</option></select></label><br>
+ <label>Screen <select id="mode"><option value="fit">Fit 1440x900 (premium frame)</option><option value="wide">Wide - poori screen bhare</option><option value="max">Max Native (1920p+ sharp)</option></select></label><br>
  <label>Pace <select id="pace"><option value="0.9">Fast</option><option value="1" selected>Normal</option><option value="1.2">Slower</option></select></label><br>
  <label><input type="checkbox" id="fr" checked> Frame + gradient</label>
  <label><input type="checkbox" id="bl"> Motion blur</label>
@@ -1210,6 +1211,1043 @@ const CLIPS={
 "mv": 1000,
 "after": 5000
 }
+],
+"all": [
+{
+"a": "auto",
+"z": 0,
+"out": 120,
+"hold": 0
+},
+{
+"a": "mark",
+"n": "01 intro+hero+spotlight"
+},
+{
+"a": "waitfor",
+"gone": "#intro",
+"max": 9000,
+"after": 500
+},
+{
+"a": "click",
+"to": "#hd",
+"z": 1.5,
+"hold": 1500,
+"out": 120
+},
+{
+"a": "wait",
+"ms": 2000
+},
+{
+"a": "click",
+"to": "#hd",
+"quiet": false,
+"nozoom": true,
+"hold": 0
+},
+{
+"a": "wait",
+"ms": 2000
+},
+{
+"a": "click",
+"to": "#hd",
+"quiet": false,
+"nozoom": true,
+"hold": 0
+},
+{
+"a": "wait",
+"ms": 2000
+},
+{
+"a": "click",
+"to": "#hd",
+"quiet": false,
+"nozoom": true,
+"hold": 0
+},
+{
+"a": "wait",
+"ms": 2000
+},
+{
+"a": "click",
+"to": "#hd",
+"quiet": false,
+"nozoom": true,
+"hold": 0
+},
+{
+"a": "wait",
+"ms": 2000
+},
+{
+"a": "cursor",
+"x": 720,
+"y": 700,
+"ms": 1100
+},
+{
+"a": "spotin",
+"to": "#cvspot",
+"n": 3,
+"by": 560,
+"ms": 900,
+"pauses": [
+350,
+300,
+400
+],
+"settle": 500,
+"fast": 1900,
+"min": 1500,
+"max": 8000,
+"after": 2800,
+"pre": 2
+},
+{
+"a": "spotgo",
+"n": 3
+},
+{
+"a": "wait",
+"ms": 2000
+},
+{
+"a": "spotgo",
+"n": 4
+},
+{
+"a": "wait",
+"ms": 2000
+},
+{
+"a": "spotgo",
+"n": "last"
+},
+{
+"a": "wait",
+"ms": 2000
+},
+{
+"a": "cut"
+},
+{
+"a": "auto",
+"z": 0,
+"out": 120,
+"hold": 0
+},
+{
+"a": "mark",
+"n": "02 menu+tonight"
+},
+{
+"a": "click",
+"to": "#mnu",
+"z": 1.5,
+"hold": 1500,
+"out": 120,
+"mv": 1100,
+"after": 700
+},
+{
+"a": "hover",
+"to": ".cvn-l [data-m=\"0\"]",
+"nozoom": true,
+"mv": 1100,
+"hold": 1500
+},
+{
+"a": "hover",
+"to": ".cvn-l [data-m=\"1\"]",
+"nozoom": true,
+"mv": 950,
+"hold": 1500
+},
+{
+"a": "hover",
+"to": ".cvn-l [data-m=\"2\"]",
+"nozoom": true,
+"mv": 950,
+"hold": 1500
+},
+{
+"a": "hover",
+"to": ".cvn-l [data-m=\"3\"]",
+"nozoom": true,
+"mv": 950,
+"hold": 1500
+},
+{
+"a": "click",
+"to": ".cvn-l [data-m=\"5\"]",
+"z": 1.5,
+"hold": 1500,
+"out": 120,
+"mv": 1200,
+"after": 700
+},
+{
+"a": "waitfor",
+"sel": ".tn .opts [data-i]",
+"max": 5000,
+"after": 400
+},
+{
+"a": "click",
+"to": ".tn .opts [data-i=\"1\"]",
+"nozoom": true,
+"mv": 900,
+"hold": 350,
+"after": 500
+},
+{
+"a": "waitfor",
+"sel": ".tn .opts [data-i]",
+"max": 5000,
+"after": 400
+},
+{
+"a": "click",
+"to": ".tn .opts [data-i=\"2\"]",
+"nozoom": true,
+"mv": 900,
+"hold": 350,
+"after": 500
+},
+{
+"a": "waitfor",
+"sel": ".tn .opts [data-i]",
+"max": 5000,
+"after": 400
+},
+{
+"a": "click",
+"to": ".tn .opts [data-i=\"2\"]",
+"nozoom": true,
+"mv": 900,
+"hold": 350
+},
+{
+"a": "waitfor",
+"sel": ".tn .res",
+"imgs": true,
+"max": 8000,
+"after": 3600
+},
+{
+"a": "click",
+"to": ".tn .tnr [data-a=\"n\"]",
+"nozoom": true,
+"mv": 700,
+"hold": 0
+},
+{
+"a": "waitfor",
+"sel": ".tn .res",
+"imgs": true,
+"max": 8000,
+"after": 3600
+},
+{
+"a": "click",
+"to": ".tn .tnr [data-a=\"n\"]",
+"nozoom": true,
+"mv": 700,
+"hold": 0
+},
+{
+"a": "waitfor",
+"sel": ".tn .res",
+"imgs": true,
+"max": 8000,
+"after": 3600
+},
+{
+"a": "click",
+"to": ".tn .tnr [data-a=\"n\"]",
+"nozoom": true,
+"mv": 700,
+"hold": 0
+},
+{
+"a": "waitfor",
+"sel": ".tn .res",
+"imgs": true,
+"max": 8000,
+"after": 3600
+},
+{
+"a": "cut"
+},
+{
+"a": "auto",
+"z": 0,
+"out": 120,
+"hold": 0
+},
+{
+"a": "mark",
+"n": "03 blade-runner-2049"
+},
+{
+"a": "click",
+"to": "#hmore",
+"z": 1.5,
+"hold": 1500,
+"out": 120,
+"mv": 1200
+},
+{
+"a": "waitfor",
+"sel": "#rg",
+"max": 8000,
+"after": 500
+},
+{
+"a": "centerif",
+"in": "#modal",
+"to": "#rg",
+"tol": 0.2,
+"ms": 1200,
+"after": 400
+},
+{
+"a": "select",
+"to": "#rg",
+"value": "IN",
+"z": 1.5,
+"hold": 1500,
+"out": 120,
+"mv": 1000,
+"after": 600
+},
+{
+"a": "click",
+"to": "[data-cvt=\"about\"]",
+"z": 1.5,
+"hold": 1500,
+"out": 120,
+"mv": 1000,
+"after": 500
+},
+{
+"a": "click",
+"to": "[data-p][data-r=\"dir\"]",
+"z": 1.5,
+"hold": 1500,
+"out": 120,
+"mv": 1100
+},
+{
+"a": "waitfor",
+"sel": ".pp-h",
+"imgs": true,
+"max": 8000,
+"after": 600
+},
+{
+"a": "stepscroll",
+"in": "#modal",
+"n": 3,
+"by": 420,
+"ms": 1400,
+"pauses": [
+700,
+800,
+700
+]
+},
+{
+"a": "scroll",
+"in": "#modal",
+"by": -420,
+"ms": 1300
+},
+{
+"a": "wait",
+"ms": 500
+},
+{
+"a": "click",
+"to": "#mx",
+"nozoom": true,
+"mv": 900
+},
+{
+"a": "waitfor",
+"sel": "#cvt",
+"max": 8000,
+"after": 500
+},
+{
+"a": "centerif",
+"in": "#modal",
+"to": "[data-cvt=\"about\"]",
+"tol": 0.18,
+"ms": 1200,
+"after": 300
+},
+{
+"a": "click",
+"to": "[data-cvt=\"about\"]",
+"nozoom": true,
+"mv": 900,
+"after": 400
+},
+{
+"a": "scroll",
+"in": "#modal",
+"by": 280,
+"ms": 1100
+},
+{
+"a": "waitfor",
+"sel": ".fr-t",
+"max": 15000,
+"after": 400
+},
+{
+"a": "centerif",
+"in": "#modal",
+"to": ".fr-t",
+"tol": 0.2,
+"ms": 1100,
+"after": 300
+},
+{
+"a": "click",
+"to": ".fr-t",
+"z": 1.5,
+"hold": 1000,
+"out": 120,
+"mv": 1000
+},
+{
+"a": "waitfor",
+"sel": "#ftabs button",
+"imgs": true,
+"max": 12000,
+"after": 1000
+},
+{
+"a": "click",
+"to": "#ftabs button@All",
+"nozoom": true,
+"mv": 900,
+"hold": 200,
+"after": 500
+},
+{
+"a": "stepscroll",
+"in": "#modal",
+"n": 2,
+"by": 380,
+"ms": 1400,
+"pauses": [
+700,
+800
+]
+},
+{
+"a": "wait",
+"ms": 600
+},
+{
+"a": "click",
+"to": "#mx",
+"nozoom": true,
+"mv": 900
+},
+{
+"a": "waitfor",
+"sel": "#cvt",
+"max": 8000,
+"after": 500
+},
+{
+"a": "centerif",
+"in": "#modal",
+"to": "[data-cvt=\"cast\"]",
+"tol": 0.18,
+"ms": 1200,
+"after": 300
+},
+{
+"a": "click",
+"to": "[data-cvt=\"cast\"]",
+"z": 1.5,
+"hold": 1500,
+"out": 120,
+"mv": 1000,
+"after": 500
+},
+{
+"a": "scroll",
+"in": "#modal",
+"by": 360,
+"ms": 1300
+},
+{
+"a": "wait",
+"ms": 1000
+},
+{
+"a": "scroll",
+"in": "#modal",
+"by": -360,
+"ms": 1200
+},
+{
+"a": "wait",
+"ms": 400
+},
+{
+"a": "click",
+"to": "[data-cvpane=\"cast\"] [data-p]@Ryan Gosling",
+"z": 1.5,
+"hold": 1500,
+"out": 120,
+"mv": 1100
+},
+{
+"a": "waitfor",
+"sel": ".pp-h",
+"imgs": true,
+"max": 8000,
+"after": 600
+},
+{
+"a": "stepscroll",
+"in": "#modal",
+"n": 4,
+"by": 400,
+"ms": 1400,
+"pauses": [
+700,
+900,
+750,
+850
+]
+},
+{
+"a": "click",
+"to": "#mx",
+"nozoom": true,
+"mv": 900
+},
+{
+"a": "waitfor",
+"sel": "#cvt",
+"max": 8000,
+"after": 500
+},
+{
+"a": "centerif",
+"in": "#modal",
+"to": "[data-cvt=\"mood\"]",
+"tol": 0.18,
+"ms": 1200,
+"after": 300
+},
+{
+"a": "click",
+"to": "[data-cvt=\"mood\"]",
+"z": 1.5,
+"hold": 1500,
+"out": 120,
+"mv": 1000,
+"after": 600
+},
+{
+"a": "centerif",
+"in": "#modal",
+"to": ".mstills",
+"tol": 0.2,
+"ms": 1200,
+"after": 400
+},
+{
+"a": "hstep",
+"to": ".mstills button",
+"n": 4,
+"by": 360,
+"ms": 1200,
+"pauses": [
+650,
+750,
+650,
+700
+]
+},
+{
+"a": "click",
+"to": ".mstills button",
+"idx": -1,
+"nozoom": true,
+"mv": 900,
+"after": 2000
+},
+{
+"a": "click",
+"to": ".mlb",
+"nozoom": true,
+"mv": 700,
+"after": 500
+},
+{
+"a": "waitfor",
+"sel": ".mpal button",
+"max": 10000,
+"after": 300
+},
+{
+"a": "centerif",
+"in": "#modal",
+"to": ".mpal",
+"tol": 0.2,
+"ms": 1200,
+"after": 400
+},
+{
+"a": "click",
+"to": ".mpal button",
+"idx": 2,
+"nozoom": true,
+"mv": 900,
+"hold": 300,
+"after": 700
+},
+{
+"a": "waitfor",
+"sel": ".mcardbtn",
+"max": 8000,
+"after": 300
+},
+{
+"a": "click",
+"to": ".mcardbtn",
+"z": 1.5,
+"hold": 1500,
+"out": 120,
+"mv": 1100
+},
+{
+"a": "waitfor",
+"sel": ".cdov [data-s=\"story\"]",
+"imgs": true,
+"max": 8000,
+"after": 2000
+},
+{
+"a": "click",
+"to": ".cdov [data-s=\"story\"]",
+"nozoom": true,
+"mv": 900,
+"after": 2000
+},
+{
+"a": "click",
+"to": ".cdov [data-a=\"x\"]",
+"nozoom": true,
+"mv": 800,
+"after": 500
+},
+{
+"a": "centerif",
+"in": "#modal",
+"to": "[data-cvt=\"more\"]",
+"tol": 0.2,
+"ms": 1000,
+"after": 300
+},
+{
+"a": "click",
+"to": "[data-cvt=\"more\"]",
+"z": 1.5,
+"hold": 1500,
+"out": 120,
+"mv": 1000,
+"after": 200,
+"quiet": false
+},
+{
+"a": "waitfor",
+"sel": "#rec .card",
+"max": 4000,
+"after": 1400
+},
+{
+"a": "centerif",
+"in": "#modal",
+"to": "#rec",
+"tol": 0.2,
+"ms": 1200,
+"after": 200
+},
+{
+"a": "hstep",
+"to": "#rec .card",
+"n": 3,
+"by": 280,
+"ms": 1800,
+"pauses": [
+1000,
+1100,
+1000
+]
+},
+{
+"a": "click",
+"to": ".rtk-s",
+"z": 1.5,
+"hold": 1400,
+"out": 120,
+"mv": 1000,
+"after": 3000
+},
+{
+"a": "cut"
+},
+{
+"a": "auto",
+"z": 0,
+"out": 120,
+"hold": 0
+},
+{
+"a": "mark",
+"n": "04 invincible"
+},
+{
+"a": "click",
+"to": "#nxt",
+"z": 1.5,
+"hold": 1500,
+"out": 120,
+"mv": 1100
+},
+{
+"a": "wait",
+"ms": 1000
+},
+{
+"a": "click",
+"to": "#hmore",
+"nozoom": true,
+"mv": 1200
+},
+{
+"a": "waitfor",
+"sel": "#ssn",
+"max": 10000,
+"after": 400
+},
+{
+"a": "centerif",
+"in": "#modal",
+"to": "#ssn",
+"tol": 0.2,
+"ms": 1200,
+"after": 400
+},
+{
+"a": "select",
+"to": "#ssn",
+"value": "4",
+"z": 1.5,
+"hold": 1000,
+"out": 120,
+"mv": 900,
+"after": 500
+},
+{
+"a": "waitfor",
+"sel": ".ep[data-i=\"4\"]",
+"imgs": true,
+"max": 10000,
+"after": 400
+},
+{
+"a": "stepscroll",
+"in": "#modal",
+"n": 6,
+"by": 340,
+"ms": 1300,
+"pauses": [
+700,
+800,
+700
+],
+"until": ".ep[data-i=\"4\"]",
+"center": true,
+"after": 400
+},
+{
+"a": "click",
+"to": ".ep[data-i=\"4\"]",
+"nozoom": true,
+"mv": 1000,
+"after": 4000
+},
+{
+"a": "stepscroll",
+"in": "#modal",
+"n": 6,
+"by": 360,
+"ms": 1300,
+"pauses": [
+650,
+750,
+650
+],
+"until": ".ep[data-i=\"5\"]",
+"center": true,
+"after": 400
+},
+{
+"a": "click",
+"to": ".ep[data-i=\"5\"]",
+"nozoom": true,
+"mv": 1000,
+"after": 6000
+},
+{
+"a": "cut"
+},
+{
+"a": "auto",
+"z": 0,
+"out": 120,
+"hold": 0
+},
+{
+"a": "mark",
+"n": "05 search-collections"
+},
+{
+"a": "zoom",
+"to": "#q",
+"z": 1.5,
+"ms": 2000
+},
+{
+"a": "type",
+"to": "#q",
+"text": "lord",
+"clear": true,
+"gap": 110
+},
+{
+"a": "zoom",
+"z": 1,
+"ms": 500
+},
+{
+"a": "waitfor",
+"sel": "#bgrid .fcard",
+"imgs": true,
+"max": 10000,
+"after": 2000
+},
+{
+"a": "click",
+"to": "#bgrid .fcard",
+"idx": 0,
+"nozoom": true,
+"mv": 900
+},
+{
+"a": "waitfor",
+"sel": ".fr-g .card",
+"imgs": true,
+"max": 10000,
+"after": 1000
+},
+{
+"a": "stepscroll",
+"in": "#modal",
+"n": 3,
+"by": 360,
+"ms": 1300,
+"pauses": [
+700,
+800,
+700
+]
+},
+{
+"a": "click",
+"to": "#mx",
+"nozoom": true,
+"mv": 900,
+"after": 500
+},
+{
+"a": "zoom",
+"to": "#q",
+"z": 1.5,
+"ms": 1500
+},
+{
+"a": "type",
+"to": "#q",
+"text": "hera phe",
+"clear": true,
+"gap": 95
+},
+{
+"a": "zoom",
+"z": 1,
+"ms": 500
+},
+{
+"a": "waitfor",
+"sel": "#bgrid .fcard",
+"imgs": true,
+"max": 10000,
+"after": 2000
+},
+{
+"a": "click",
+"to": "#bgrid .fcard",
+"idx": 0,
+"nozoom": true,
+"mv": 900
+},
+{
+"a": "waitfor",
+"sel": ".fr-g .card",
+"imgs": true,
+"max": 10000,
+"after": 1800
+},
+{
+"a": "click",
+"to": "#mx",
+"nozoom": true,
+"mv": 900,
+"after": 500
+},
+{
+"a": "zoom",
+"to": "#q",
+"z": 1.5,
+"ms": 2000
+},
+{
+"a": "type",
+"to": "#q",
+"text": "narn",
+"clear": true,
+"gap": 110
+},
+{
+"a": "zoom",
+"z": 1,
+"ms": 500
+},
+{
+"a": "waitfor",
+"sel": "#bgrid .fcard.one",
+"imgs": true,
+"max": 10000,
+"after": 3000
+},
+{
+"a": "click",
+"to": "#bgrid .fcard",
+"idx": 1,
+"nozoom": true,
+"mv": 900
+},
+{
+"a": "waitfor",
+"sel": ".fr-g .card",
+"imgs": true,
+"max": 10000,
+"after": 4000
+},
+{
+"a": "cut"
+},
+{
+"a": "auto",
+"z": 0,
+"out": 120,
+"hold": 0
+},
+{
+"a": "mark",
+"n": "06 browse-filters-crimson"
+},
+{
+"a": "click",
+"to": "nav [data-v=\"browse\"]",
+"nozoom": true,
+"mv": 1000
+},
+{
+"a": "waitfor",
+"sel": "[data-cvm=\"gems\"]",
+"imgs": true,
+"max": 10000,
+"after": 500
+},
+{
+"a": "click",
+"to": "[data-cvm=\"gems\"]",
+"nozoom": true,
+"mv": 1000,
+"after": 6000
+},
+{
+"a": "stepscroll",
+"n": 3,
+"by": 380,
+"ms": 1400,
+"pauses": [
+700,
+850,
+700
+]
+},
+{
+"a": "scroll",
+"y": 0,
+"ms": 1400
+},
+{
+"a": "wait",
+"ms": 400
+},
+{
+"a": "click",
+"to": "[data-cvm=\"quick\"]",
+"nozoom": true,
+"mv": 1000,
+"after": 4000
+},
+{
+"a": "scroll",
+"by": 380,
+"ms": 1400
+},
+{
+"a": "wait",
+"ms": 400
+},
+{
+"a": "click",
+"to": "#cvcrow [data-c=\"Crimson\"]",
+"nozoom": true,
+"mv": 1000,
+"after": 5000
+}
 ]
 };
 const cam={z:1,x:W/2,y:H/2,tw:null,follow:false},cur={x:W*.8,y:H*.85},auto={z:0,out:1500};
@@ -1218,7 +2256,7 @@ let k=1,ww=0,wh=0,abort=false,running=false,manualOn=false,trackOn=false,holdZoo
 const isApp=()=>matchMedia('(display-mode: fullscreen)').matches||matchMedia('(display-mode: standalone)').matches;
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 function layout(){
- if($('#mode').value==='wide'){W=Math.max(1280,Math.min(1600,Math.round(900*innerWidth/innerHeight)));H=Math.max(560,Math.round(W*innerHeight/innerWidth))}else{W=1440;H=900}
+ const md=$('#mode').value;if(md==='max'){const dpr=Math.min(window.devicePixelRatio||1,2);W=Math.max(1920,Math.round(innerWidth*dpr));H=Math.max(900,Math.round(W*innerHeight/innerWidth))}else if(md==='wide'){W=Math.max(1280,Math.min(1600,Math.round(900*innerWidth/innerHeight)));H=Math.max(560,Math.round(W*innerHeight/innerWidth))}else{W=1440;H=900}
  camEl.style.width=ifr.style.width=W+'px';camEl.style.height=ifr.style.height=H+'px';
  const flat=!$('#fr').checked;document.body.classList.toggle('flat',flat);
  const padOpen=trackOn&&running;
@@ -1258,7 +2296,7 @@ function tick(t){const dt=Math.min(.05,(t-last)/1000);last=t;const pz=cam.z,px=c
  const s=k*cam.z;let tx=ww/2-cam.x*s,ty=wh/2-cam.y*s;
  tx=Math.min(0,Math.max(ww-W*s,tx));ty=Math.min(0,Math.max(wh-H*s,ty));
  const mv=Math.abs(cam.z-pz)*400+Math.abs(cam.x-px)+Math.abs(cam.y-py);
- if(mv>.15){lastMove=t;if(!wc){camEl.style.willChange='transform';wc=1}}else if(wc&&t-lastMove>350){camEl.style.willChange='auto';wc=0}
+ if(mv>.15){lastMove=t;if(!wc){camEl.style.willChange='transform';wc=1}}else if(!running&&wc&&t-lastMove>350){camEl.style.willChange='auto';wc=0}
  const tf=`translate(${tx.toFixed(2)}px,${ty.toFixed(2)}px) scale(${s.toFixed(5)})`;
  if(tf!==lastTf){camEl.style.transform=tf;lastTf=tf}
  const bf=blurOn&&mv>.2?`blur(${Math.min(1.5,mv/Math.max(dt,.001)*.0004).toFixed(2)}px)`:'';
@@ -1791,9 +2829,9 @@ async function start(){if(running)return;
 let tap=0;$('#stop').onclick=()=>{const n=Date.now();if(n-tap<500){if(running){abort=true;$('#cd').style.display='none'}else{fade.style.opacity=0;$('#panel').classList.remove('h')}}tap=n};
 $('#go').onclick=start;
 const loadClip=()=>{$('#scr').value=JSON.stringify(CLIPS[$('#clip').value]||CLIPS.clip1,null,1)};$('#clip').onchange=loadClip;$('#rs').onclick=loadClip;
-/* BUILD clips-v9: script ab kabhi browser memory se restore nahi hoti - hamesha is file ka DEF load hota hai */
+/* BUILD clips-v11: script ab kabhi browser memory se restore nahi hoti - hamesha is file ka DEF load hota hai */
 try{localStorage.removeItem('stg_scr')}catch(e){}
 $('#rs').click();
-$('#info').textContent='[BUILD clips-v9] '+(isApp()?'App mode ON (fullscreen app) - recording ke liye best.':'Tip: Chrome menu > Install app, phir "Parda Stage" icon se kholo. Isse fullscreen + landscape bina black screen ke milta hai.');
+$('#info').textContent='[BUILD clips-v11] '+(isApp()?'App mode ON (fullscreen app) - recording ke liye best.':'Tip: Chrome menu > Install app, phir "Parda Stage" icon se kholo. Isse fullscreen + landscape bina black screen ke milta hai.');
 syncModeUI();layout();drawCur();requestAnimationFrame(tick);
 </script></body></html>
