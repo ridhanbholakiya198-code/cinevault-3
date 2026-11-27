@@ -48,7 +48,7 @@ function fpOf(im){const c=document.createElement("canvas");c.width=16;c.height=9
 function bestMatch(list,fp){return Promise.all(list.map(b=>new Promise(res=>{const im=new Image();im.crossOrigin="anonymous";
   im.onload=()=>{try{const d=fpOf(im);let e=0,j=0;for(let k=0;k<d.length;k++){if(k%4===3)continue;e+=(d[k]-fp[j++])**2}res([e,b])}catch{res([Infinity,b])}};im.onerror=()=>res([Infinity,b]);im.src=IMG+"w300"+b.file_path}))).then(r=>{r.sort((a,b)=>a[0]-b[0]);return r[0]&&r[0][0]<Infinity?r[0][1]:null})}
 // ---- build stamp + on-screen diagnostics (visible only when the address ends with ?debug=1)
-const PARDA_BUILD=68,DBG=/[?&]debug\b/.test(location.search);
+const PARDA_BUILD=72,DBG=/[?&]debug\b/.test(location.search);
 const dbg=window.CVDBG=m=>{if(!DBG)return;try{let e=document.getElementById("pdbg");if(!e){e=document.createElement("pre");e.id="pdbg";e.style.cssText="position:fixed;left:8px;right:8px;bottom:96px;z-index:99999;margin:0;padding:8px 10px;background:#000d;color:#8f8;font:11px/1.45 monospace;border-radius:8px;white-space:pre-wrap;pointer-events:none;max-height:40vh;overflow:hidden";document.body.append(e)}e.textContent+=m+"\n"}catch{}};
 // ---- TEMP: pinned hero slots. 1 = Blade Runner 2049 on its first Mood "Still" (the one the Mood tab lists first), 2 = Invincible. The normal mix follows.
 // Set HERO_PIN=false to go back to the usual hero.
@@ -144,7 +144,7 @@ function setHero(n,dir){const len=hero.length;if(!len)return;n=((n%len)+len)%len
 // autoplay never advances while a picture is still coming, off-screen, or in a background tab
 // hero on screen? measured live (not only from the observer flag, which can get stuck at false after a fast scroll or a view switch)
 const heroOn=()=>{const H=$("#hx");if(!H||H.hidden)return 0;const r=H.getBoundingClientRect();return r.height>0&&r.bottom>innerHeight*.04&&r.top<innerHeight*.96};
-const auto=()=>{clearInterval(ht);ht=setInterval(()=>{if(document.hidden||!heroOn()||hbusy||hero.length<2||$("#hx").hidden||!$("#modal").hidden)return;setHero(hi+1,1)},8000)};
+const auto=()=>{clearInterval(ht);ht=setInterval(()=>{if(document.hidden||!heroOn()||hbusy||hero.length<2||$("#hx").hidden||!$("#modal").hidden){if(DBG)dbg("hero skip: hidden="+document.hidden+" on="+heroOn()+" busy="+hbusy+" n="+hero.length+" modal="+!$("#modal").hidden);return}setHero(hi+1,1)},8000)};
 function growDots(){const d=$("#dots");for(let k=d.children.length;k<hero.length;k++){const e=document.createElement("i");e.dataset.k=k;e.onclick=()=>step(k-hi);d.append(e)}$("#ct").textContent="/"+String(hero.length).padStart(2,"0")}
 function growHero(){growDots();if(matchMedia("(min-width:900px)").matches){const nx=hero[(hi+1)%hero.length];if(nx){$("#ni").src=cvOvr(nx,"hero")||IMG+"w300"+hbd(nx);$("#nt").textContent=title(nx)}}}
 function startHero(){growDots();setHero(0,1);auto();bindHero()}

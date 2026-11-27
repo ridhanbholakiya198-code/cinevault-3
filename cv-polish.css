@@ -39,7 +39,7 @@ img{image-rendering:auto}
 
 /* Phones: bottom scrim so content never shows between the floating tabs; notch + landscape safe areas */
 @media(max-width:899px){
-  body::after{content:"";position:fixed;left:0;right:0;bottom:0;height:calc(92px + env(safe-area-inset-bottom));background:linear-gradient(#0000,#000 82%);pointer-events:none;z-index:29}
+  /* bottom bar: no dark fade behind the buttons, the page shows through (v71) */
 }
 header{padding-left:max(5vw,env(safe-area-inset-left))!important;padding-right:max(5vw,env(safe-area-inset-right))!important}
 .row,.rt,.bar,.tabs,#tabs{padding-left:max(5vw,env(safe-area-inset-left));padding-right:max(5vw,env(safe-area-inset-right))}
@@ -70,7 +70,6 @@ header{padding-left:max(5vw,env(safe-area-inset-left))!important;padding-right:m
 @media(max-width:899px){
   header.s,.bn{-webkit-backdrop-filter:none!important;backdrop-filter:none!important}
   header.s{background:rgba(0,0,0,.92)}
-  .bn::before{content:"";position:fixed;left:0;right:0;bottom:0;height:calc(max(12px,env(safe-area-inset-bottom)) + 92px);background:linear-gradient(to top,rgba(6,6,7,.9),rgba(6,6,7,.5) 55%,transparent);pointer-events:none;z-index:-1}
   .hbgs{will-change:auto}
 }
 
