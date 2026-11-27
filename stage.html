@@ -97,7 +97,8 @@ button.g{background:#333}
   <option value="clip1">Clip 1 (Intro + Hero + Spotlight)</option>
   <option value="clip2">Clip 2 (Menu + Tonight)</option>
   <option value="clip3">Clip 3 (Blade Runner 2049 Deep Dive)</option>
-  <option value="clip4" selected>Clip 4 (Invincible Seasons &amp; Episodes)</option>
+  <option value="clip4">Clip 4 (Invincible Seasons &amp; Episodes)</option>
+  <option value="clip5" selected>Clip 5 (Search Collections)</option>
  </select></label><br>
  <div id="mopts" class="mopts">
   <label>Zoom level <select id="mz">
@@ -966,6 +967,167 @@ const CLIPS={
 "mv": 1000,
 "after": 6000
 }
+],
+"clip5": [
+{
+"a": "auto",
+"z": 0,
+"out": 120,
+"hold": 0
+},
+{
+"a": "mark",
+"n": "05 search-collections"
+},
+{
+"a": "waitfor",
+"gone": "#intro",
+"max": 9000,
+"after": 500
+},
+{
+"a": "zoom",
+"to": "#q",
+"z": 1.5,
+"ms": 2000
+},
+{
+"a": "type",
+"to": "#q",
+"text": "lord",
+"clear": true,
+"gap": 110
+},
+{
+"a": "zoom",
+"z": 1,
+"ms": 500
+},
+{
+"a": "waitfor",
+"sel": "#bgrid .fcard",
+"imgs": true,
+"max": 10000,
+"after": 2000
+},
+{
+"a": "click",
+"to": "#bgrid .fcard",
+"idx": 0,
+"nozoom": true,
+"mv": 900
+},
+{
+"a": "waitfor",
+"sel": ".fr-g .card",
+"imgs": true,
+"max": 10000,
+"after": 1000
+},
+{
+"a": "stepscroll",
+"in": "#modal",
+"n": 3,
+"by": 360,
+"ms": 1300,
+"pauses": [
+700,
+800,
+700
+]
+},
+{
+"a": "click",
+"to": "#mx",
+"nozoom": true,
+"mv": 900,
+"after": 500
+},
+{
+"a": "zoom",
+"to": "#q",
+"z": 1.5,
+"ms": 1500
+},
+{
+"a": "type",
+"to": "#q",
+"text": "hera phe",
+"clear": true,
+"gap": 95
+},
+{
+"a": "zoom",
+"z": 1,
+"ms": 500
+},
+{
+"a": "waitfor",
+"sel": "#bgrid .fcard",
+"imgs": true,
+"max": 10000,
+"after": 2000
+},
+{
+"a": "click",
+"to": "#bgrid .fcard",
+"idx": 0,
+"nozoom": true,
+"mv": 900
+},
+{
+"a": "waitfor",
+"sel": ".fr-g .card",
+"imgs": true,
+"max": 10000,
+"after": 1800
+},
+{
+"a": "click",
+"to": "#mx",
+"nozoom": true,
+"mv": 900,
+"after": 500
+},
+{
+"a": "zoom",
+"to": "#q",
+"z": 1.5,
+"ms": 2000
+},
+{
+"a": "type",
+"to": "#q",
+"text": "narn",
+"clear": true,
+"gap": 110
+},
+{
+"a": "zoom",
+"z": 1,
+"ms": 500
+},
+{
+"a": "waitfor",
+"sel": "#bgrid .fcard.one",
+"imgs": true,
+"max": 10000,
+"after": 3000
+},
+{
+"a": "click",
+"to": "#bgrid .fcard",
+"idx": 1,
+"nozoom": true,
+"mv": 900
+},
+{
+"a": "waitfor",
+"sel": ".fr-g .card",
+"imgs": true,
+"max": 10000,
+"after": 4000
+}
 ]
 };
 const cam={z:1,x:W/2,y:H/2,tw:null,follow:false},cur={x:W*.8,y:H*.85},auto={z:0,out:1500};
@@ -1547,9 +1709,9 @@ async function start(){if(running)return;
 let tap=0;$('#stop').onclick=()=>{const n=Date.now();if(n-tap<500){if(running){abort=true;$('#cd').style.display='none'}else{fade.style.opacity=0;$('#panel').classList.remove('h')}}tap=n};
 $('#go').onclick=start;
 const loadClip=()=>{$('#scr').value=JSON.stringify(CLIPS[$('#clip').value]||CLIPS.clip1,null,1)};$('#clip').onchange=loadClip;$('#rs').onclick=loadClip;
-/* BUILD clips-v7: script ab kabhi browser memory se restore nahi hoti - hamesha is file ka DEF load hota hai */
+/* BUILD clips-v8: script ab kabhi browser memory se restore nahi hoti - hamesha is file ka DEF load hota hai */
 try{localStorage.removeItem('stg_scr')}catch(e){}
 $('#rs').click();
-$('#info').textContent='[BUILD clips-v7] '+(isApp()?'App mode ON (fullscreen app) - recording ke liye best.':'Tip: Chrome menu > Install app, phir "Parda Stage" icon se kholo. Isse fullscreen + landscape bina black screen ke milta hai.');
+$('#info').textContent='[BUILD clips-v8] '+(isApp()?'App mode ON (fullscreen app) - recording ke liye best.':'Tip: Chrome menu > Install app, phir "Parda Stage" icon se kholo. Isse fullscreen + landscape bina black screen ke milta hai.');
 syncModeUI();layout();drawCur();requestAnimationFrame(tick);
 </script></body></html>
