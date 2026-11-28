@@ -1,6 +1,6 @@
 /* Parda sound: original Web Audio synthesis, nothing downloaded. Off by default. Menu -> "Sound": Off / Effects / Effects + ambience.
    Design rules taken from measured cinema references: dark spectrum, slow 0.3 Hz "breathing", long reverb, few events, big gaps of silence.
-   Phone speakers cannot play below ~150 Hz, so low notes are built from their harmonics (100-600 Hz). Add ?soundlab=1 to the URL to tune by ear. */
+   Phone speakers cannot play below ~150 Hz, so low notes are built from their harmonics (100-600 Hz). */
 (() => {
   const KEY = "cv_snd", CFG = "cv_snd_cfg", RATIO = [1, 6 / 5, 4 / 3, 3 / 2, 9 / 5, 2];
   let saved = {}; try { saved = JSON.parse(localStorage.getItem(CFG) || "{}") } catch (e) {}
@@ -82,12 +82,4 @@
   document.addEventListener("visibilitychange", () => { if (!ctx) return; document.hidden ? ctx.suspend() : (mode !== "off" && ctx.resume()) });
   document.addEventListener("click", e => { const b = e.target.closest("#bkm"); if (!b || mode === "off") return; const before = b.textContent; setTimeout(() => { const now = b.textContent; (/remove|in list|added|saved|✓/i.test(now) && now !== before) || b.classList.contains("on") ? api.add() : api.remove() }, 80) }, true);
 
-  if (/[?&]soundlab/.test(location.search)) document.addEventListener("DOMContentLoaded", () => {
-    const d = document.createElement("div"); d.style.cssText = "position:fixed;left:8px;right:8px;bottom:calc(8px + env(safe-area-inset-bottom,0px));z-index:2147483002;background:#000e;border:1px solid #ffffff30;border-radius:16px;padding:12px;font:12px/1.3 'DM Sans',sans-serif;color:#f2ede4;max-width:460px;margin:auto";
-    const row = (k, lab, mn, mx, st) => `<label style="display:flex;align-items:center;gap:8px;margin:4px 0"><span style="width:72px">${lab}</span><input data-k="${k}" type="range" min="${mn}" max="${mx}" step="${st}" value="${P[k]}" style="flex:1"><b data-v="${k}" style="width:44px;text-align:right">${P[k]}</b></label>`;
-    d.innerHTML = `<b style="letter-spacing:.2em">SOUND LAB</b>${row("vol", "Volume", 0, 1, .01)}${row("tone", "Tone Hz", 600, 9000, 100)}${row("rev", "Reverb", 0, 1.5, .01)}${row("root", "Root Hz", 40, 110, 1)}${row("score", "Score", 0, 1, .01)}<div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px">${["awaken", "open", "add", "remove", "swipe", "shutter"].map(n => `<button data-p="${n}" style="all:unset;padding:8px 12px;border:1px solid #ffffff40;border-radius:99px;cursor:pointer">${n}</button>`).join("")}<button data-p="amb" style="all:unset;padding:8px 12px;border:1px solid #ffffff40;border-radius:99px;cursor:pointer">soundtrack on/off</button><button data-p="copy" style="all:unset;padding:8px 12px;border-radius:99px;background:#e8905a;color:#000;cursor:pointer">copy settings</button></div>`;
-    d.oninput = e => { const k = e.target.dataset.k; if (!k) return; P[k] = +e.target.value; d.querySelector(`[data-v="${k}"]`).textContent = P[k]; localStorage.setItem(CFG, JSON.stringify(P)); ensure(); api._apply() };
-    d.onclick = e => { const n = (e.target.closest("[data-p]") || {}).dataset; if (!n) return; n.p === "copy" ? navigator.clipboard.writeText(JSON.stringify(P)) : n.p === "amb" ? api.ambience(!ambo) : api[n.p](true) };
-    document.body.append(d);
-  });
 })();

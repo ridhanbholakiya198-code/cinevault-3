@@ -29,7 +29,7 @@
   document.head.appendChild(css);
 
   let data = null, sec = null, idx = 0, timer = 0, paused = 0, visible = false, colours = [];
-  const bu = (it, z) => (window.cvOvr && cvOvr(it, "spot")) || IMG + z + it.backdrop_path, D = 7000, kind = it => it.title ? "movie" : "tv";
+  const bu = (it, z) => IMG + z + it.backdrop_path, D = 7000, kind = it => it.title ? "movie" : "tv";
   async function load() {
     if (data) return data;
     let hero = []; try { hero = (0, eval)("hero").map(h => h.id) } catch (e) {}

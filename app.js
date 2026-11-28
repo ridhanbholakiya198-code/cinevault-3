@@ -1,10 +1,7 @@
-window.cvOvr=(it,k)=>{const t=((it&&(it.title||it.name))||"").trim();return /avengers:?\s*doomsday/i.test(t)?"/art/doomsday-"+k+".jpg":/^the\s+walking\s+dead$/i.test(t)?"/art/walkingdead-"+k+".jpg":""};
 const DIRECT="https://api.themoviedb.org/3",DIMG="https://image.tmdb.org/t/p/";
 // On hosted sites, go through our own domain (vercel.json rewrites) so ISP blocks on TMDB domains don't matter
 const PX=location.protocol.startsWith("http")&&!/^(localhost|127\.|192\.168\.|10\.)/.test(location.hostname),IMG=PX?"/timg/":DIMG;
 addEventListener("error",e=>{const t=e.target;if(t&&t.tagName==="IMG"&&t.src.includes("/timg/")&&!t.dataset.f){t.dataset.f=1;t.src=t.src.replace(location.origin+"/timg/",DIMG)}},true);
-function showErr(m){const d=document.createElement("div");d.className="err";d.textContent="Error: "+m;document.body.append(d);setTimeout(()=>d.remove(),9000)}
-addEventListener("error",e=>e.message&&showErr(e.message));addEventListener("unhandledrejection",e=>showErr(e.reason&&e.reason.message||e.reason));
 async function get(base,p,q){let u;if(base==="/api/tmdb"){u=new URL(base,location.origin);u.searchParams.set("path",p)}else{u=new URL(base+p,location.origin);u.searchParams.set("api_key",KEY())}for(const k in q)u.searchParams.set(k,q[k]);
  const c=new AbortController(),t=setTimeout(()=>c.abort(),20000);try{const r=await fetch(u,{signal:c.signal});if(!r.ok){const e=Error(r.status);try{const b=(await r.text()).replace(/\s+/g," ").slice(0,90);e.info="["+b+"] vercel-cache="+(r.headers.get("x-vercel-cache")||"-")+" age="+(r.headers.get("age")||"-")}catch{}throw e}return await r.json()}finally{clearTimeout(t)}}
 const $=s=>document.querySelector(s),root=document.documentElement,M=innerWidth<700,P=M?"w185":"w342";
@@ -18,7 +15,7 @@ async function api(p,q={},nc){if(!PX&&!KEY())throw Error("key");const ck="c:"+p+
  if(mem.has(ck))return mem.get(ck);
  try{const c=JSON.parse(localStorage.getItem(ck)||"null");if(c&&Date.now()-c.t<TTL){mem.set(ck,c.j);return c.j}}catch{}
  let j,er;for(let a=0;a<3;a++){er=null;try{j=await get(PX?"/api/tmdb":DIRECT,p,a?{...q,_r:Date.now()}:q);break}catch(e){er=e;if(PX&&KEY()&&e.message!=="401"&&e.message!=="404"){try{j=await get(DIRECT,p,q);er=null;break}catch(e2){er=e2}}
-  if(/^(401|404|key)$/.test(er.message))break;await new Promise(r=>setTimeout(r,700*(a+1)))}}if(er){try{CVDBG(`api ${p} failed: ${er.message} ${er.info||""}`)}catch{}throw er}
+  if(/^(401|404|key)$/.test(er.message))break;await new Promise(r=>setTimeout(r,700*(a+1)))}}if(er)throw er
  mem.set(ck,j);
  if(!nc)try{localStorage.setItem(ck,JSON.stringify({t:Date.now(),j}))}catch{Object.keys(localStorage).filter(x=>x.startsWith("c:")).forEach(x=>localStorage.removeItem(x))}return j}
 const title=i=>i.title||i.name,kind=i=>i.media_type||(i.title?"movie":"tv");
@@ -43,30 +40,10 @@ let hero=[],hi=0,ht,tx=0,ty=0,py=0,hl=0,hq=0;
 const BRFP=[230,191,144,234,202,163,236,206,170,239,209,176,241,210,176,244,215,183,245,216,184,246,216,182,246,214,176,245,213,173,243,209,162,242,208,162,240,207,162,239,205,161,236,200,150,234,191,137,227,176,121,230,185,133,232,193,144,233,194,147,232,188,134,238,205,161,239,206,161,239,203,151,235,191,128,236,193,131,233,186,121,237,197,139,236,196,139,233,187,128,227,170,105,228,171,109,148,84,37,182,111,52,216,141,67,215,136,54,220,143,61,226,159,82,228,163,87,229,162,83,224,149,61,225,153,69,221,143,52,226,154,69,227,154,70,215,129,36,210,118,23,214,131,47,155,78,12,159,75,7,193,98,9,195,97,5,194,101,9,198,100,7,202,102,7,201,104,10,198,97,5,189,96,8,181,90,8,182,90,7,171,80,6,170,79,5,157,72,6,152,67,5,143,64,8,139,63,8,111,49,10,94,45,13,90,40,10,111,49,9,143,64,7,132,62,17,139,61,12,118,52,13,128,54,9,134,59,12,134,57,9,133,54,5,123,50,7,128,53,7,108,43,7,103,43,8,99,42,9,111,47,8,110,47,7,123,54,11,144,69,16,119,65,24,133,67,17,119,63,23,158,99,61,148,93,59,134,85,55,160,98,58,123,58,18,117,52,12,110,48,11,115,50,10,123,54,9,126,57,12,133,62,13,135,63,14,131,60,14,122,57,14,123,56,11,87,44,18,73,44,26,31,19,13,34,21,14,27,16,12,73,35,13,122,57,17,126,58,12,130,60,13,127,58,14,116,52,12,113,47,8,110,45,7,106,43,7,107,45,9,103,43,8,70,31,10,32,19,12,30,19,13,58,35,23,44,22,11,90,37,9,93,38,9,130,60,13,123,56,13,112,48,10,105,44,9,105,44,9,106,44,8,101,42,8,101,42,7,103,44,8,92,38,8,76,33,8,63,28,8,60,29,11,70,31,9,82,34,9,90,37,9];
 const HERO=[["Blade Runner 2049",2017,{ref:BRFP,fx:"56%"}],["Dune",2021],["Stalker",1979],["2001: A Space Odyssey",1968],["Fallen Angels",1995]];
 const upd=()=>$("#hbgs").style.transform=`translate3d(${tx}px,${py+ty}px,0)`,day=n=>new Date(Date.now()-n*864e5).toISOString().slice(0,10);
-const STRONG=(navigator.deviceMemory||4)>=8&&(navigator.hardwareConcurrency||4)>=8&&!/Android/.test(navigator.userAgent||""),hm=m=>m?`${Math.floor(m/60)}h ${m%60}m`:"",hbd=i=>i.bd||i.backdrop_path,hsrc=i=>cvOvr(i,"hero")||(M&&i.pt&&!i.pref?IMG+"w780"+i.pt:IMG+(STRONG&&M&&i.bw&&i.bw<=2560&&!SLOW()?"original":"w1280")+hbd(i));
+const STRONG=(navigator.deviceMemory||4)>=8&&(navigator.hardwareConcurrency||4)>=8&&!/Android/.test(navigator.userAgent||""),hm=m=>m?`${Math.floor(m/60)}h ${m%60}m`:"",hbd=i=>i.bd||i.backdrop_path,hsrc=i=>(M&&i.pt&&!i.pref?IMG+"w780"+i.pt:IMG+(STRONG&&M&&i.bw&&i.bw<=2560&&!SLOW()?"original":"w1280")+hbd(i));
 function fpOf(im){const c=document.createElement("canvas");c.width=16;c.height=9;const x=c.getContext("2d");x.drawImage(im,0,0,16,9);return x.getImageData(0,0,16,9).data}
 function bestMatch(list,fp){return Promise.all(list.map(b=>new Promise(res=>{const im=new Image();im.crossOrigin="anonymous";
   im.onload=()=>{try{const d=fpOf(im);let e=0,j=0;for(let k=0;k<d.length;k++){if(k%4===3)continue;e+=(d[k]-fp[j++])**2}res([e,b])}catch{res([Infinity,b])}};im.onerror=()=>res([Infinity,b]);im.src=IMG+"w300"+b.file_path}))).then(r=>{r.sort((a,b)=>a[0]-b[0]);return r[0]&&r[0][0]<Infinity?r[0][1]:null})}
-// ---- build stamp + on-screen diagnostics (visible only when the address ends with ?debug=1)
-const PARDA_BUILD=77,DBG=/[?&]debug\b/.test(location.search);
-const dbg=window.CVDBG=m=>{if(!DBG)return;try{let e=document.getElementById("pdbg");if(!e){e=document.createElement("pre");e.id="pdbg";e.style.cssText="position:fixed;left:8px;right:8px;bottom:96px;z-index:99999;margin:0;padding:8px 10px;background:#000d;color:#8f8;font:11px/1.45 monospace;border-radius:8px;white-space:pre-wrap;pointer-events:none;max-height:40vh;overflow:hidden";document.body.append(e)}e.textContent+=m+"\n"}catch{}};
-// ---- TEMP: pinned hero slots. 1 = Blade Runner 2049 on its first Mood "Still" (the one the Mood tab lists first), 2 = Invincible. The normal mix follows.
-// Set HERO_PIN=false to go back to the usual hero.
-const HERO_PIN=true,PN=6; // PN = number of pinned hero slots (Blade Runner, Invincible, Top Gun: Maverick, Guardians Vol. 2, Gladiator, The Walking Dead)
-async function heroPins(){if(!HERO_PIN)return[];
- try{const c=JSON.parse(localStorage.getItem("cv_hpin3")||"null");if(c&&Date.now()-c.t<216e5&&c.h&&c.h.length===PN){c.h.forEach(i=>{if(i.logo!=null)lgc[kind(i)+i.id]=i.logo});dbg("pins: loaded from saved copy");return c.h}}catch{}
- const pg=async(p,q)=>{try{return await api(p,q)}catch(e){if(!e||e.message!=="404")throw e;dbg("retry on fresh url: "+p);return await api(p,{...q,_r:Date.now()},1)}};
- const one=async(t,id,still,fx,q,y)=>{try{let d;try{d=await pg(`/${t}/${id}`,{append_to_response:"images",include_image_language:"en,null"})}catch(e1){dbg("pin "+t+id+" id not found ("+(e1&&e1.message)+"), searching by name: "+q);const sr=await pg(`/search/${t}`,t==="tv"?{query:q,first_air_date_year:y}:{query:q,year:y}),hit=(sr.results||[]).filter(x=>x.backdrop_path&&x.poster_path&&(t==="movie"||q!=="Invincible"||((x.genre_ids||[]).includes(16)&&String(x.first_air_date||"").startsWith(String(y)))))[0];if(!hit)throw e1;dbg("pin "+q+" found id "+hit.id);d=await pg(`/${t}/${hit.id}`,{append_to_response:"images",include_image_language:"en,null"})}
-  const bs=((d.images||{}).backdrops||[]).filter(b=>!b.iso_639_1).sort((p,q)=>q.vote_average-p.vote_average); // same order as the Mood tab
-  const pk=(still?bs[0]:(bs.filter(b=>b.width>=1920)[0]||bs[0]))||{};
-  const ps=((d.images||{}).posters||[]).filter(p=>!p.iso_639_1&&p.height>=1200).sort((p,q)=>q.vote_average-p.vote_average);
-  if(!(pk.file_path||d.backdrop_path))return null;
-  lgc[t+d.id]=pick((d.images||{}).logos);dbg("pin "+q+" OK id="+d.id+" stills="+bs.length+" pick="+(pk.file_path||"-"));
-  return{...d,media_type:t,bd:pk.file_path||d.backdrop_path,bw:pk.width||0,fx:fx,pref:still?1:0,pt:ps[0]?ps[0].file_path:"",runtime:d.runtime||(d.episode_run_time||[])[0]||0}}catch(e){dbg("pin "+t+id+" FAILED: "+(e&&e.message));return null}};
- const r=(await Promise.all([one("movie",335984,1,"46%","Blade Runner 2049",2017),one("tv",95557,0,undefined,"Invincible",2021),one("movie",361743,0,undefined,"Top Gun: Maverick",2022),one("movie",283995,0,undefined,"Guardians of the Galaxy Vol. 2",2017),one("movie",98,0,undefined,"Gladiator",2000),one("tv",1402,0,undefined,"The Walking Dead",2010)])).filter(Boolean);dbg("pins fetched: "+r.map(x=>x.media_type+x.id+" bd="+x.bd).join(" | "));
- if(r.length===PN)try{localStorage.setItem("cv_hpin3",JSON.stringify({t:Date.now(),h:r.map(slim)}))}catch{}
- return r}
-async function heroPinsRetry(){if(!HERO_PIN)return[];let best=[];for(let k=0;k<4;k++){const r=await heroPins();if(r.length>best.length)best=r;if(best.length===PN)return best;dbg("pins retry "+(k+1));await hsleep(2000*(k+1))}return best}
 async function heroPicks(){const r=await Promise.all(HERO.map(async([q,y,o])=>{try{o=o||{};
   let id=localStorage.getItem("hid:"+q+y);
   if(!id){const s=await api("/search/movie",{query:q,year:y}),m=s.results.find(x=>x.backdrop_path&&x.poster_path);if(!m)return null;id=m.id;try{localStorage.setItem("hid:"+q+y,id)}catch{}}
@@ -127,12 +104,12 @@ function paintHero(i,n,id){HGO&&HGO();const c=$(".hcont");c.style.setProperty("-
  const go=pl=>openDetail(kind(i),i.id).then(()=>{if(pl){const b=$("#pl");b&&b.click()}});$("#hopen").onclick=()=>go(1);$("#hmore").onclick=()=>go(0);
  document.querySelectorAll(".hdots i").forEach((d,k)=>d.classList.toggle("on",k===n));
  $("#cn").textContent=String(n+1).padStart(2,"0");$("#ct").textContent="/"+String(hero.length).padStart(2,"0");
- if(matchMedia("(min-width:900px)").matches){const nx=hero[(n+1)%hero.length];$("#ni").src=cvOvr(nx,"hero")||IMG+"w300"+hbd(nx);$("#nt").textContent=title(nx)}
+ if(matchMedia("(min-width:900px)").matches){const nx=hero[(n+1)%hero.length];$("#ni").src=IMG+"w300"+hbd(nx);$("#nt").textContent=title(nx)}
  // the slide colour is remembered, but only painted when no detail page / menu is open (those keep their own title colour)
  dominant(i.poster_path).then(c=>{if(id!==hq)return;hAcc=c;if($("#modal").hidden&&!document.querySelector(".cva"))root.style.setProperty("--accent",c)})}
 function swapBg(i,s,id){const A=[$("#hbgA"),$("#hbgB")],cu=A[hl],nw=A[1-hl];if(cu.classList.contains("on")&&cu.dataset.s===s)return;
  hl=1-hl;clearTimeout(nw._f);nw.className="hbg";void nw.offsetWidth;nw.style.backgroundImage=`url(${s})`;nw.style.backgroundPosition=(i.fx||"50%")+" 50%";nw.dataset.s=s;
- if(STRONG&&M&&i.pref&&!cvOvr(i,"hero"))hload(IMG+"original"+hbd(i)).then(h=>{if(h&&id===hq&&nw.classList.contains("on"))nw.style.backgroundImage=`url(${h})`});
+ if(STRONG&&M&&i.pref)hload(IMG+"original"+hbd(i)).then(h=>{if(h&&id===hq&&nw.classList.contains("on"))nw.style.backgroundImage=`url(${h})`});
  nw.classList.add("on");cu.classList.remove("on");cu.classList.add("out");
  // give the decoded picture back once it has faded out (this is what keeps low-RAM phones from killing the tab)
  cu._f=setTimeout(()=>{if(!cu.classList.contains("on")){cu.style.backgroundImage="none";cu.dataset.s=""}},1700)}
@@ -149,13 +126,12 @@ const heroOn=()=>{const H=$("#hx");if(!H||H.hidden)return 0;const r=H.getBoundin
 // v72 slide engine: one timer, plus "kicks" (scroll stop, tab back, touch end) that restart it if the hero is on screen and has been still for a while.
 // A stuck "busy" flag can no longer freeze the hero: after 12s it is ignored.
 const hadv=(force)=>{const now=Date.now();if(document.hidden||hero.length<2)return;if(now-hlast<(force?7000:6500))return;if(hbusy&&now-hlast<12000)return;setHero(hi+1,1)};
-const hinfo=()=>{const r=$("#hx").getBoundingClientRect();return"y="+Math.round(scrollY)+" top="+Math.round(r.top)+" bot="+Math.round(r.bottom)+" ih="+innerHeight+" on="+heroOn()+" busy="+hbusy+" modal="+!$("#modal").hidden+" hid="+$("#hx").hidden+" n="+hero.length+" idx="+hi+" ago="+Math.round((Date.now()-hlast)/1000)+"s"};
-const auto=()=>{clearInterval(ht);ht=setInterval(()=>{if(DBG)dbg("tick "+hinfo());hadv()},8000)};
+const auto=()=>{clearInterval(ht);ht=setInterval(hadv,8000)};
 const hkick=()=>{if(!ht&&hero.length>1)auto();hadv(1)};let hkt;
 addEventListener("scroll",()=>{clearTimeout(hkt);hkt=setTimeout(hkick,180)},{passive:true});
 ["touchend","pointerup","visibilitychange","pageshow","focus","resize"].forEach(e=>addEventListener(e,()=>{clearTimeout(hkt);hkt=setTimeout(hkick,250)},{passive:true}));
 function growDots(){const d=$("#dots");for(let k=d.children.length;k<hero.length;k++){const e=document.createElement("i");e.dataset.k=k;e.onclick=()=>step(k-hi);d.append(e)}$("#ct").textContent="/"+String(hero.length).padStart(2,"0")}
-function growHero(){growDots();if(matchMedia("(min-width:900px)").matches){const nx=hero[(hi+1)%hero.length];if(nx){$("#ni").src=cvOvr(nx,"hero")||IMG+"w300"+hbd(nx);$("#nt").textContent=title(nx)}}}
+function growHero(){growDots();if(matchMedia("(min-width:900px)").matches){const nx=hero[(hi+1)%hero.length];if(nx){$("#ni").src=IMG+"w300"+hbd(nx);$("#nt").textContent=title(nx)}}}
 function startHero(){growDots();setHero(0,1);auto();bindHero()}
 function bindHero(){if(hbound)return;hbound=1;const H=$("#hx");let x0=0,y0=0,t0=0,tr=0;
  H.addEventListener("touchstart",e=>{const t=e.touches[0];x0=t.clientX;y0=t.clientY;t0=Date.now();tr=e.touches.length===1},{passive:true});
@@ -221,22 +197,17 @@ function setup(e){$("#hx").hidden=true;$("#rows").innerHTML=e.message==="key"||e
  if($("#rt"))$("#rt").onclick=()=>location.reload();
  if($("#ksv"))$("#ksv").onclick=()=>{localStorage.setItem("cv_key",$("#kin").value.trim());location.reload()}}
 function heroLogo(i){logoOf(i).then(l=>{if(l&&hero[hi]===i)$("#htitle").innerHTML=`<img class="htl" alt="${esc(title(i))}" src="${l}">`})}
-const HC="cv_hero3",slim=i=>({id:i.id,media_type:kind(i),title:i.title,name:i.name,tagline:i.tagline,overview:i.overview,vote_average:i.vote_average,release_date:i.release_date,first_air_date:i.first_air_date,runtime:i.runtime,genres:(i.genres||[]).slice(0,2).map(g=>({name:g.name})),poster_path:i.poster_path,backdrop_path:i.backdrop_path,bd:i.bd,bw:i.bw,pt:i.pt,pref:i.pref,fx:i.fx,logo:lgc[kind(i)+i.id]});
+const HC="cv_hero4",slim=i=>({id:i.id,media_type:kind(i),title:i.title,name:i.name,tagline:i.tagline,overview:i.overview,vote_average:i.vote_average,release_date:i.release_date,first_air_date:i.first_air_date,runtime:i.runtime,genres:(i.genres||[]).slice(0,2).map(g=>({name:g.name})),poster_path:i.poster_path,backdrop_path:i.backdrop_path,bd:i.bd,bw:i.bw,pt:i.pt,pref:i.pref,fx:i.fx,logo:lgc[kind(i)+i.id]});
 function heroCacheGet(){try{const c=JSON.parse(localStorage.getItem(HC)||"null");if(c&&Date.now()-c.t<216e5&&Array.isArray(c.h)&&c.h.length>=3&&c.h.every(x=>x&&x.id&&(x.bd||x.backdrop_path)))return c.h}catch{}return null}
 function heroCachePut(h){try{if(h&&h.length>=4)localStorage.setItem(HC,JSON.stringify({t:Date.now(),h:h.slice(0,6).map(slim)}))}catch{}}
-const safeHero=()=>{try{startHero()}catch(e){console.error(e);showErr("hero: "+(e&&e.message))}},safeGrow=()=>{try{growHero()}catch(e){console.error(e)}};
-async function home(){let on=0;dbg("build "+PARDA_BUILD+" (new app.js is live)");
+const safeHero=()=>{try{startHero()}catch(e){console.error(e);}},safeGrow=()=>{try{growHero()}catch(e){console.error(e)}};
+async function home(){let on=0;
  // first slide appears as soon as ONE title is ready; the rest join the carousel as they arrive
  const feed=i=>{if(hero.length>=6||hero.some(x=>x.id===i.id&&kind(x)===kind(i)))return;hero.push(i);if(!((kind(i)+i.id) in lgc))heroLogo(i);if(on)safeGrow();else{on=1;safeHero()}};
  const warm=heroCacheGet();
- const pinsP=heroPinsRetry();
- (async()=>{let pins=await Promise.race([pinsP,hsleep(2200).then(()=>null)]);const late=pins===null;if(late)pins=[];dbg("hero pins ready: "+pins.length+(late?" (still loading after 2.2s, join when ready)":"")); // TEMP pinned slots first, the usual mix follows
-  const isPin=x=>pins.some(p=>p.id===x.id&&kind(p)===kind(x));
-  if(late)pinsP.then(ps=>{dbg("late pins arrived: "+ps.length);if(!ps.length)return;if(!on){ps.forEach(feed);return}hero=ps.concat(hero.filter(x=>!ps.some(p=>p.id===x.id&&kind(p)===kind(x)))).slice(0,6);growDots();setHero(0,1)}).catch(()=>{});
-  if(warm){warm.forEach(i=>{if(i.logo!=null)lgc[kind(i)+i.id]=i.logo});const rest=warm.filter(w=>!isPin(w)).sort(()=>Math.random()-.5);hero=pins.concat(rest).slice(0,6);on=1;safeHero();
-   setTimeout(()=>heroItems().then(heroCachePut).catch(()=>{}),SLOW()?30000:2500)} // a fresh mix is prepared quietly for the next visit
-  else{pins.forEach(feed);await heroItems(feed).then(h=>{h.forEach(feed);if(!on)throw Error("No titles loaded");heroCachePut(hero)})}
- })().catch(e=>{if(!on)setup(e)});
+ if(warm){warm.forEach(i=>{if(i.logo!=null)lgc[kind(i)+i.id]=i.logo});hero=warm.slice().sort(()=>Math.random()-.5);on=1;safeHero();
+  setTimeout(()=>heroItems().then(heroCachePut).catch(()=>{}),SLOW()?30000:2500)} // a fresh mix is prepared quietly for the next visit
+ else heroItems(feed).then(h=>{h.forEach(feed);if(!on)throw Error("No titles loaded");heroCachePut(hero)}).catch(e=>{if(!on)setup(e)});
  RW=buildRows();RW.forEach((r,i)=>{const s=document.createElement("section");s.className="row";s.dataset.i=i;
   s.innerHTML=`<div class="rh"><h2>${r[0]==="In cinemas now"?'<i class="live"></i>':""}${esc(r[0])}</h2><svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></div><div class="strip">${'<div class="card sk"></div>'.repeat(6)}</div><button class="ar l" aria-label="Back"><svg viewBox="0 0 24 24"><path d="m15 5-7 7 7 7"/></svg></button><button class="ar r" aria-label="Next"><svg viewBox="0 0 24 24"><path d="m9 5 7 7-7 7"/></svg></button>`;
   s.querySelector(".rh").onclick=async()=>{if(r[6]){B={path:"",type:"",q:{},f:0,page:1,busy:0,end:1};$("#btitle").textContent=r[0];$("#bar").hidden=true;$("#bgrid").innerHTML="";(await named(r[6])).forEach(i=>$("#bgrid").append(card(i,"")));view("browse");return}reset(r[0],r[1],r[2]||"",r[3]||{},false);view("browse")};s.querySelectorAll(".ar").forEach(b=>b.onclick=()=>{const st=s.querySelector(".strip");st.scrollBy({left:(b.classList.contains("r")?1:-1)*st.clientWidth*.8,behavior:"smooth"})});$("#rows").append(s);io.observe(s)});(()=>{const fr=frRow(),r1=$("#rows").children[1];r1?r1.after(fr):$("#rows").append(fr)})();
@@ -394,7 +365,7 @@ async function openDetail(t,id,bk){$("#simp").hidden=$("#sheet").hidden=true;nav
  const stt=t==="tv"?(nx?`Ongoing · next ep ${when(nx.air_date)}`:/Ended|Canceled/.test(d.status)?"Ended":"Returning"):(!d.release_date?"Upcoming":d.release_date>day(0)?`Releases ${fd(d.release_date)}`:"Released");
  const m={id,type:t,title:title(d),poster:d.poster_path,lang:d.original_language,genres:(d.genres||[]).map(g=>g.id)};learn(m,1);CUR={d,t,m};
  const cast=d.credits.cast.slice(0,20).map(c=>`<div data-p="${c.id}" data-r="cast">${c.profile_path?`<img loading="lazy" decoding="async" src="${IMG}w185${c.profile_path}" alt="">`:"<i></i>"}<b>${esc(c.name)}</b><small>${esc(c.character||"")}</small></div>`).join("");
- const run=d.runtime?d.runtime+" min":"",bbd=bestBd(d),bk=cvOvr(d,"det")||(bbd?IMG+(innerWidth>900?"w1280":"w780")+bbd:(d.poster_path?IMG+"w780"+d.poster_path:"")),lg=pick(d.images&&d.images.logos);
+ const run=d.runtime?d.runtime+" min":"",bbd=bestBd(d),bk=(bbd?IMG+(innerWidth>900?"w1280":"w780")+bbd:(d.poster_path?IMG+"w780"+d.poster_path:"")),lg=pick(d.images&&d.images.logos);
  $("#mc").innerHTML=`<div class="tr" style="background-image:url(${bk})"><div class="tbg"></div><div class="tc">${lg?`<img class="tlg" src="${lg}" alt="">`:""}${v?'<button class="btn play" id="pl">Play trailer</button>':'<p class="notr">No trailer available</p>'}</div></div>
  <div class="mi"><div class="mw"><img class="dp" alt="" src="${d.poster_path?IMG+"w342"+d.poster_path:""}"><div class="mx">
  <div class="chips"><i class="c1">${cat(d,t)}</i><i>${(d.release_date||d.first_air_date||"").slice(0,4)||"TBA"}</i><i>${STAR}${(d.vote_average||0).toFixed(1)}</i><i>${stt}</i></div>

@@ -3,6 +3,10 @@
     {
       "source": "/timg/:path*",
       "destination": "https://image.tmdb.org/t/p/:path*"
+    },
+    {
+      "source": "/s/:kind/:id",
+      "destination": "/api/share?kind=:kind&id=:id"
     }
   ]
 }
